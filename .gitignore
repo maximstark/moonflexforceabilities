@@ -1,2 +1,4 @@
 __pycache__/
 .DS_Store
+tools/headless/_bundle*.js
+_shot_*.png

@@ -1,0 +1,363 @@
+"use strict";
+/* =====================================================================
+ *  WORLD — level lifecycle, pickups, doors & elevator, camera,
+ *  particles, floaters, parallax + tile rendering, level events.
+ * ===================================================================== */
+const World = (() => {
+  let pickups = [], floaters = [], particles = [];
+  let doors = [], elevator = null;
+  let trophySpawned = false, firesLeft = 0, rescueArmed = false;
+  let camX = 0, camY = 0;
+  let levelCache = {};
+
+  /* ---------------- loading ---------------- */
+  async function loadLevel(id) {
+    const file = id === "hub" ? "levels/hub.json" : `levels/level${id}.json`;
+    if (!levelCache[file]) levelCache[file] = await (await fetch(file)).json();
+    // deep-clone the pristine copy: the grid is mutated in play (fires, blocks)
+    level = JSON.parse(JSON.stringify(levelCache[file]));
+    grid = level.grid; gridH = grid.length; gridW = grid[0].length;
+    buildTileSets();
+    resetWorld(id);
+  }
+
+  function resetWorld(id) {
+    pickups = []; floaters = []; particles = [];
+    enemies.length = 0; projectiles.length = 0; stinkClouds.length = 0;
+    Combat.laserShots.length = 0; Combat.spoonSwings.length = 0;
+    Combat.pinkBursts.length = 0; Combat.poundShocks.length = 0;
+    trophySpawned = false;
+    Game.levelId = id;
+    Game.happiness = T.HAPPINESS_MAX;
+    Game.babiesThisLevel = 0;
+
+    for (const e of level.enemies) enemies.push(makeEnemy(e));
+    for (const pk of level.pickups)
+      pickups.push({ ...pk, taken: false, seed: pickups.length * 1.7, grace: 0 });
+    doors = (level.doors || []).map(d => ({ ...d }));
+    elevator = level.elevator
+      ? { x: level.elevator.x, y: level.elevator.stops[0], stops: level.elevator.stops,
+          target: 0, moving: false, w: 24, h: 6 }
+      : null;
+    Bosses.spawn(level.boss);
+    firesLeft = 0;
+    for (const row of grid) for (const t of row)
+      if (t >= 0 && level.tileNames[t] === "fire1") firesLeft++;
+    rescueArmed = firesLeft > 0;
+
+    // players
+    for (const p of players) {
+      const i = players.indexOf(p);
+      p.x = level.spawn.x + i * 20; p.y = level.spawn.y;
+      p.vx = 0; p.vy = 0; p.dead = false;
+      p.lastSafeX = p.x; p.lastSafeY = p.y;
+      p.carrying = 0; p.rooted = false; p.pounding = false; p.moonTimer = 0;
+      if (level.forceForm === "mecha") {
+        p.form = "mecha"; p.w = T.MECHA_W; p.h = T.MECHA_H;
+        p.hearts = p.maxHearts = T.MECHA_HEARTS;
+        p.stack = [];
+      } else {
+        p.form = p.character === "charmgirl" ? "charmgirl" : "swan";
+        p.w = T.PLAYER_W; p.h = T.PLAYER_H;
+        p.hearts = p.maxHearts = T.MAX_HEARTS;
+      }
+    }
+    camX = clamp(level.spawn.x - T.VIEW_W / 2, 0, Math.max(0, gridW * TS - T.VIEW_W));
+    camY = clamp(level.spawn.y - T.VIEW_H / 2, 0, Math.max(0, gridH * TS - T.VIEW_H));
+    AudioSys.playSong(level.music);
+  }
+
+  /* ---------------- pickups ---------------- */
+  const PICKUP_SPRITE = {
+    popcorn: ["hud","popcorn"], star: ["hud","star"], treat: ["hud","treat"],
+    trophy: ["hud","trophy"], moon: ["items","moon"], beads: ["items","beads"],
+    pickup_goosefeet: ["items","pickup_goosefeet"], pickup_laser: ["items","pickup_laser"],
+    pickup_kirby: ["items","icon_kirby"], pickup_spoon: ["items","pickup_spoon"],
+    pickup_mermaid: ["items","pickup_mermaid"],
+    chest: ["tiles2","chest_closed"], chest_open: ["tiles2","chest_open"],
+    babyswan: ["babyswan","bob1"],
+  };
+  function dropCostume(costume, x, y) {
+    pickups.push({ type: "pickup_" + costume, x, y, taken: false,
+                   seed: Math.random() * 9, grace: T.DROP_GRACE });
+  }
+  function spawnTrophy(kind) {
+    if (trophySpawned) return;
+    trophySpawned = true;
+    const tx = Math.floor(level.goalX / TS);
+    let ty = 0;
+    while (ty < gridH && !isSolid(tx, ty)) ty++;
+    pickups.push({ type: kind, x: level.goalX - 8, y: ty * TS - 20, taken: false, seed: 0, grace: 0 });
+    addFloater(level.goalX, ty * TS - 30, kind === "beads" ? "THE GOLD MEDAL!" : "GO!");
+  }
+
+  function updatePickups() {
+    for (const pk of pickups) {
+      if (pk.taken) continue;
+      if (pk.grace > 0) { pk.grace--; continue; }
+      const bob = Math.sin((Game.frame + pk.seed * 37) / 18) * 2;
+      const box = { x: pk.x, y: pk.y + bob, w: 16, h: 16 };
+      for (const p of players) {
+        if (p.dead || !overlaps({ x: p.x, y: p.y, w: p.w, h: p.h }, box)) continue;
+        if (collectPickup(pk, p)) break;
+      }
+    }
+  }
+  function collectPickup(pk, p) {
+    const t = pk.type;
+    if (t === "chest") {
+      if (Game.stars >= 3) {
+        pk.type = "chest_open";
+        Game.stars -= 3;
+        Game.state = "chooser"; Game.chooserIdx = 0; Game.chooserFor = p;
+        AudioSys.sfx("star");
+      } else if (Game.frame % 30 === 0) {
+        addFloater(pk.x + 8, pk.y - 8, "NEEDS 3 STARS");
+      }
+      return false;
+    }
+    pk.taken = true;
+    if (t === "popcorn") { Game.score += T.POINTS_POPCORN; addFloater(pk.x+8, pk.y-4, "+"+T.POINTS_POPCORN); AudioSys.sfx("popcorn"); }
+    else if (t === "star") { Game.stars++; addFloater(pk.x+8, pk.y-4, "STAR!"); AudioSys.sfx("star"); burstAt(pk.x+8, pk.y+8, "spark", 4); }
+    else if (t === "treat") { Game.happiness = Math.min(T.HAPPINESS_MAX, Game.happiness + T.TREAT_REFILL); addFloater(pk.x+8, pk.y-4, "YUM!"); AudioSys.sfx("treat"); }
+    else if (t === "moon") { grantMoon(p); burstAt(pk.x+8, pk.y+8, "moonspark", 8); }
+    else if (t === "babyswan") {
+      p.carrying++; Game.babiesThisLevel++;
+      addFloater(pk.x+8, pk.y-8, "BABY SWAN!"); AudioSys.sfx("baby");
+      if (pk.rescue && firesLeft > 0) addFloater(pk.x+8, pk.y+8, "(so brave, so warm)");
+    }
+    else if (t.startsWith("pickup_")) {
+      const costume = t.slice(7);
+      if (costume === "mermaid") { p.form = "mermaid"; AudioSys.sfx("transform"); }
+      else wearCostume(p, costume);
+    }
+    else if (t === "trophy") { levelClear(); }
+    else if (t === "beads") { finaleClear(); }
+    return true;
+  }
+
+  /* ---------------- level events ---------------- */
+  function onFirePutOut() {
+    firesLeft--;
+    addFloater(players[0].x, players[0].y - 12, firesLeft > 0 ? firesLeft + " FIRES LEFT!" : "FIRE'S OUT!");
+    if (firesLeft === 0 && rescueArmed) {
+      Game.score += T.POINTS_RESCUE;
+      Game.happiness = T.HAPPINESS_MAX;
+      addFloater(players[0].x, players[0].y - 24, "RESCUE! +" + T.POINTS_RESCUE);
+      AudioSys.sfx("win");
+    }
+  }
+  function onBossesCleared(fled) {
+    if (Game.levelId === 6) spawnTrophy("beads");
+    else spawnTrophy("trophy");
+    if (!fled) AudioSys.playSong(level.music);
+  }
+  function levelClear() {
+    AudioSys.sfx("win");
+    for (const p of players) if (p.carrying) {
+      Game.score += p.carrying * T.POINTS_BABY;
+      addFloater(p.x, p.y - 10, "BABIES SAFE! +" + p.carrying * T.POINTS_BABY);
+    }
+    if (Game.babiesThisLevel > 0 && Game.levelId >= 1 && Game.levelId <= 5)
+      save.babies[Game.levelId - 1] = true;
+    if (typeof Game.levelId === "number") {
+      save.unlocked = Math.max(save.unlocked, Math.min(6, Game.levelId + 1));
+      writeSave();
+    }
+    Game.state = "clear"; Game.stateTimer = 130;
+  }
+  function finaleClear() {
+    Game.score += T.POINTS_FINALE;
+    AudioSys.sfx("tenmil");
+    Game.shake = 10;
+    addFloater(players[0].x, players[0].y - 16, "+10,000,000!!!");
+    save.unlocked = 6; writeSave();
+    Game.state = "ending"; Game.stateTimer = 0;
+    AudioSys.playSong("ending");
+  }
+
+  /* ---------------- doors & elevator (the hub) ---------------- */
+  function updateHubBits() {
+    if (elevator) {
+      const e = elevator;
+      if (e.moving) {
+        const ty = e.stops[e.target];
+        e.y += clamp(ty - e.y, -2.2, 2.2);
+        if (Math.abs(e.y - ty) < 1) { e.y = ty; e.moving = false; AudioSys.sfx("ding"); }
+      }
+      // ride: stand on the car
+      for (const p of players) {
+        if (p.dead) continue;
+        const onCar = p.y + p.h >= e.y - 2 && p.y + p.h <= e.y + 8 &&
+                      p.x + p.w > e.x && p.x < e.x + e.w;
+        if (onCar) {
+          if (e.moving) { p.y = e.y - p.h; p.vy = 0; p.grounded = true; }
+          else if (pads[p.idx].pressed.has("action") && e.target < e.stops.length - 1) {
+            e.target++; e.moving = true; AudioSys.sfx("door");
+          } else if (pads[p.idx].held.down && pads[p.idx].pressed.has("jump") === false &&
+                     pads[p.idx].pressed.has("down") && e.target > 0) {
+            e.target--; e.moving = true; AudioSys.sfx("door");
+          } else if (!e.moving) { if (p.y + p.h !== e.y) { p.y = e.y - p.h; } p.vy = Math.min(p.vy, 0); p.grounded = true; }
+        }
+      }
+    }
+    for (const d of doors) {
+      for (const p of players) {
+        if (p.dead || !p.grounded) continue;
+        const near = Math.abs((p.x + p.w / 2) - (d.x + 8)) < 12 &&
+                     Math.abs((p.y + p.h) - (d.y + 16)) < 20;
+        if (near && pads[p.idx].pressed.has("down")) {
+          if (d.level <= save.unlocked) {
+            AudioSys.sfx("door");
+            Game.enterLevel(d.level);
+          } else {
+            addFloater(d.x + 8, d.y - 8, "LOCKED — CLEAR FLOOR " + (d.level - 1));
+            AudioSys.sfx("refund");
+          }
+        }
+      }
+    }
+  }
+
+  /* ---------------- particles & floaters ---------------- */
+  const PARTS = {
+    feather: { frames: ["feather"], grav: 0.04, life: 50, vy: -0.5, spread: 1.2 },
+    splash:  { frames: ["splash1","splash2"], grav: 0.12, life: 26, vy: -1.6, spread: 1.4 },
+    spark:   { frames: ["spark1","spark2"], grav: 0, life: 24, vy: -0.3, spread: 1.6 },
+    poof:    { frames: ["poof1","poof2"], grav: -0.01, life: 22, vy: -0.4, spread: 1.2 },
+    bubble:  { frames: ["bubble"], grav: -0.05, life: 60, vy: -0.4, spread: 0.4 },
+    moonspark:{ frames: ["moonspark"], grav: 0, life: 30, vy: -0.6, spread: 0.8 },
+    ring:    { frames: ["ring1","ring2"], grav: 0, life: 16, vy: 0, spread: 2.2 },
+    ember:   { frames: ["spark1"], grav: -0.03, life: 30, vy: -0.8, spread: 0.6 },
+  };
+  function burstAt(x, y, type, n) {
+    const def = PARTS[type];
+    if (!def || particles.length > 220) return;
+    for (let i = 0; i < n; i++)
+      particles.push({ type, x, y, vx: (Math.random() - 0.5) * 2 * def.spread,
+                       vy: def.vy + (Math.random() - 0.5), life: def.life + Math.random() * 10, t: 0 });
+  }
+  function addFloater(x, y, text) { floaters.push({ x, y, text, timer: 50 }); }
+  function updateFx() {
+    for (const f of floaters) { f.timer--; f.y -= 0.5; }
+    floaters = floaters.filter(f => f.timer > 0);
+    for (const pt of particles) {
+      const def = PARTS[pt.type];
+      pt.t++; pt.life--; pt.x += pt.vx; pt.y += pt.vy; pt.vy += def.grav;
+    }
+    particles = particles.filter(p => p.life > 0);
+  }
+
+  /* ---------------- camera ---------------- */
+  function updateCamera() {
+    const alive = players.filter(p => !p.dead);
+    if (!alive.length) return;
+    let fx = 0, fy = 0;
+    for (const p of alive) { fx += p.x + p.w / 2 + p.facing * T.CAM_LOOKAHEAD / alive.length; fy += p.y + p.h / 2; }
+    fx /= alive.length; fy /= alive.length;
+    camX += (fx - T.VIEW_W / 2 - camX) * T.CAM_LERP;
+    camY += (fy - T.VIEW_H / 2 - camY) * T.CAM_LERP;
+    camX = clamp(camX, 0, Math.max(0, gridW * TS - T.VIEW_W));
+    camY = clamp(camY, 0, Math.max(0, gridH * TS - T.VIEW_H));
+  }
+
+  /* ---------------- rendering ---------------- */
+  const ANIM_TILES = { water_surf1: "water_surf2", fire1: "fire2", seaweed1: "seaweed2" };
+  function draw() {
+    let cx = Math.round(camX), cy = Math.round(camY);
+    if (Game.shake > 0) {
+      cx += Math.round((Math.random() - 0.5) * 4);
+      cy += Math.round((Math.random() - 0.5) * 3);
+    }
+    // sky + parallax
+    drawStretched(level.sky, "g", 0, 0, T.VIEW_W, T.VIEW_H);
+    const strip = sheets[level.par];
+    if (strip) {
+      const off = Math.floor(cx * 0.35) % 192;
+      const py = T.VIEW_H - 110 - Math.round(cy * 0.2);
+      for (let x = -off; x < T.VIEW_W; x += 192) drawFrame(level.par, "s", x, py);
+    }
+    drawTiles(cx, cy);
+    drawWaterTint(cx, cy);
+    drawHubBits(cx, cy);
+    drawPickups(cx, cy);
+    drawEnemies(cx, cy);
+    Bosses.draw(cx, cy);
+    for (const p of players) drawPlayer(p, cx, cy);
+    drawProjectiles(cx, cy);
+    drawParticles(cx, cy);
+    drawFloaters(cx, cy);
+    return { cx, cy };
+  }
+  function drawTiles(cx, cy) {
+    const x0 = Math.max(0, Math.floor(cx / TS));
+    const x1 = Math.min(gridW - 1, Math.floor((cx + T.VIEW_W) / TS));
+    const y0 = Math.max(0, Math.floor(cy / TS));
+    const y1 = Math.min(gridH - 1, Math.floor((cy + T.VIEW_H) / TS));
+    const alt = (Game.frame >> 4) % 2 === 1;
+    for (let ty = y0; ty <= y1; ty++) {
+      for (let tx = x0; tx <= x1; tx++) {
+        const t = grid[ty][tx];
+        if (t < 0) continue;
+        let name = level.tileNames[t];
+        if (alt && ANIM_TILES[name]) name = ANIM_TILES[name];
+        drawFrame(TILE_LOOKUP[name], name, tx * TS - cx, ty * TS - cy);
+        if (name.startsWith("fire") && Math.random() < 0.05)
+          burstAt(tx * TS + 8, ty * TS, "ember", 1);
+      }
+    }
+  }
+  function drawWaterTint(cx, cy) {
+    for (const r of waterRects) {
+      ctx.fillStyle = "rgba(86,134,219,0.28)";
+      ctx.fillRect(Math.round(r.x - cx), Math.round(r.y - cy), r.w, r.h);
+    }
+  }
+  function drawHubBits(cx, cy) {
+    if (elevator) {
+      drawFrame("elevator", elevator.moving ? "closed" : "open",
+                elevator.x - cx, elevator.y - 26 - cy);
+    }
+    for (const d of doors) {
+      const locked = d.level > save.unlocked;
+      ctx.font = "7px monospace"; ctx.textAlign = "center";
+      ctx.fillStyle = locked ? "#7a6a8a" : "#ffe48a";
+      ctx.fillText(locked ? "LOCK" : "FL." + d.level, d.x + 8 - cx, d.y - 4 - cy);
+      ctx.textAlign = "left";
+    }
+  }
+  function drawPickups(cx, cy) {
+    for (const pk of pickups) {
+      if (pk.taken) continue;
+      const bob = Math.sin((Game.frame + pk.seed * 37) / 18) * 2;
+      const spr = PICKUP_SPRITE[pk.type];
+      if (!spr) continue;
+      if (pk.type === "babyswan")
+        drawFrame("babyswan", (Game.frame >> 4) % 2 ? "bob2" : "bob1", pk.x - cx, pk.y + bob - cy);
+      else drawFrame(spr[0], spr[1], pk.x - cx, pk.y + bob - cy);
+      if (pk.grace > 0 && (pk.grace >> 2) % 2) continue;
+    }
+  }
+  function drawParticles(cx, cy) {
+    for (const pt of particles) {
+      const def = PARTS[pt.type];
+      const f = def.frames[(pt.t >> 3) % def.frames.length];
+      if (pt.life < 8 && pt.life % 2 === 0) continue;
+      drawFrame("fx", f, pt.x - 8 - cx, pt.y - 8 - cy);
+    }
+  }
+  function drawFloaters(cx, cy) {
+    ctx.font = "8px monospace"; ctx.textAlign = "center";
+    for (const f of floaters) {
+      ctx.fillStyle = f.timer > 15 ? "#fff6d8" : "rgba(255,246,216,0.5)";
+      ctx.fillText(f.text, Math.round(f.x - cx), Math.round(f.y - cy));
+    }
+    ctx.textAlign = "left";
+  }
+
+  return { loadLevel, resetWorld, updatePickups, updateHubBits, updateFx, updateCamera,
+           draw, burstAt, addFloater, dropCostume, spawnTrophy, onFirePutOut,
+           onBossesCleared, levelClear,
+           get camX() { return camX; }, get camY() { return camY; },
+           get pickups() { return pickups; } };
+})();
