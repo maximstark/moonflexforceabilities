@@ -88,5 +88,327 @@
       "trophy"
     ],
     "file": "assets/hud.png"
+  },
+  "charmgirl": {
+    "frame_w": 30,
+    "frame_h": 28,
+    "frames": [
+      "idle",
+      "walk1",
+      "walk2",
+      "jump"
+    ],
+    "file": "assets/charmgirl.png"
+  },
+  "trex": {
+    "frame_w": 52,
+    "frame_h": 48,
+    "frames": [
+      "walk1",
+      "walk2",
+      "roar"
+    ],
+    "file": "assets/trex.png"
+  },
+  "mecha": {
+    "frame_w": 64,
+    "frame_h": 60,
+    "frames": [
+      "idle",
+      "walk1",
+      "walk2",
+      "fly1",
+      "fly2"
+    ],
+    "file": "assets/mecha.png"
+  },
+  "babyswan": {
+    "frame_w": 18,
+    "frame_h": 16,
+    "frames": [
+      "bob1",
+      "bob2"
+    ],
+    "file": "assets/babyswan.png"
+  },
+  "alligator": {
+    "frame_w": 48,
+    "frame_h": 26,
+    "frames": [
+      "catface",
+      "reveal",
+      "chomp"
+    ],
+    "file": "assets/alligator.png"
+  },
+  "fish": {
+    "frame_w": 14,
+    "frame_h": 10,
+    "frames": [
+      "swim1",
+      "swim2"
+    ],
+    "file": "assets/fish.png"
+  },
+  "turtles": {
+    "frame_w": 96,
+    "frame_h": 40,
+    "frames": [
+      "calm1",
+      "calm2"
+    ],
+    "file": "assets/turtles.png"
+  },
+  "boss_papa": {
+    "frame_w": 96,
+    "frame_h": 80,
+    "frames": [
+      "idle",
+      "attack",
+      "hurt"
+    ],
+    "file": "assets/boss_papa.png"
+  },
+  "boss_hogdog": {
+    "frame_w": 96,
+    "frame_h": 88,
+    "frames": [
+      "idle",
+      "attack",
+      "hurt"
+    ],
+    "file": "assets/boss_hogdog.png"
+  },
+  "gear": {
+    "frame_w": 28,
+    "frame_h": 28,
+    "frames": [
+      "goosefeet",
+      "visor",
+      "spoon_up",
+      "spoon_down",
+      "kirbycap"
+    ],
+    "file": "assets/gear.png"
+  },
+  "fx": {
+    "frame_w": 16,
+    "frame_h": 16,
+    "frames": [
+      "fireball1",
+      "fireball2",
+      "nut",
+      "mushroom",
+      "stink",
+      "ring1",
+      "ring2",
+      "beam",
+      "beamtip",
+      "splash1",
+      "splash2",
+      "spark1",
+      "spark2",
+      "feather",
+      "poof1",
+      "poof2",
+      "bubble",
+      "moonspark"
+    ],
+    "file": "assets/fx.png"
+  },
+  "items": {
+    "frame_w": 16,
+    "frame_h": 16,
+    "frames": [
+      "moon",
+      "beads",
+      "icon_fire",
+      "icon_pink",
+      "icon_tree",
+      "icon_kirby",
+      "pickup_mermaid",
+      "pickup_goosefeet",
+      "pickup_laser",
+      "pickup_spoon",
+      "baby_icon",
+      "charm_icon",
+      "phone"
+    ],
+    "file": "assets/items.png"
+  },
+  "tiles2": {
+    "frame_w": 16,
+    "frame_h": 16,
+    "frames": [
+      "water_surf1",
+      "water_surf2",
+      "water_deep",
+      "rock_top",
+      "rock_fill",
+      "seaweed1",
+      "seaweed2",
+      "coral",
+      "chest_closed",
+      "chest_open",
+      "cloud_top",
+      "cloud_fill",
+      "candy_top",
+      "candy_fill",
+      "gumdrop",
+      "spring1",
+      "spring2",
+      "night_grass",
+      "night_dirt",
+      "fire1",
+      "fire2",
+      "tree_trunk",
+      "tree_leaves",
+      "mush_block",
+      "fence",
+      "flower",
+      "sign"
+    ],
+    "file": "assets/tiles2.png"
+  },
+  "hub": {
+    "frame_w": 16,
+    "frame_h": 16,
+    "frames": [
+      "wall",
+      "paper",
+      "floor",
+      "window",
+      "door",
+      "bed_l",
+      "bed_r",
+      "shelf",
+      "lamp",
+      "plant",
+      "shaft",
+      "roof_l",
+      "roof_r"
+    ],
+    "file": "assets/hub.png"
+  },
+  "elevator": {
+    "frame_w": 24,
+    "frame_h": 32,
+    "frames": [
+      "closed",
+      "open"
+    ],
+    "file": "assets/elevator.png"
+  },
+  "sky_lake": {
+    "frame_w": 4,
+    "frame_h": 240,
+    "frames": [
+      "g"
+    ],
+    "file": "assets/sky_lake.png"
+  },
+  "sky_night": {
+    "frame_w": 4,
+    "frame_h": 240,
+    "frames": [
+      "g"
+    ],
+    "file": "assets/sky_night.png"
+  },
+  "sky_under": {
+    "frame_w": 4,
+    "frame_h": 240,
+    "frames": [
+      "g"
+    ],
+    "file": "assets/sky_under.png"
+  },
+  "sky_candy": {
+    "frame_w": 4,
+    "frame_h": 240,
+    "frames": [
+      "g"
+    ],
+    "file": "assets/sky_candy.png"
+  },
+  "sky_fever": {
+    "frame_w": 4,
+    "frame_h": 240,
+    "frames": [
+      "g"
+    ],
+    "file": "assets/sky_fever.png"
+  },
+  "sky_hub": {
+    "frame_w": 4,
+    "frame_h": 240,
+    "frames": [
+      "g"
+    ],
+    "file": "assets/sky_hub.png"
+  },
+  "sky_finale": {
+    "frame_w": 4,
+    "frame_h": 240,
+    "frames": [
+      "g"
+    ],
+    "file": "assets/sky_finale.png"
+  },
+  "par_lake": {
+    "frame_w": 192,
+    "frame_h": 110,
+    "frames": [
+      "s"
+    ],
+    "file": "assets/par_lake.png"
+  },
+  "par_night": {
+    "frame_w": 192,
+    "frame_h": 110,
+    "frames": [
+      "s"
+    ],
+    "file": "assets/par_night.png"
+  },
+  "par_under": {
+    "frame_w": 192,
+    "frame_h": 110,
+    "frames": [
+      "s"
+    ],
+    "file": "assets/par_under.png"
+  },
+  "par_candy": {
+    "frame_w": 192,
+    "frame_h": 110,
+    "frames": [
+      "s"
+    ],
+    "file": "assets/par_candy.png"
+  },
+  "par_fever": {
+    "frame_w": 192,
+    "frame_h": 110,
+    "frames": [
+      "s"
+    ],
+    "file": "assets/par_fever.png"
+  },
+  "par_hub": {
+    "frame_w": 192,
+    "frame_h": 110,
+    "frames": [
+      "s"
+    ],
+    "file": "assets/par_hub.png"
+  },
+  "par_finale": {
+    "frame_w": 192,
+    "frame_h": 110,
+    "frames": [
+      "s"
+    ],
+    "file": "assets/par_finale.png"
   }
 }
