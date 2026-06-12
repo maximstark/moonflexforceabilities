@@ -1,0 +1,92 @@
+{
+  "swan": {
+    "frame_w": 40,
+    "frame_h": 36,
+    "frames": [
+      "idle",
+      "walk1",
+      "walk2",
+      "jump",
+      "swim1",
+      "swim2"
+    ],
+    "file": "assets/swan.png"
+  },
+  "mermaid": {
+    "frame_w": 40,
+    "frame_h": 40,
+    "frames": [
+      "idle",
+      "swim1",
+      "swim2"
+    ],
+    "file": "assets/mermaid.png"
+  },
+  "boss_grumpis": {
+    "frame_w": 64,
+    "frame_h": 64,
+    "frames": [
+      "idle",
+      "attack",
+      "hurt"
+    ],
+    "file": "assets/boss_grumpis.png"
+  },
+  "frog": {
+    "frame_w": 26,
+    "frame_h": 22,
+    "frames": [
+      "idle",
+      "hop"
+    ],
+    "file": "assets/frog.png"
+  },
+  "cockroach": {
+    "frame_w": 30,
+    "frame_h": 16,
+    "frames": [
+      "scuttle1",
+      "scuttle2"
+    ],
+    "file": "assets/cockroach.png"
+  },
+  "dino": {
+    "frame_w": 32,
+    "frame_h": 30,
+    "frames": [
+      "walk1",
+      "walk2"
+    ],
+    "file": "assets/dino.png"
+  },
+  "tiles": {
+    "frame_w": 16,
+    "frame_h": 16,
+    "frames": [
+      "grass_top",
+      "dirt",
+      "edge_left",
+      "edge_right",
+      "platform",
+      "lilypad",
+      "cattail",
+      "lantern"
+    ],
+    "file": "assets/tiles.png"
+  },
+  "hud": {
+    "frame_w": 16,
+    "frame_h": 16,
+    "frames": [
+      "heart_full",
+      "heart_empty",
+      "happy_smiley",
+      "happy_seg",
+      "popcorn",
+      "star",
+      "treat",
+      "trophy"
+    ],
+    "file": "assets/hud.png"
+  }
+}
