@@ -54,6 +54,23 @@
     el.addEventListener("contextmenu", e => e.preventDefault());
   });
 
+  // scale the whole handheld to fill the viewport (height- or width-bound,
+  // whichever is tighter) keeping a small buffer, re-fit on resize/rotate
+  function fitToScreen() {
+    const c = document.getElementById("cabinet");
+    if (!c) return;
+    const buffer = 0.97;                         // small margin around the edges
+    const vw = document.documentElement.clientWidth;
+    const vh = document.documentElement.clientHeight;
+    const s = Math.min(vw * buffer / c.offsetWidth, vh * buffer / c.offsetHeight);
+    c.style.transform = "translate(-50%,-50%) scale(" + s + ")";
+  }
+  window.addEventListener("resize", fitToScreen);
+  window.addEventListener("orientationchange", fitToScreen);
+  fitToScreen();
+  requestAnimationFrame(fitToScreen);           // after first paint
+  setTimeout(fitToScreen, 250);                 // after late layout settles
+
   // belt-and-suspenders against mobile zoom/scroll gestures
   ["gesturestart", "gesturechange", "dblclick"].forEach(ev =>
     document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
