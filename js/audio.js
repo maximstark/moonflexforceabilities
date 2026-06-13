@@ -22,16 +22,19 @@ const AudioSys = (() => {
   }
 
   function init() {
-    if (ac) return;
-    ac = new (window.AudioContext || window.webkitAudioContext)();
-    master = ac.createGain(); master.gain.value = 0.55; master.connect(ac.destination);
-    musicBus = ac.createGain(); musicBus.gain.value = 0.42; musicBus.connect(master);
-    sfxBus = ac.createGain(); sfxBus.gain.value = 0.9; sfxBus.connect(master);
-    started = true;
-    if (songName) playSong(songName, true);
+    if (!ac) {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      master = ac.createGain(); master.gain.value = muted ? 0 : 0.55; master.connect(ac.destination);
+      musicBus = ac.createGain(); musicBus.gain.value = 0.42; musicBus.connect(master);
+      sfxBus = ac.createGain(); sfxBus.gain.value = 0.9; sfxBus.connect(master);
+      started = true;
+    }
+    if (ac.state === "suspended") ac.resume();        // mobile: contexts start suspended
+    if (songName && !song) playSong(songName, true);  // start the pending track once live
   }
   function toggleMute() {
     muted = !muted;
+    if (ac && ac.state === "suspended") ac.resume();  // a tap on mute also wakes audio
     if (master) master.gain.value = muted ? 0 : 0.55;
     return muted;
   }
