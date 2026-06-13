@@ -2,15 +2,140 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>MoonFlexForceAbilities</title>
 <style>
-  html, body { margin:0; padding:0; background:#16131f; height:100%; overflow:hidden; }
-  body { display:flex; align-items:center; justify-content:center; }
-  canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+  :root{
+    --shell:#d7d4dd; --shell-d:#b7b2c4; --shell-l:#efedf4;
+    --bezel:#3a3550; --screen:#1d2b1e; --accent:#8a2c6a; --accent2:#3a3550;
+    --btn:#2a2535; --btn-face:#41384f; --led:#ff5a4d;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; height:100%; background:#15121d;
+    font-family:"Courier New",monospace; overflow:hidden;
+    -webkit-user-select:none; user-select:none; touch-action:none; }
+  body{ display:flex; align-items:center; justify-content:center; padding:6px; }
+
+  /* the handheld */
+  #cabinet{
+    display:flex; flex-direction:column;
+    width:min(440px, 96vw); max-height:98vh;
+    padding:14px 14px 18px; gap:10px;
+    background:linear-gradient(160deg,var(--shell-l),var(--shell) 40%,var(--shell-d));
+    border-radius:16px 16px 46px 16px;
+    box-shadow: inset 0 2px 0 #fff8, inset 0 -6px 14px #0003, 0 14px 40px #000a;
+  }
+  #brand{ display:flex; align-items:center; gap:8px; color:#5a5470;
+    font-weight:bold; letter-spacing:.5px; font-size:11px; padding:0 2px; }
+  #brand .led{ width:8px; height:8px; border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, #ff9b91, var(--led));
+    box-shadow:0 0 6px var(--led); }
+  #brand .tag{ margin-left:auto; font-size:8px; font-weight:normal; color:#7a7490;
+    letter-spacing:.3px; }
+
+  /* screen */
+  #bezel{
+    background:linear-gradient(160deg,#46415f,var(--bezel));
+    border-radius:10px 10px 22px 10px; padding:14px 22px;
+    box-shadow: inset 0 3px 10px #000b;
+  }
+  #screen{
+    position:relative; width:100%; aspect-ratio:384/240;
+    background:var(--screen); border-radius:4px; overflow:hidden;
+    box-shadow: inset 0 0 0 2px #0007;
+  }
+  #game{ position:absolute; inset:0; width:100%; height:100%;
+    image-rendering:pixelated; image-rendering:crisp-edges; display:block; }
+  #bezel .sublabel{ text-align:center; color:#cdbfe0; font-size:8px;
+    letter-spacing:3px; margin-top:7px; opacity:.8; }
+
+  /* controls */
+  #controls{ position:relative; display:grid;
+    grid-template-columns:1fr 1fr; align-items:center; gap:8px;
+    padding:6px 4px 0; min-height:150px; }
+
+  /* d-pad */
+  #dpad{ position:relative; width:118px; height:118px; justify-self:center; }
+  #dpad .pad{ position:absolute; background:linear-gradient(#4a4258,#241f30);
+    box-shadow: inset 0 2px 0 #ffffff22, 0 3px 4px #0006; }
+  #dpad .pad:active, #dpad .pad.on{ background:#1b1726; }
+  #dpad .up   { left:40px; top:0;    width:38px; height:42px; border-radius:7px 7px 0 0; }
+  #dpad .down { left:40px; bottom:0; width:38px; height:42px; border-radius:0 0 7px 7px; }
+  #dpad .left { left:0;  top:40px;   width:42px; height:38px; border-radius:7px 0 0 7px; }
+  #dpad .right{ right:0; top:40px;   width:42px; height:38px; border-radius:0 7px 7px 0; }
+  #dpad .hub  { left:40px; top:40px; width:38px; height:38px;
+    background:linear-gradient(#3a3346,#211c2d); }
+  #dpad .pad span{ position:absolute; inset:0; display:flex; align-items:center;
+    justify-content:center; color:#cbb9e0; font-size:13px; }
+
+  /* a/b */
+  #ab{ justify-self:center; display:flex; gap:16px; align-items:flex-end;
+    transform:rotate(-18deg); }
+  .face{ width:52px; height:52px; border-radius:50%; color:#ffd9ee;
+    font-weight:bold; font-size:16px; border:none;
+    background:radial-gradient(circle at 35% 30%, #b8407f, var(--accent));
+    box-shadow: inset 0 2px 0 #ffffff44, 0 4px 6px #0007; }
+  .face.lift{ transform:translateY(-16px); }
+  .face:active, .face.on{ background:radial-gradient(circle at 35% 30%, #7c1f53, #5a1740);
+    box-shadow: inset 0 2px 5px #0008; }
+
+  /* start / select */
+  #startselect{ grid-column:1 / -1; justify-self:center; display:flex; gap:18px;
+    margin-top:4px; }
+  .pill{ color:#efe9f6; font-size:9px; letter-spacing:1px; font-weight:bold;
+    padding:6px 14px; border:none; border-radius:10px;
+    background:linear-gradient(#4a4258,#2a2436); transform:rotate(-18deg);
+    box-shadow: inset 0 1px 0 #ffffff33, 0 3px 4px #0006; }
+  .pill:active, .pill.on{ background:#1b1726; }
+
+  /* corner chips (mute / shed) sit on the shell edge */
+  #chips{ position:absolute; top:-2px; right:2px; display:flex; gap:6px; }
+  .chip{ font-size:8px; font-weight:bold; color:#5a5470; background:#0000;
+    border:1px solid #8884; border-radius:6px; padding:3px 6px; letter-spacing:.5px; }
+  .chip:active, .chip.on{ color:#15121d; background:#cbb9e0; }
+
+  /* keyboard hint, desktop only */
+  #kbd{ position:absolute; bottom:-2px; left:0; right:0; text-align:center;
+    font-size:8px; color:#7a7490; }
+
+  @media (pointer:fine){ /* mouse users get a smaller, tidy unit */
+    #controls{ min-height:140px; }
+  }
 </style>
 </head>
 <body>
-<canvas id="game"></canvas>
+  <div id="cabinet">
+    <div id="brand"><span class="led"></span>NEMTENBO<span class="tag">DOT-MATRIX · STELLAR SOUND</span></div>
+    <div id="bezel">
+      <div id="screen"><canvas id="game"></canvas></div>
+      <div class="sublabel">MOONFLEX FORCE ABILITIES</div>
+    </div>
+    <div id="controls">
+      <div id="chips">
+        <button class="chip" data-btn="mute">♪ MUTE</button>
+        <button class="chip" data-btn="shed">C SHED</button>
+      </div>
+      <div id="dpad">
+        <div class="pad up"    data-btn="up"><span>▲</span></div>
+        <div class="pad left"  data-btn="left"><span>◀</span></div>
+        <div class="pad hub"></div>
+        <div class="pad right" data-btn="right"><span>▶</span></div>
+        <div class="pad down"  data-btn="down"><span>▼</span></div>
+      </div>
+      <div id="ab">
+        <button class="face" data-btn="b">B</button>
+        <button class="face lift" data-btn="a">A</button>
+      </div>
+      <div id="startselect">
+        <button class="pill" data-btn="select">SELECT</button>
+        <button class="pill" data-btn="start">START</button>
+      </div>
+      <div id="kbd">keyboard works too — WASD/arrows · space · X · enter</div>
+    </div>
+  </div>
+
 <!-- buildless on purpose: plain scripts, load order matters, no bundler -->
 <script src="js/tuning.js"></script>
 <script src="js/audio.js"></script>
@@ -22,5 +147,6 @@
 <script src="js/world.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/main.js"></script>
+<script src="js/shell.js"></script>
 </body>
 </html>

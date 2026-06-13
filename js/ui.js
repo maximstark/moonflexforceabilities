@@ -95,18 +95,21 @@ const UI = (() => {
     drawFrame("swan", (Game.frame >> 4) % 2 ? "walk1" : "idle", T.VIEW_W / 2 - 46, 112 + wob);
     drawFrame("charmgirl", (Game.frame >> 4) % 2 ? "walk2" : "idle", T.VIEW_W / 2 + 14, 118 - wob);
     ctx.fillStyle = "#fff6d8"; ctx.font = "9px monospace";
-    ctx.fillText("WASD/ARROWS MOVE   SPACE JUMP (TAP MIDAIR: FLAP)", T.VIEW_W / 2, 168);
-    ctx.fillText("X ACTION   C SHED COSTUME   SHIFT/E THE PHONE   M MUTE", T.VIEW_W / 2, 180);
+    ctx.fillText("MOVE  WASD / ARROWS", T.VIEW_W / 2, 154);
+    ctx.fillText("JUMP  SPACE   ·   tap jump in the air to FLAP", T.VIEW_W / 2, 166);
+    ctx.fillText("X  ACTION     C  SHED     SHIFT/E  THE PHONE", T.VIEW_W / 2, 178);
+    ctx.fillStyle = "#ffd9f0";
+    ctx.fillText("AT HOME:  X up  ·  ↓ down  ·  ↓ at a door to dive in", T.VIEW_W / 2, 190);
     ctx.fillStyle = "#ffb0c8";
-    ctx.fillText("RIGHT-SHIFT: CHARMGIRL JOINS (P2 = ARROWS + RSHIFT/RCTRL)", T.VIEW_W / 2, 192);
+    ctx.fillText("RIGHT-SHIFT: CHARMGIRL JOINS     ·     M  MUTE", T.VIEW_W / 2, 202);
     if ((Game.frame >> 4) % 2) {
       ctx.fillStyle = "#ffe48a"; ctx.font = "11px monospace";
-      ctx.fillText("PRESS ENTER", T.VIEW_W / 2, 212);
+      ctx.fillText("PRESS ENTER", T.VIEW_W / 2, 220);
     }
     if (save.highScores.length) {
       ctx.font = "8px monospace"; ctx.fillStyle = "#e8d8f8";
       const h = save.highScores[0];
-      ctx.fillText("BEST DREAMER: " + h.name + "  " + h.score, T.VIEW_W / 2, 228);
+      ctx.fillText("BEST DREAMER: " + h.name + "  " + h.score, T.VIEW_W / 2, 234);
     }
     ctx.textAlign = "left";
   }

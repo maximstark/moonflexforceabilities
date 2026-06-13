@@ -177,27 +177,56 @@ const World = (() => {
   }
 
   /* ---------------- doors & elevator (the hub) ---------------- */
+  // which stop is this height standing at? (-1 if none)
+  function stopAt(e, feet) {
+    for (let i = 0; i < e.stops.length; i++)
+      if (Math.abs(feet - e.stops[i]) <= 3) return i;
+    return -1;
+  }
   function updateHubBits() {
     if (elevator) {
       const e = elevator;
+      const bandL = e.x - 6, bandR = e.x + e.w + 6;   // ride/call zone around the shaft
       if (e.moving) {
         const ty = e.stops[e.target];
-        e.y += clamp(ty - e.y, -2.2, 2.2);
+        e.y += clamp(ty - e.y, -2.6, 2.6);
         if (Math.abs(e.y - ty) < 1) { e.y = ty; e.moving = false; AudioSys.sfx("ding"); }
       }
-      // ride: stand on the car
       for (const p of players) {
         if (p.dead) continue;
-        const onCar = p.y + p.h >= e.y - 2 && p.y + p.h <= e.y + 8 &&
-                      p.x + p.w > e.x && p.x < e.x + e.w;
-        if (onCar) {
-          if (e.moving) { p.y = e.y - p.h; p.vy = 0; p.grounded = true; }
-          else if (pads[p.idx].pressed.has("action") && e.target < e.stops.length - 1) {
-            e.target++; e.moving = true; AudioSys.sfx("door");
-          } else if (pads[p.idx].held.down && pads[p.idx].pressed.has("jump") === false &&
-                     pads[p.idx].pressed.has("down") && e.target > 0) {
-            e.target--; e.moving = true; AudioSys.sfx("door");
-          } else if (!e.moving) { if (p.y + p.h !== e.y) { p.y = e.y - p.h; } p.vy = Math.min(p.vy, 0); p.grounded = true; }
+        const pad = pads[p.idx];
+        const feet = p.y + p.h;
+        if (!(p.x + p.w > bandL && p.x < bandR)) continue;   // not in the shaft column
+
+        // riding the car
+        if (feet >= e.y - 3 && feet <= e.y + 8) {
+          p.y = e.y - p.h; p.vy = Math.min(p.vy, 0); p.grounded = true;
+          if (!e.moving) {
+            if (pad.pressed.has("action") && e.target < e.stops.length - 1) {
+              e.target++; e.moving = true; AudioSys.sfx("door");
+            } else if (pad.pressed.has("down") && e.target > 0) {
+              e.target--; e.moving = true; AudioSys.sfx("door");
+            }
+          }
+          continue;
+        }
+
+        // an empty shaft is never a pit: catch a faller on the floor below
+        if (!p.grounded && p.vy > 0) {
+          const prevFeet = feet - p.vy;
+          for (const s of e.stops)
+            if (Math.abs(s - e.y) > 1 && prevFeet <= s + 1 && feet >= s) {
+              p.y = s - p.h; p.vy = 0; p.grounded = true;
+              break;
+            }
+        }
+
+        // standing at a landing: press action to summon the car here
+        if (p.grounded) {
+          const here = stopAt(e, p.y + p.h);
+          if (here >= 0 && Math.abs(e.stops[here] - e.y) > 1 && pad.pressed.has("action")) {
+            e.target = here; e.moving = true; AudioSys.sfx("door");
+          }
         }
       }
     }
@@ -287,6 +316,7 @@ const World = (() => {
     drawProjectiles(cx, cy);
     drawParticles(cx, cy);
     drawFloaters(cx, cy);
+    drawHubPrompts(cx, cy);
     return { cx, cy };
   }
   function drawTiles(cx, cy) {
@@ -315,8 +345,11 @@ const World = (() => {
   }
   function drawHubBits(cx, cy) {
     if (elevator) {
-      drawFrame("elevator", elevator.moving ? "closed" : "open",
-                elevator.x - cx, elevator.y - 26 - cy);
+      const e = elevator;
+      // shut doors at every floor; the doorway is open only where the car waits
+      for (const s of e.stops)
+        if (Math.abs(s - e.y) > 1) drawFrame("elevator", "closed", e.x - cx, s - 26 - cy);
+      drawFrame("elevator", e.moving ? "closed" : "open", e.x - cx, e.y - 26 - cy);
     }
     for (const d of doors) {
       const locked = d.level > save.unlocked;
@@ -325,6 +358,37 @@ const World = (() => {
       ctx.fillText(locked ? "LOCK" : "FL." + d.level, d.x + 8 - cx, d.y - 4 - cy);
       ctx.textAlign = "left";
     }
+  }
+  // contextual hints, drawn on top of the cast so the player never hides them
+  function drawHubPrompts(cx, cy) {
+    const p = players[0];
+    if (!p || p.dead) return;
+    const feet = p.y + p.h;
+    if (elevator) {
+      const e = elevator;
+      const inBand = p.x + p.w > e.x - 6 && p.x < e.x + e.w + 6;
+      const onCar = inBand && feet >= e.y - 3 && feet <= e.y + 8;
+      if (onCar && !e.moving) {
+        const up = e.target < e.stops.length - 1, dn = e.target > 0;
+        const msg = (up ? "X ▲" : "") + (up && dn ? "   " : "") + (dn ? "↓ ▼" : "");
+        if (msg) drawPrompt(msg, e.x + e.w / 2, e.y - 30, cx, cy);
+      } else if (inBand && p.grounded && !e.moving) {
+        drawPrompt("X ↑ CALL", e.x + e.w / 2, e.y - 30, cx, cy);
+      }
+    }
+    if (p.grounded) for (const d of doors) {
+      const near = Math.abs((p.x + p.w / 2) - (d.x + 8)) < 12 &&
+                   Math.abs(feet - (d.y + 16)) < 20;
+      if (near) drawPrompt(d.level > save.unlocked ? "LOCKED" : "↓ DIVE IN", d.x + 8, d.y - 18, cx, cy);
+    }
+  }
+  function drawPrompt(text, wx, wy, cx, cy) {
+    ctx.font = "7px monospace"; ctx.textAlign = "center";
+    const w = ctx.measureText(text).width + 8;
+    const x = Math.round(wx - cx), y = Math.round(wy - cy + Math.sin(Game.frame / 12));
+    ctx.fillStyle = "rgba(20,12,28,0.82)"; ctx.fillRect(x - w / 2, y - 9, w, 11);
+    ctx.fillStyle = "#ffe48a"; ctx.fillText(text, x, y - 1);
+    ctx.textAlign = "left";
   }
   function drawPickups(cx, cy) {
     for (const pk of pickups) {

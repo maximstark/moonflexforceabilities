@@ -42,7 +42,7 @@ into any world (1-6 or `hub`).
 | The invisible phone (hold to see it; transform in water) | `Shift` / `E` | `/` |
 | Ground pound (with Giant Goose Feet) | `↓` in mid-air | same |
 | Drop through platforms / enter doors / root (Tree power) | `↓` (+jump on platforms) | same |
-| Elevator | stand on car: `X` up, `↓` down | same |
+| Elevator | by the shaft: `X` to call/ride up, `↓` down (it can't strand you) | same |
 | Pause | `Esc` | — |
 
 ## The dream, floor by floor
