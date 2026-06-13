@@ -19,6 +19,13 @@ const Overworld = (() => {
   let idx = 1, tx = NODES[1].x, ty = NODES[1].y;
   let moving = false, from = 1, to = 1, mt = 0, fr = 0;
 
+  // ---- top-down lake scenery (static, deterministic) ----
+  const TAU = Math.PI * 2;
+  const DEEP    = [[58,54,42],[300,46,52],[206,210,58],[118,206,38],[348,212,40]];
+  const PADS    = [[64,116],[332,104],[158,78],[252,58],[108,214],[300,206],[196,120],[40,150]];
+  const SHIMMER = Array.from({ length: 36 }, (_, i) => ({ x: (i*97)%384, y: (i*53)%240, p: i*9 }));
+  const RIPPLES = [[82,92],[262,98],[150,200],[330,172],[200,150]].map(([x,y],i) => ({ x, y, p: i*16 }));
+
   const lvl = n => (n.id === "home" ? 0 : n.id);               // home is always reachable
   const nodeOpen = i => NODES[i].id === "home" || NODES[i].id <= save.unlocked;
   // path i links node i and i+1; open once the higher world on it is unlocked
@@ -61,8 +68,8 @@ const Overworld = (() => {
 
   /* ---------------- draw ---------------- */
   function draw() {
-    drawStretched("sky_hub", "g", 0, 0, T.VIEW_W, T.VIEW_H);
-    if (sheets["par_hub"]) for (let x = 0; x < T.VIEW_W; x += 192) drawFrame("par_hub", "s", x, T.VIEW_H - 90);
+    drawWater();
+    for (const n of NODES) drawIsland(n);
     for (let i = 0; i < NODES.length - 1; i++) drawPath(NODES[i], NODES[i + 1], pathOpen(i));
     for (let i = 0; i < NODES.length; i++) drawNode(NODES[i], nodeOpen(i), i === idx);
     const bob = Math.sin(fr / 8) * 1.5;
@@ -100,6 +107,35 @@ const Overworld = (() => {
     ctx.font = "7px monospace"; ctx.textAlign = "center"; ctx.fillStyle = "#241a30";
     ctx.fillText(n.id === "home" ? "H" : open ? String(n.id) : "×", x, y + 2);
     ctx.textAlign = "left";
+  }
+  function drawWater() {
+    ctx.fillStyle = "#3f86b5"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);                       // lake
+    ctx.fillStyle = "rgba(36,84,124,0.40)"; ctx.fillRect(0, T.VIEW_H * 0.58, T.VIEW_W, T.VIEW_H * 0.42);
+    ctx.fillStyle = "rgba(32,76,116,0.55)";                                                  // deep patches
+    for (const [x, y, r] of DEEP) { ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.62, 0, 0, TAU); ctx.fill(); }
+    ctx.strokeStyle = "#cfeaf6"; ctx.lineWidth = 1;                                          // ripple rings
+    for (const rp of RIPPLES) {
+      const t = ((fr + rp.p) % 90) / 90;
+      ctx.globalAlpha = 0.5 * (1 - t);
+      ctx.beginPath(); ctx.ellipse(rp.x, rp.y, 2 + t * 8, 1 + t * 4, 0, 0, TAU); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "rgba(206,238,250,0.75)";                                                // sun shimmer
+    for (const s of SHIMMER) if (((fr + s.p) >> 4) % 3 === 0)
+      ctx.fillRect(s.x, s.y + Math.round(Math.sin((fr + s.p) / 22)), 3, 1);
+    for (const [x, y] of PADS) drawPad(x, y);
+  }
+  function drawPad(x, y) {
+    ctx.fillStyle = "#3c8038"; ctx.beginPath(); ctx.ellipse(x + 1, y + 1, 5, 4, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = "#5fae54"; ctx.beginPath(); ctx.ellipse(x, y, 5, 4, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = "#3c8038"; ctx.fillRect(x - 1, y - 1, 2, 2);
+  }
+  function drawIsland(n) {
+    const x = n.x, y = n.y;
+    ctx.fillStyle = "rgba(36,76,116,0.5)"; ctx.beginPath(); ctx.ellipse(x, y + 4, 18, 11, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = "#e6d29a"; ctx.beginPath(); ctx.ellipse(x, y + 2, 16, 10, 0, 0, TAU); ctx.fill();   // sand
+    ctx.fillStyle = "#6fb049"; ctx.beginPath(); ctx.ellipse(x, y, 13, 8, 0, 0, TAU); ctx.fill();        // grass
+    ctx.fillStyle = "#8fce63"; ctx.beginPath(); ctx.ellipse(x - 2, y - 2, 8, 5, 0, 0, TAU); ctx.fill(); // shine
   }
   function drawTrophy() {
     drawStretched("sky_hub", "g", 0, 0, T.VIEW_W, T.VIEW_H);
