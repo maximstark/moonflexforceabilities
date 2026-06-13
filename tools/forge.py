@@ -9,7 +9,7 @@ To upgrade art for v2: redraw any PNG at the SAME cell size; no code changes.
 from PIL import Image, ImageDraw
 import numpy as np, json, os, math
 
-OUT = "/home/claude/assets"; os.makedirs(OUT, exist_ok=True)
+OUT = "assets"; os.makedirs(OUT, exist_ok=True)
 T = (0, 0, 0, 0); OUTLINE = (38, 26, 53, 255)
 
 WHITE=(245,244,250,255); LAV=(201,187,226,255); LAV2=(170,152,202,255)
@@ -46,23 +46,30 @@ def heart(d,x0,y0,w,h,col):
 
 def swan_frames():
     W,H=40,36
+    HI=(255,255,255,255); BLUSH=(247,176,198,255)
     def neck(d,dx=0,dy=0,low=0):
         p0=(22,18+low);p1=(24,6+low);p2=(31+dx,5+dy+low)
         for t in [i/28 for i in range(29)]:
             x=(1-t)**2*p0[0]+2*(1-t)*t*p1[0]+t*t*p2[0]
             y=(1-t)**2*p0[1]+2*(1-t)*t*p1[1]+t*t*p2[1]
             d.ellipse([x-2,y-2,x+2,y+2],fill=WHITE)
+            d.point((x-1,y),fill=HI)                                 # soft sheen down the neck
     def body(d,low=0):
         d.ellipse([5,17+low,31,31+low],fill=WHITE); d.ellipse([7,24+low,30,32+low],fill=LAV)
         d.ellipse([10,27+low,27,32+low],fill=LAV2); d.polygon([(7,18+low),(3,13+low),(10,19+low)],fill=WHITE)
     def head(d,dx=0,dy=0,low=0):
         d.ellipse([28+dx,1+dy+low,37+dx,9+dy+low],fill=WHITE)
+        d.ellipse([29+dx,2+dy+low,33+dx,5+dy+low],fill=HI)              # forehead shine
         d.polygon([(36+dx,4+dy+low),(40+dx,5+dy+low),(36+dx,7+dy+low)],fill=BEAK)
-        d.point((38+dx,5+dy+low),fill=BEAKS); d.rectangle([32+dx,3+dy+low,33+dx,4+dy+low],fill=EYE)
+        d.point((38+dx,5+dy+low),fill=BEAKS)
+        d.ellipse([30+dx,6+dy+low,32+dx,8+dy+low],fill=BLUSH)           # rosy cheek
+        d.rectangle([32+dx,3+dy+low,33+dx,4+dy+low],fill=EYE)
+        d.point((33+dx,3+dy+low),fill=EYEW)                            # eye catchlight
     def wing(d,low=0):
         d.ellipse([9,18+low,26,28+low],fill=WHITE)
         for x in [13,17,21]: d.line([(x,20+low),(x+3,26+low)],fill=LAV,width=1)
         d.line([(11,22+low),(24,22+low)],fill=LAV,width=1)
+        d.line([(11,20+low),(23,20+low)],fill=HI)                      # wing top highlight
     def leg(d,x,fx=0,lift=0):
         d.line([(x,30),(x,33-lift)],fill=FOOT,width=1)
         d.line([(x-2+fx,33-lift),(x+2+fx,33-lift)],fill=FOOT,width=1); d.point((x+fx,33-lift),fill=FOOTS)
