@@ -113,7 +113,7 @@
     const k = document.getElementById("kbd");
     if (!k) return;
     if (matchMedia("(pointer:fine)").matches)
-      k.textContent = "keyboard: WASD / arrows · space · X · C · shift — or use the buttons";
+      k.textContent = "keyboard: WASD / arrows · space · X · shift — or use the buttons";
     else k.style.display = "none";
   })();
   window.addEventListener("resize", fitToScreen);

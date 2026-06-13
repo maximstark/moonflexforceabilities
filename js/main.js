@@ -9,7 +9,7 @@ const Game = {
   state: "loading", stateTimer: 0, frame: 0,
   levelId: null, score: 0, stars: 0, happiness: 100, babiesThisLevel: 0,
   shake: 0, hitstop: 0, toast: 0, iris: 0,
-  pauseIdx: 0, chooserIdx: 0, chooserFor: null,
+  pauseIdx: 0, chooserIdx: 0, chooserFor: null, confirmErase: false,
   card: null, cardQueue: [],
   pendingLevel: null,
 
@@ -97,17 +97,23 @@ function update() {
       break;
     }
 
-    case "pause":
-      if (menuPad.pressed.has("up")) Game.pauseIdx = (Game.pauseIdx + 3) % 4;
-      if (menuPad.pressed.has("down")) Game.pauseIdx = (Game.pauseIdx + 1) % 4;
-      if (menuPad.pressed.has("pause")) Game.state = "play";
+    case "pause": {
+      const nopts = UI.PAUSE_OPTS.length;
+      if (menuPad.pressed.has("up")) { Game.pauseIdx = (Game.pauseIdx + nopts - 1) % nopts; Game.confirmErase = false; }
+      if (menuPad.pressed.has("down")) { Game.pauseIdx = (Game.pauseIdx + 1) % nopts; Game.confirmErase = false; }
+      if (menuPad.pressed.has("pause")) { Game.state = "play"; Game.confirmErase = false; }
       if (menuPad.pressed.has("confirm")) {
         if (Game.pauseIdx === 0) Game.state = "play";
         else if (Game.pauseIdx === 1) { World.resetWorld(Game.levelId); Game.state = "play"; }
         else if (Game.pauseIdx === 2) Game.enterLevel("hub");
-        else AudioSys.toggleMute();
+        else if (Game.pauseIdx === 3) AudioSys.toggleMute();
+        else if (Game.pauseIdx === 4) {
+          if (Game.confirmErase) { eraseSave(); Game.confirmErase = false; Game.state = "title"; AudioSys.playSong("title"); }
+          else Game.confirmErase = true;
+        }
       }
       break;
+    }
 
     case "chooser":
       UI.updateChooser();

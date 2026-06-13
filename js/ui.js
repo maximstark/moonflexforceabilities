@@ -102,7 +102,7 @@ const UI = (() => {
     ctx.fillStyle = "#fff6d8"; ctx.font = "9px monospace";
     ctx.fillText("MOVE  WASD / ARROWS", T.VIEW_W / 2, 154);
     ctx.fillText("JUMP  SPACE   ·   tap jump in the air to FLAP", T.VIEW_W / 2, 166);
-    ctx.fillText("X  ACTION     C  SHED     SHIFT/E  THE PHONE", T.VIEW_W / 2, 178);
+    ctx.fillText("X  ACTION        SHIFT/E  THE PHONE", T.VIEW_W / 2, 178);
     ctx.fillStyle = "#ffd9f0";
     ctx.fillText("AT HOME:  X up  ·  ↓ down  ·  ↓ at a door to dive in", T.VIEW_W / 2, 190);
     ctx.fillStyle = "#ffb0c8";
@@ -120,7 +120,7 @@ const UI = (() => {
   }
 
   /* ---------------- pause ---------------- */
-  const PAUSE_OPTS = ["KEEP DREAMING", "RESTART THIS DREAM", "WAKE UP (HOME)", "MUTE MUSIC"];
+  const PAUSE_OPTS = ["KEEP DREAMING", "RESTART THIS DREAM", "WAKE UP (HOME)", "MUTE MUSIC", "ERASE ALL DREAMS"];
   function drawPause() {
     ctx.fillStyle = "rgba(12,10,20,0.6)"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
     ctx.textAlign = "center";
@@ -129,8 +129,11 @@ const UI = (() => {
     ctx.font = "9px monospace";
     PAUSE_OPTS.forEach((o, i) => {
       const sel = i === Game.pauseIdx;
-      ctx.fillStyle = sel ? "#ffe48a" : "#b9b2d8";
-      ctx.fillText((sel ? "> " : "") + (i === 3 && AudioSys.muted ? "UNMUTE MUSIC" : o), T.VIEW_W / 2, 100 + i * 16);
+      let label = o;
+      if (i === 3 && AudioSys.muted) label = "UNMUTE MUSIC";
+      if (i === 4 && Game.confirmErase) label = "REALLY ERASE? — CONFIRM";
+      ctx.fillStyle = i === 4 ? (sel ? "#ff9a9a" : "#c08a9a") : (sel ? "#ffe48a" : "#b9b2d8");
+      ctx.fillText((sel ? "> " : "") + label, T.VIEW_W / 2, 100 + i * 16);
     });
     ctx.textAlign = "left";
   }

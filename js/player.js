@@ -137,7 +137,6 @@ function updateLand(p, pad, dir) {
   }
 
   // actions
-  if (pad.pressed.has("shed")) shedCostume(p);
   if (pad.pressed.has("action")) doAttack(p, pad);
   if (p.rooted && p.power === "tree" && pad.held.action && p.atkCD <= 0) shootNut(p);
   // plant roots
@@ -176,7 +175,6 @@ function updateSwim(p, pad, dir, waterRect) {
   p.vy = Math.min(p.vy + T.WATER_GRAVITY, T.WATER_MAX_FALL);
   p.coyote = 0; p.jumpBuffer = 0; p.jumping = false; p.flaps = 0; p.pounding = false;
   if (pad.pressed.has("action")) doAttack(p, pad);
-  if (pad.pressed.has("shed")) shedCostume(p);
 }
 
 function updateMecha(p, pad) {

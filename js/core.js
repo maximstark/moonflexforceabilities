@@ -114,6 +114,10 @@ function loadSave() {
 function writeSave() {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* private mode: in-memory only */ }
 }
+function eraseSave() {
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
+  save = { unlocked: 1, babies: [false,false,false,false,false], highScores: [], best: 0 };
+}
 
 /* ---------------- helpers ---------------- */
 const overlaps = (a, b) =>

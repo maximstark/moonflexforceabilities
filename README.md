@@ -38,7 +38,6 @@ into any world (1-6 or `hub`).
 | Move | WASD / arrows (solo) | arrows |
 | Jump / swim stroke / mid-air flap (×2) | `Space` / `W` / `↑` | `R-Shift` / `↑` |
 | Action (laser, fire, spoon, nuts, pink) | `X` / `F` | `R-Ctrl` |
-| Shed top costume ("jump out of it") | `C` / `Q` | `.` |
 | The invisible phone (hold to see it; transform in water) | `Shift` / `E` | `/` |
 | Ground pound (with Giant Goose Feet) | `↓` in mid-air | same |
 | Drop through platforms / enter doors / root (Tree power) | `↓` (+jump on platforms) | same |
