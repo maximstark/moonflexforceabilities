@@ -370,10 +370,10 @@ const World = (() => {
       const onCar = inBand && feet >= e.y - 3 && feet <= e.y + 8;
       if (onCar && !e.moving) {
         const up = e.target < e.stops.length - 1, dn = e.target > 0;
-        const msg = (up ? "X ▲" : "") + (up && dn ? "   " : "") + (dn ? "↓ ▼" : "");
+        const msg = (up ? "X/B ▲" : "") + (up && dn ? "   " : "") + (dn ? "↓ ▼" : "");
         if (msg) drawPrompt(msg, e.x + e.w / 2, e.y - 30, cx, cy);
       } else if (inBand && p.grounded && !e.moving) {
-        drawPrompt("X ↑ CALL", e.x + e.w / 2, e.y - 30, cx, cy);
+        drawPrompt("X/B  CALL", e.x + e.w / 2, e.y - 30, cx, cy);
       }
     }
     if (p.grounded) for (const d of doors) {

@@ -98,9 +98,10 @@
     border:1px solid #8884; border-radius:6px; padding:3px 6px; letter-spacing:.5px; }
   .chip:active, .chip.on{ color:#15121d; background:#cbb9e0; }
 
-  /* keyboard hint, desktop only */
-  #kbd{ position:absolute; bottom:-2px; left:0; right:0; text-align:center;
-    font-size:8px; color:#7a7490; }
+  /* control hint — sits on the dark page UNDER the handheld, legible */
+  #kbd{ position:fixed; left:0; right:0; bottom:7px; text-align:center;
+    font-size:12px; color:#b3abce; letter-spacing:.3px; padding:0 10px;
+    pointer-events:none; text-shadow:0 1px 2px #000a; }
 
   @media (pointer:fine){ /* mouse users get a smaller, tidy unit */
     #controls{ min-height:140px; }
@@ -120,11 +121,11 @@
         <button class="chip" data-btn="shed">C SHED</button>
       </div>
       <div id="dpad">
-        <div class="pad up"    data-btn="up"><span>▲</span></div>
-        <div class="pad left"  data-btn="left"><span>◀</span></div>
+        <div class="pad up"><span>▲</span></div>
+        <div class="pad left"><span>◀</span></div>
         <div class="pad hub"></div>
-        <div class="pad right" data-btn="right"><span>▶</span></div>
-        <div class="pad down"  data-btn="down"><span>▼</span></div>
+        <div class="pad right"><span>▶</span></div>
+        <div class="pad down"><span>▼</span></div>
       </div>
       <div id="ab">
         <button class="face" data-btn="b">B</button>
@@ -134,9 +135,9 @@
         <button class="pill" data-btn="select">SELECT</button>
         <button class="pill" data-btn="start">START</button>
       </div>
-      <div id="kbd">keyboard works too — WASD/arrows · space · X · enter</div>
     </div>
   </div>
+  <div id="kbd">keyboard: WASD / arrows · space · X · C · shift — or use the buttons</div>
 
 <!-- buildless on purpose: plain scripts, load order matters, no bundler -->
 <script src="js/tuning.js"></script>

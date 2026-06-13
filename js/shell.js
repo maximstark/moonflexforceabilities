@@ -54,6 +54,44 @@
     el.addEventListener("contextmenu", e => e.preventDefault());
   });
 
+  // the D-pad behaves like a thumb-stick: press anywhere in the cross and drag.
+  // Direction is the offset from the pad's centre (8-way), held while held — so
+  // you can press-and-slide between directions instead of stabbing tiny buttons.
+  (function () {
+    const dpad = document.getElementById("dpad");
+    if (!dpad) return;
+    const DIRS = ["left", "right", "up", "down"];
+    let stick = null;                            // { id, cx, cy, dz, on:Set }
+    const mark = (d, on) => { const el = dpad.querySelector("." + d); if (el) el.classList.toggle("on", on); };
+    function apply(want) {
+      for (const d of DIRS) {
+        const has = stick.on.has(d);
+        if (want.has(d) && !has) { press(d); stick.on.add(d); mark(d, true); }
+        else if (!want.has(d) && has) { release(d); stick.on.delete(d); mark(d, false); }
+      }
+    }
+    function read(e) {
+      const dx = e.clientX - stick.cx, dy = e.clientY - stick.cy, dz = stick.dz, w = new Set();
+      if (dx < -dz) w.add("left"); else if (dx > dz) w.add("right");
+      if (dy < -dz) w.add("up");   else if (dy > dz) w.add("down");
+      apply(w);
+    }
+    const end = () => { if (stick) { apply(new Set()); stick = null; } };
+    dpad.addEventListener("pointerdown", e => {
+      e.preventDefault(); AudioSys.init();
+      const r = dpad.getBoundingClientRect();
+      stick = { id: e.pointerId, cx: r.left + r.width / 2, cy: r.top + r.height / 2,
+                dz: r.width * 0.16, on: new Set() };
+      try { dpad.setPointerCapture(e.pointerId); } catch (_) {}
+      read(e);
+    });
+    dpad.addEventListener("pointermove", e => { if (stick && e.pointerId === stick.id) read(e); });
+    dpad.addEventListener("pointerup", end);
+    dpad.addEventListener("pointercancel", end);
+    dpad.addEventListener("lostpointercapture", end);
+    dpad.addEventListener("contextmenu", e => e.preventDefault());
+  })();
+
   // scale the whole handheld to fill the viewport (height- or width-bound,
   // whichever is tighter) keeping a small buffer, re-fit on resize/rotate
   function fitToScreen() {
@@ -62,9 +100,22 @@
     const buffer = 0.97;                         // small margin around the edges
     const vw = document.documentElement.clientWidth;
     const vh = document.documentElement.clientHeight;
-    const s = Math.min(vw * buffer / c.offsetWidth, vh * buffer / c.offsetHeight);
+    const foot = document.getElementById("kbd"); // leave room for the footer hint
+    const reserve = (foot && getComputedStyle(foot).display !== "none") ? foot.offsetHeight + 14 : 0;
+    const availH = vh - reserve;
+    const s = Math.min(vw * buffer / c.offsetWidth, availH * buffer / c.offsetHeight);
+    c.style.top = reserve ? (availH / 2) + "px" : "50%";
     c.style.transform = "translate(-50%,-50%) scale(" + s + ")";
   }
+  // the hint under the handheld is for keyboards — pointless on touch, so hide
+  // it there (which also frees the reserved space back to the screen)
+  (function () {
+    const k = document.getElementById("kbd");
+    if (!k) return;
+    if (matchMedia("(pointer:fine)").matches)
+      k.textContent = "keyboard: WASD / arrows · space · X · C · shift — or use the buttons";
+    else k.style.display = "none";
+  })();
   window.addEventListener("resize", fitToScreen);
   window.addEventListener("orientationchange", fitToScreen);
   fitToScreen();
@@ -74,10 +125,4 @@
   // belt-and-suspenders against mobile zoom/scroll gestures
   ["gesturestart", "gesturechange", "dblclick"].forEach(ev =>
     document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
-
-  // desktop keyboard users don't need the touch hint
-  if (matchMedia("(pointer:fine)").matches) {
-    const k = document.getElementById("kbd");
-    if (k) k.textContent = "keyboard or buttons — both play";
-  }
 })();
