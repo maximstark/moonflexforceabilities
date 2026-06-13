@@ -59,6 +59,11 @@ const UI = (() => {
       ctx.font = "bold 12px monospace"; ctx.textAlign = "center";
       ctx.fillStyle = Game.toast > 30 ? "#ffe48a" : "rgba(255,228,138," + Game.toast / 30 + ")";
       ctx.fillText(level.name, T.VIEW_W / 2, 80);
+      if (level.world === 0 && save.unlocked > 1) {     // back in the hub with progress
+        ctx.font = "8px monospace";
+        ctx.fillStyle = Game.toast > 30 ? "#9fe8a0" : "rgba(159,232,160," + Game.toast / 30 + ")";
+        ctx.fillText("FLOOR " + save.unlocked + " IS OPEN — RIDE THE ELEVATOR UP", T.VIEW_W / 2, 94);
+      }
       ctx.textAlign = "left";
     }
   }

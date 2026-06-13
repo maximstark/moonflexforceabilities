@@ -350,14 +350,44 @@ const World = (() => {
       for (const s of e.stops)
         if (Math.abs(s - e.y) > 1) drawFrame("elevator", "closed", e.x - cx, s - 26 - cy);
       drawFrame("elevator", e.moving ? "closed" : "open", e.x - cx, e.y - 26 - cy);
+      // beacon: the next floor is UP the shaft (you respawn at the bottom)
+      const p = players[0];
+      const nearLift = p && !p.dead && p.x + p.w > e.x - 6 && p.x < e.x + e.w + 6;
+      if (save.unlocked > 1 && !nearLift) {
+        const by = Math.sin(Game.frame / 10) * 2;
+        ctx.font = "7px monospace"; ctx.textAlign = "center"; ctx.fillStyle = "#ffe48a";
+        ctx.fillText("↑ FL." + save.unlocked, e.x + e.w / 2 - cx, e.y - 34 - cy + by);
+        ctx.textAlign = "left";
+      }
     }
     for (const d of doors) {
       const locked = d.level > save.unlocked;
+      if (locked) drawBars(d.x - cx, d.y - cy);
       ctx.font = "7px monospace"; ctx.textAlign = "center";
-      ctx.fillStyle = locked ? "#7a6a8a" : "#ffe48a";
-      ctx.fillText(locked ? "LOCK" : "FL." + d.level, d.x + 8 - cx, d.y - 4 - cy);
+      ctx.fillStyle = locked ? "#8a7a9a" : "#ffe48a";
+      ctx.fillText("FL." + d.level, d.x + 8 - cx, d.y - 4 - cy);
+      if (d.level === save.unlocked) {                 // newest open floor: go here
+        const by = Math.sin(Game.frame / 9) * 2;
+        ctx.fillStyle = "#9fe8a0";
+        ctx.fillText("▼", d.x + 8 - cx, d.y - 12 - cy + by);
+      }
       ctx.textAlign = "left";
     }
+  }
+  // iron bars + a little padlock over a locked doorway
+  function drawBars(sx, sy) {
+    sx = Math.round(sx); sy = Math.round(sy);
+    ctx.fillStyle = "rgba(16,11,24,0.55)"; ctx.fillRect(sx, sy, 16, 16);
+    const vb = [2, 6, 10, 13], hb = [4, 10];
+    ctx.fillStyle = "#2a2038";
+    for (const bx of vb) ctx.fillRect(sx + bx, sy + 1, 2, 15);
+    for (const by of hb) ctx.fillRect(sx + 1, sy + by, 15, 2);
+    ctx.fillStyle = "#aeb0c8";
+    for (const bx of vb) ctx.fillRect(sx + bx, sy + 1, 1, 15);
+    for (const by of hb) ctx.fillRect(sx + 1, sy + by, 15, 1);
+    ctx.fillStyle = "#241a30"; ctx.fillRect(sx + 5, sy + 6, 6, 6);
+    ctx.fillStyle = "#ffd96a"; ctx.fillRect(sx + 6, sy + 7, 4, 4);
+    ctx.fillStyle = "#241a30"; ctx.fillRect(sx + 7, sy + 9, 2, 2);
   }
   // contextual hints, drawn on top of the cast so the player never hides them
   function drawHubPrompts(cx, cy) {
