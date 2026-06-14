@@ -205,7 +205,9 @@ const UI = (() => {
       if (COSTUME_PICKS[pw]) wearCostume(p, pw);                 // costumes stack in p.stack
       else {
         if (!p.powers.includes(pw)) p.powers.push(pw);          // powers stack in p.powers
-        AudioSys.sfx("transform"); World.addFloater(p.x, p.y - 10, pw.toUpperCase() + "!");
+        p.lvl[pw] = Math.min(2, (p.lvl[pw] || 0) + 1);          // 2nd = mirrored pair
+        AudioSys.sfx("transform");
+        World.addFloater(p.x, p.y - 10, (p.lvl[pw] >= 2 ? "x2 " : "") + pw.toUpperCase() + "!");
       }
       Game.state = "play";
     }

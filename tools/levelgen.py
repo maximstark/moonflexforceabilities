@@ -384,29 +384,30 @@ def level8():
     v.spawn = (3*TS, 7*TS)
     v.story = [
         ["the dream goes DARK.", "", "a thin plateau over an endless fall."],
-        ["the air fills with wings and jelly.", "", "good thing you came STACKED."],
+        ["something stirs in the dark above.", "", "STACK UP — and do not stop moving."],
     ]
     G,D = "night_grass","night_dirt"
     v.ground(0,32,9,G,D,edges=False)                              # the starting plateau
     v.deco([(2,8,"sign"),(8,8,"cattail"),(14,8,"lantern"),(24,8,"flower"),(29,8,"lantern")])
-    v.pick("chest",10,8); v.pick("chest",18,8); v.pick("chest",26,8)   # stack up first
+    v.pick("chest",10,8); v.pick("chest",18,8); v.pick("chest",26,8)   # STACK UP first!
     for c in (6,8,12,16,20,22,28,30): v.pick("star",c,8)
     v.pick("treat",14,8); v.pick("treat",24,8)
-    steps=[]; c=36; i=0                                           # the long wave of tiny steps
+    # narrow SINGLE-tile steps in a gentle wave over the void — precise landings
+    steps=[]; c=35; i=0
     while c < 158:
-        row = 11 + int(round(3*math.sin(i*0.7)))
-        v.plat(c,c+2,row,"platform"); steps.append((c,row))
-        c += 6; i += 1
-    v.ground(160,179,12,G,D,edges=False)                         # safe landing + goal
-    v.deco([(176,11,"lantern"),(170,11,"flower")])
-    for sc,sr in steps[1::3]: v.pick("star",sc+1,sr-1)
-    mid = steps[len(steps)//2]; v.pick("treat",mid[0]+1,mid[1]-1)
-    v.pops([164,166,168,170],11)
-    for k,(sc,sr) in enumerate(steps):                           # THE ONSLAUGHT
-        if k % 3 == 0: v.enemy("fly",sc+1,sr-4)
-        if k % 2 == 0: v.enemy("wisp",sc+1,sr-6)
-    v.enemy("fly",44,5); v.enemy("fly",96,4); v.enemy("fly",132,5)
-    v.boss = None
+        row = 11 + int(round(2*math.sin(i*0.55)))
+        v.set(c,row,"platform"); steps.append((c,row))
+        c += 4; i += 1
+    v.ground(160,179,12,G,D,edges=False)                         # the far landing (+ goal)
+    v.deco([(176,11,"lantern")])
+    for sc,sr in steps[2::4]: v.pick("star",sc,sr-1)
+    for sc,sr in steps[3::6]: v.pick("treat",sc,sr-1)
+    # a thinner swarm — THE CHASER is the real threat now
+    for k,(sc,sr) in enumerate(steps):
+        if k % 5 == 0: v.enemy("fly",sc,sr-4)
+        if k % 4 == 0: v.enemy("wisp",sc,sr-6)
+    # THE BAD DREAMS — drops at the plateau edge, then chases you to the end
+    v.boss = dict(type="badcode", x=560, y=104)
     v.goalX = 176*TS
     return v
 

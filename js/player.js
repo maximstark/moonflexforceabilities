@@ -20,6 +20,7 @@ function makePlayer(idx, character) {
     iframes: 0, dead: false, deadTimer: 0,
     stack: [],                    // worn costumes, bottom->top: goosefeet|laser|kirby|spoon
     powers: [],                   // treasure powers held — they STACK and persist: fire|pink|tree|mace
+    lvl: {}, maceAngle: 0, maceAngle2: 0,   // ability level 1/2 (2 = mirrored pair) + the two mace spin angles
     pounding: false, rooted: false, dropThrough: 0,
     atkCD: 0, spoonTimer: 0, pinkCD: 0, fireCD: 0, nutCD: 0,
     moonTimer: 0,                 // trex (charmgirl) / moonflex (swan)
@@ -52,7 +53,10 @@ function updatePlayer(p) {
   if (p.dropThrough > 0) p.dropThrough--;
   if (p.moonTimer > 0 && --p.moonTimer === 0) endMoon(p);
   if (p.squash !== 0) p.squash *= 0.82;
-  if (p.powers.includes("mace")) p.maceAngle = (p.maceAngle || 0) - T.MACE_SPEED;   // slow CCW spin
+  if (p.powers.includes("mace")) {
+    p.maceAngle = (p.maceAngle || 0) - T.MACE_SPEED;                       // CCW mace
+    if (p.lvl.mace >= 2) p.maceAngle2 = (p.maceAngle2 || 0) + T.MACE_SPEED;   // a second, CW mace
+  }
 
   if (p.form === "mecha") { updateMecha(p, pad); return; }
 
@@ -116,7 +120,7 @@ function updateLand(p, pad, dir) {
     // air flap glide (swan thing; kirby cap adds one).
     // groundWithin guard: near the floor the press stays buffered for the
     // landing jump instead — protects the slice's jump-buffer feel.
-    const maxFlaps = T.FLAPS_MAX + (has(p, "kirby") ? T.KIRBY_EXTRA_FLAPS : 0);
+    const maxFlaps = T.FLAPS_MAX + (p.lvl.kirby || 0) * T.KIRBY_EXTRA_FLAPS;
     if (p.flaps < maxFlaps && p.flapCD <= 0) {
       p.flaps++; p.flapCD = T.FLAP_MIN_INTERVAL;
       p.vy = Math.min(p.vy, -T.FLAP_VEL);
@@ -236,10 +240,12 @@ function doAttack(p, pad) {
   if (p.form === "mecha" && p.atkCD <= 0) {
     fireLaser(p, T.MECHA_LASER_DMG); p.atkCD = T.MECHA_LASER_COOLDOWN; acted = true;
   } else if (has(p, "laser") && p.atkCD <= 0) {     // LASER BEAM EYES
-    fireLaser(p, 1); p.atkCD = T.LASER_COOLDOWN; acted = true;
+    fireLaser(p, 1); if (p.lvl.laser >= 2) fireLaser(p, 1, -p.facing); p.atkCD = T.LASER_COOLDOWN; acted = true;
   }
   if (p.powers.includes("fire") && p.fireCD <= 0) {
     spawnProjectile("fireball", p.x + p.w / 2, p.y + 6, p.facing * T.FIREBALL_VX, -1.5, "player", 1);
+    if (p.lvl.fire >= 2)                                  // a second fireball out the back
+      spawnProjectile("fireball", p.x + p.w / 2, p.y + 6, -p.facing * T.FIREBALL_VX, -1.5, "player", 1);
     p.fireCD = T.FIRE_COOLDOWN; AudioSys.sfx("fire"); acted = true;
   }
   if (p.powers.includes("pink") && p.pinkCD <= 0) {        // the pink burst
@@ -248,15 +254,15 @@ function doAttack(p, pad) {
   if (p.powers.includes("tree") && p.nutCD <= 0) { shootNut(p); acted = true; }   // X throws a nut; rooting rapid-fires
   return acted;
 }
-function fireLaser(p, dmg) {
+function fireLaser(p, dmg, dir) {
   AudioSys.sfx("laser");
   const aim = pads[p.idx].held.up ? -0.35 : pads[p.idx].held.down ? 0.35 : 0;
   Combat.laserShots.push({ x: p.x + p.w / 2, y: p.y + (p.form === "mecha" ? 8 : 6),
-                           dir: p.facing, aim, dmg, life: 8, owner: p });
+                           dir: dir || p.facing, aim, dmg, life: 8, owner: p });
 }
 function spoonSwing(p) {
   AudioSys.sfx("spoon");
-  Combat.spoonSwings.push({ owner: p, life: T.SPOON_ARC_FRAMES });
+  Combat.spoonSwings.push({ owner: p, life: T.SPOON_ARC_FRAMES, both: (p.lvl.spoon || 0) >= 2 });
 }
 function pinkBurst(p) {
   AudioSys.sfx("pink");
@@ -266,6 +272,8 @@ function pinkBurst(p) {
 }
 function shootNut(p) {
   spawnProjectile("nut", p.x + p.w / 2, p.y + 4, p.facing * T.NUT_VX, -0.6, "player", 1);
+  if ((p.lvl.tree || 0) >= 2)                            // a second nut, lobbed at ~30 degrees
+    spawnProjectile("nut", p.x + p.w / 2, p.y + 4, p.facing * T.NUT_VX * 0.87, -T.NUT_VX * 0.5, "player", 1);
   p.nutCD = T.NUT_COOLDOWN; AudioSys.sfx("nut");
 }
 function landPound(p) {
@@ -281,6 +289,7 @@ function landPound(p) {
 /* ---------------- costumes ---------------- */
 function wearCostume(p, costume) {
   if (!has(p, costume)) p.stack.push(costume);
+  p.lvl[costume] = Math.min(2, (p.lvl[costume] || 0) + 1);     // a 2nd of the same = mirrored pair
   AudioSys.sfx("transform");
   World.addFloater(p.x + p.w / 2, p.y - 8,
     { goosefeet: "GIANT GOOSE FEET!", laser: "LASER EYES!", kirby: "KIRBY CAP!", spoon: "THE SPOON!" }[costume] || costume);

@@ -31,8 +31,15 @@ const Bosses = (() => {
     } else if (kind === "hogdog" || kind === "hogdog_final") {
       units.push(hog(spec.x, spec.y, kind === "hogdog_final"));
       arenaName = kind === "hogdog" ? "THE BIG HOG DOG" : "THE BIG HOG DOG (WE STILL HATE HIM)";
+    } else if (kind === "badcode") {
+      units.push(badcode(spec.x, spec.y));
+      arenaName = "THE BAD DREAMS";
     }
   }
+  const badcode = (x, y) => ({
+    sub: "badcode", sheet: "boss_badcode", x, y: y - 240, w: 44, h: 44,
+    hp: T.BADCODE_HP, maxHp: T.BADCODE_HP, state: "sleep", timer: 0, iframes: 0,
+    hurtFlash: 0, facing: -1, vx: 0, vy: 0, dropY: y, triggerX: x - 60, animTimer: 0, rage: 1 });
   const grumpis = (x, y, hp, phase = 0) => ({
     sub: "grumpis", sheet: "boss_grumpis", x, y, w: 52, h: 48, vx: 0, vy: 0,
     hp, maxHp: hp, state: "windup", timer: T.GRUMPIS_WINDUP + phase, iframes: 0,
@@ -52,7 +59,8 @@ const Bosses = (() => {
     if (!units.length) { if (fledTimer > 0 && --fledTimer === 0) World.onBossesCleared(true); return; }
     const pl = nearestPlayer(units[0].x, units[0].y);
     if (!activated && pl &&
-        Math.abs(pl.x - units[0].x) < T.BOSS_ACTIVATE_DIST) {
+        (kind === "badcode" ? pl.x > units[0].triggerX
+                            : Math.abs(pl.x - units[0].x) < T.BOSS_ACTIVATE_DIST)) {
       activated = true;
       AudioSys.sfx("roar");
       AudioSys.playSong(kind === "hogdog" || kind === "hogdog_final" ? "hogdog" : "boss");
@@ -67,6 +75,7 @@ const Bosses = (() => {
       if (b.sub === "grumpis") updateGrumpis(b, mult);
       else if (b.sub === "papa") updatePapa(b, mult);
       else if (b.sub === "hog") updateHog(b, mult);
+      else if (b.sub === "badcode") updateBadcode(b, mult);
       if (b.state !== "dying" && !b.fleeing) bossContact(b);
     }
     units = units.filter(b => b.state !== "gone");
@@ -183,6 +192,28 @@ const Bosses = (() => {
     moveAndCollide(b);
   }
 
+  function updateBadcode(b, mult) {
+    const pl = nearestPlayer(b.x, b.y);
+    if (b.state === "sleep") b.state = "drop";              // first activated frame
+    if (b.state === "dying") { if (--b.timer <= 0) dieOff(b); return; }
+    if (b.state === "drop") {
+      b.y += 7; Game.shake = 6;                             // VIBRATE THE WHOLE CONSOLE
+      if (b.y >= b.dropY) {
+        b.y = b.dropY; b.state = "speak"; b.timer = 6; Game.shake = 14;
+        AudioSys.sfx("roar");
+        Game.queueCard(['"I AM THE BAD DREAMS."', "", '"GIVE ME YOUR... BABIES."']);
+      }
+      return;
+    }
+    if (b.state === "speak") { b.vx = b.vy = 0; if (--b.timer <= 0) b.state = "chase"; return; }
+    if (pl) {                                               // chase: relentless, a touch slower than the swan
+      const dx = (pl.x + pl.w / 2) - (b.x + b.w / 2), dy = (pl.y + pl.h / 2) - (b.y + b.h / 2);
+      const dd = Math.hypot(dx, dy) || 1, sp = T.BADCODE_SPEED * mult;
+      b.vx = dx / dd * sp; b.vy = dy / dd * sp; b.facing = dx < 0 ? -1 : 1;
+    }
+    b.x += b.vx; b.y += b.vy;                               // floats — no gravity, no tiles
+  }
+
   function bossContact(b) {
     if (b.sub === "papa" && !b.onLand && (b.state === "submerged" || b.state === "rising")) return;
     const box = { x: b.x, y: b.y, w: b.w, h: b.h };
@@ -240,11 +271,26 @@ const Bosses = (() => {
     return false;
   }
 
+  function drawBadcode(b, camX, camY) {
+    const x = Math.round(b.x - camX), y = Math.round(b.y - camY), w = b.w, h = b.h, t = b.animTimer;
+    const hurt = b.hurtFlash > 0;
+    ctx.fillStyle = hurt ? "#8a2a4a" : "#1c1430"; ctx.fillRect(x + 2, y + 4, w - 4, h - 6);
+    ctx.fillStyle = hurt ? "#aa3a5a" : "#2a1f44"; ctx.fillRect(x, y + 8, w, h - 14); ctx.fillRect(x + 6, y, w - 12, h);
+    for (let i = 0; i < 28; i++) {                          // flickering tangled "code"
+      const gx = x + ((i * 37 + t * 3) % w), gy = y + ((i * 53 + t * 5) % h);
+      ctx.fillStyle = (i % 3 === 0) ? "#54ffd0" : (i % 3 === 1) ? "#ff5a8c" : "#9a7aff";
+      if (((t + i) >> 1) % 2) ctx.fillRect(gx, gy, 2, 2);
+    }
+    ctx.fillStyle = "#ff3a4a"; ctx.fillRect(x + 12, y + 16, 4, 4); ctx.fillRect(x + w - 16, y + 16, 4, 4);  // eyes
+    ctx.fillStyle = "#ffd0d0"; ctx.fillRect(x + 13, y + 17, 1, 1); ctx.fillRect(x + w - 15, y + 17, 1, 1);
+    ctx.strokeStyle = "#0a0814"; ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  }
   function draw(camX, camY) {
     for (const b of units) {
       if (b.state === "gone") continue;
       if (b.iframes > 0 && b.hurtFlash <= 0 && (b.iframes >> 2) % 2 === 0) continue;
       if (b.state === "dying" && (b.animTimer >> 2) % 2 === 0) continue;
+      if (b.sub === "badcode") { drawBadcode(b, camX, camY); continue; }
       const s = sheets[b.sheet];
       let frame = "idle";
       if (b.hurtFlash > 0 || b.state === "dying") frame = "hurt";

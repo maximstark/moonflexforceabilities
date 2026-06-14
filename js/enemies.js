@@ -268,8 +268,9 @@ function updateCombat() {
   // spoon arcs: short melee box; also deflects mushrooms back
   for (const sw of Combat.spoonSwings) {
     const p = sw.owner;
-    const box = { x: p.facing > 0 ? p.x + p.w : p.x - T.SPOON_RANGE,
-                  y: p.y - 6, w: T.SPOON_RANGE, h: p.h + 10 };
+    const box = sw.both
+      ? { x: p.x - T.SPOON_RANGE, y: p.y - 6, w: p.w + 2 * T.SPOON_RANGE, h: p.h + 10 }
+      : { x: p.facing > 0 ? p.x + p.w : p.x - T.SPOON_RANGE, y: p.y - 6, w: T.SPOON_RANGE, h: p.h + 10 };
     for (const e of enemies)
       if (e.alive && e.deadTimer <= 0 && e.iframes <= 0 && overlaps(box, e)) damageEnemy(e, 1, p);
     Bosses.hitByBox(box, 1);
@@ -314,12 +315,16 @@ function updateCombat() {
   // spin-mace: a slow orbiting WMD (gives no defense — you stay exposed)
   for (const p of players) {
     if (p.dead || !p.powers.includes("mace")) continue;
-    const hx = p.x + p.w / 2 + Math.cos(p.maceAngle || 0) * T.MACE_RADIUS;
-    const hy = p.y + p.h / 2 + Math.sin(p.maceAngle || 0) * T.MACE_RADIUS;
-    const box = { x: hx - 8, y: hy - 8, w: 16, h: 16 };
-    for (const e of enemies)
-      if (e.alive && e.deadTimer <= 0 && e.iframes <= 0 && overlaps(box, e)) damageEnemy(e, T.MACE_DMG, p);
-    Bosses.hitByBox(box, T.MACE_DMG);
+    const angs = [p.maceAngle || 0];
+    if ((p.lvl.mace || 0) >= 2) angs.push(p.maceAngle2 || 0);
+    for (const ang of angs) {
+      const hx = p.x + p.w / 2 + Math.cos(ang) * T.MACE_RADIUS;
+      const hy = p.y + p.h / 2 + Math.sin(ang) * T.MACE_RADIUS;
+      const box = { x: hx - 8, y: hy - 8, w: 16, h: 16 };
+      for (const e of enemies)
+        if (e.alive && e.deadTimer <= 0 && e.iframes <= 0 && overlaps(box, e)) damageEnemy(e, T.MACE_DMG, p);
+      Bosses.hitByBox(box, T.MACE_DMG);
+    }
   }
 }
 
@@ -385,13 +390,17 @@ function drawProjectiles(camX, camY) {
   for (const p of players) {
     if (p.dead || !p.powers.includes("mace")) continue;
     const ccx = p.x + p.w / 2 - camX, ccy = p.y + p.h / 2 - camY;
-    const hx = ccx + Math.cos(p.maceAngle || 0) * T.MACE_RADIUS;
-    const hy = ccy + Math.sin(p.maceAngle || 0) * T.MACE_RADIUS;
-    ctx.fillStyle = "#9a93b0";
-    for (let i = 1; i <= 4; i++) ctx.fillRect(Math.round(ccx + (hx - ccx) * i / 5) - 1, Math.round(ccy + (hy - ccy) * i / 5) - 1, 2, 2);
-    ctx.fillStyle = "#2a2438";
-    for (let a = 0; a < 8; a++) { const A = a * Math.PI / 4; ctx.fillRect(Math.round(hx + Math.cos(A) * 6) - 1, Math.round(hy + Math.sin(A) * 6) - 1, 2, 2); }
-    ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI * 2); ctx.fillStyle = "#4a4458"; ctx.fill();
-    ctx.beginPath(); ctx.arc(hx - 1, hy - 1, 2, 0, Math.PI * 2); ctx.fillStyle = "#8a84a0"; ctx.fill();
+    const angs = [p.maceAngle || 0];
+    if ((p.lvl.mace || 0) >= 2) angs.push(p.maceAngle2 || 0);
+    for (const ang of angs) {
+      const hx = ccx + Math.cos(ang) * T.MACE_RADIUS;
+      const hy = ccy + Math.sin(ang) * T.MACE_RADIUS;
+      ctx.fillStyle = "#9a93b0";
+      for (let i = 1; i <= 4; i++) ctx.fillRect(Math.round(ccx + (hx - ccx) * i / 5) - 1, Math.round(ccy + (hy - ccy) * i / 5) - 1, 2, 2);
+      ctx.fillStyle = "#2a2438";
+      for (let a = 0; a < 8; a++) { const A = a * Math.PI / 4; ctx.fillRect(Math.round(hx + Math.cos(A) * 6) - 1, Math.round(hy + Math.sin(A) * 6) - 1, 2, 2); }
+      ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI * 2); ctx.fillStyle = "#4a4458"; ctx.fill();
+      ctx.beginPath(); ctx.arc(hx - 1, hy - 1, 2, 0, Math.PI * 2); ctx.fillStyle = "#8a84a0"; ctx.fill();
+    }
   }
 }
