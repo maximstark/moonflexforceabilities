@@ -8,13 +8,14 @@
  * ===================================================================== */
 const Overworld = (() => {
   const NODES = [
-    { id: "home", x: 34,  y: 190, label: "HOME · TROPHY ROOM" },
-    { id: 1, x: 92,  y: 158, label: "1   THE DREAM LAKE" },
-    { id: 2, x: 142, y: 190, label: "2   MOONLIGHT LAKE" },
-    { id: 3, x: 196, y: 150, label: "3   THE DEEP" },
-    { id: 4, x: 250, y: 186, label: "4   CANDY CLOUDS" },
-    { id: 5, x: 302, y: 140, label: "5   THE FEVER SWARM" },
-    { id: 6, x: 350, y: 172, label: "6   THE BIG HOG DOG" },
+    { id: "home", x: 26, y: 192, label: "HOME · TROPHY ROOM" },
+    { id: 1, x: 64,  y: 160, label: "1   THE DREAM LAKE" },
+    { id: 2, x: 104, y: 190, label: "2   MOONLIGHT LAKE" },
+    { id: 3, x: 148, y: 150, label: "3   THE DEEP" },
+    { id: 4, x: 192, y: 188, label: "4   CANDY CLOUDS" },
+    { id: 5, x: 236, y: 146, label: "5   THE FEVER SWARM" },
+    { id: 6, x: 286, y: 184, label: "6   THE BIG HOG DOG" },
+    { id: 7, x: 344, y: 150, label: "7   THE BROKEN ASCENT" },
   ];
   let idx = 1, tx = NODES[1].x, ty = NODES[1].y;
   let moving = false, from = 1, to = 1, mt = 0, fr = 0;

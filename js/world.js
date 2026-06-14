@@ -28,7 +28,7 @@ const World = (() => {
     Combat.pinkBursts.length = 0; Combat.poundShocks.length = 0;
     trophySpawned = false;
     Game.levelId = id;
-    Game.happiness = T.HAPPINESS_MAX;
+    Game.happiness = level.startHappy != null ? level.startHappy : T.HAPPINESS_MAX;
     Game.babiesThisLevel = 0;
 
     for (const e of level.enemies) enemies.push(makeEnemy(e));
@@ -40,6 +40,7 @@ const World = (() => {
           target: 0, moving: false, w: 24, h: 6 }
       : null;
     Bosses.spawn(level.boss);
+    if (!level.boss && id !== "hub") spawnTrophy("trophy");   // bossless level: reach the goal
     firesLeft = 0;
     for (const row of grid) for (const t of row)
       if (t >= 0 && level.tileNames[t] === "fire1") firesLeft++;
@@ -148,7 +149,7 @@ const World = (() => {
     }
   }
   function onBossesCleared(fled) {
-    if (Game.levelId === T.WORLD_COUNT) spawnTrophy("beads");
+    if (level.finale) spawnTrophy("beads");
     else spawnTrophy("trophy");
     if (!fled) AudioSys.playSong(level.music);
   }

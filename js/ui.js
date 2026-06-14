@@ -37,7 +37,10 @@ const UI = (() => {
     const ICON = { goosefeet: ["items","pickup_goosefeet"], laser: ["items","pickup_laser"],
                    kirby: ["items","icon_kirby"], spoon: ["items","pickup_spoon"] };
     p1.stack.forEach((c, i) => { const s = ICON[c]; if (s) drawFrame(s[0], s[1], 6 + i * 14, 38); });
-    if (p1.power) drawFrame("items", "icon_" + p1.power, 6 + p1.stack.length * 14 + 4, 38);
+    if (p1.power) {
+      const px = 6 + p1.stack.length * 14 + 4;
+      if (p1.power === "mace") drawMaceIcon(px + 8, 46); else drawFrame("items", "icon_" + p1.power, px, 38);
+    }
     // moon timer
     if (p1.moonTimer > 0) {
       drawFrame("items", "moon", 6, 54);
@@ -144,7 +147,16 @@ const UI = (() => {
     ["pink", "PINK", "a pink burst clears the room (X)"],
     ["tree", "TREE", "hold DOWN: root + shoot nuts (X)"],
     ["kirby", "KIRBY COSTUME", "one more flap, very round"],
+    ["mace", "SPIN MACE", "a slow mace orbits you — a WMD, but you stay exposed"],
   ];
+  function drawMaceIcon(cx, cy) {
+    ctx.fillStyle = "#9a93b0";
+    for (let i = 1; i <= 3; i++) ctx.fillRect(cx - 7 + i * 2, cy + 5 - i * 2, 2, 2);     // chain
+    ctx.fillStyle = "#2a2438";
+    for (let a = 0; a < 8; a++) { const A = a * Math.PI / 4; ctx.fillRect(Math.round(cx + Math.cos(A) * 6) - 1, Math.round(cy + Math.sin(A) * 6) - 1, 2, 2); }
+    ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fillStyle = "#4a4458"; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx - 1, cy - 1, 2, 0, Math.PI * 2); ctx.fillStyle = "#8a84a0"; ctx.fill();
+  }
   function drawChooser() {
     ctx.fillStyle = "rgba(12,10,20,0.75)"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
     ctx.textAlign = "center";
@@ -153,12 +165,12 @@ const UI = (() => {
     ctx.font = "8px monospace"; ctx.fillStyle = "#b9b2d8";
     ctx.fillText("choose a power (this is how you beat that beast)", T.VIEW_W / 2, 62);
     POWERS.forEach((pw, i) => {
-      const x = T.VIEW_W / 2 - 132 + i * 68, y = 92;
+      const x = (T.VIEW_W - (POWERS.length * 68 - 8)) / 2 + i * 68, y = 92;
       const sel = i === Game.chooserIdx;
       ctx.fillStyle = sel ? "#3a2a50" : "#241a34";
       ctx.fillRect(x, y, 60, 64);
       if (sel) { ctx.strokeStyle = "#ffe48a"; ctx.strokeRect(x + 0.5, y + 0.5, 59, 63); }
-      drawFrame("items", "icon_" + pw[0], x + 22, y + 8);
+      if (pw[0] === "mace") drawMaceIcon(x + 30, y + 18); else drawFrame("items", "icon_" + pw[0], x + 22, y + 8);
       ctx.fillStyle = sel ? "#ffe48a" : "#cabce0"; ctx.font = "7px monospace";
       ctx.fillText(pw[1], x + 30, y + 38);
       if (sel) {
@@ -171,8 +183,8 @@ const UI = (() => {
     ctx.textAlign = "left";
   }
   function updateChooser() {
-    if (menuPad.pressed.has("left")) Game.chooserIdx = (Game.chooserIdx + 3) % 4;
-    if (menuPad.pressed.has("right")) Game.chooserIdx = (Game.chooserIdx + 1) % 4;
+    if (menuPad.pressed.has("left")) Game.chooserIdx = (Game.chooserIdx + POWERS.length - 1) % POWERS.length;
+    if (menuPad.pressed.has("right")) Game.chooserIdx = (Game.chooserIdx + 1) % POWERS.length;
     if (menuPad.pressed.has("confirm")) {
       const pw = POWERS[Game.chooserIdx][0];
       const p = Game.chooserFor || players[0];

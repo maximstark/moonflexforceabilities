@@ -298,6 +298,17 @@ function updateCombat() {
     ps.life--;
   }
   Combat.poundShocks = Combat.poundShocks.filter(s => s.life > 0);
+
+  // spin-mace: a slow orbiting WMD (gives no defense — you stay exposed)
+  for (const p of players) {
+    if (p.dead || p.power !== "mace") continue;
+    const hx = p.x + p.w / 2 + Math.cos(p.maceAngle || 0) * T.MACE_RADIUS;
+    const hy = p.y + p.h / 2 + Math.sin(p.maceAngle || 0) * T.MACE_RADIUS;
+    const box = { x: hx - 8, y: hy - 8, w: 16, h: 16 };
+    for (const e of enemies)
+      if (e.alive && e.deadTimer <= 0 && e.iframes <= 0 && overlaps(box, e)) damageEnemy(e, T.MACE_DMG, p);
+    Bosses.hitByBox(box, T.MACE_DMG);
+  }
 }
 
 /* ---------------- drawing ---------------- */
@@ -356,5 +367,18 @@ function drawProjectiles(camX, camY) {
       drawFrame("fx", pb.life % 2 ? "ring1" : "ring2",
                 pb.x + Math.cos(ang) * r - 8 - camX, pb.y + Math.sin(ang) * r - 8 - camY);
     }
+  }
+  // spin-mace: chain of dots out to a spiked ball
+  for (const p of players) {
+    if (p.dead || p.power !== "mace") continue;
+    const ccx = p.x + p.w / 2 - camX, ccy = p.y + p.h / 2 - camY;
+    const hx = ccx + Math.cos(p.maceAngle || 0) * T.MACE_RADIUS;
+    const hy = ccy + Math.sin(p.maceAngle || 0) * T.MACE_RADIUS;
+    ctx.fillStyle = "#9a93b0";
+    for (let i = 1; i <= 4; i++) ctx.fillRect(Math.round(ccx + (hx - ccx) * i / 5) - 1, Math.round(ccy + (hy - ccy) * i / 5) - 1, 2, 2);
+    ctx.fillStyle = "#2a2438";
+    for (let a = 0; a < 8; a++) { const A = a * Math.PI / 4; ctx.fillRect(Math.round(hx + Math.cos(A) * 6) - 1, Math.round(hy + Math.sin(A) * 6) - 1, 2, 2); }
+    ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI * 2); ctx.fillStyle = "#4a4458"; ctx.fill();
+    ctx.beginPath(); ctx.arc(hx - 1, hy - 1, 2, 0, Math.PI * 2); ctx.fillStyle = "#8a84a0"; ctx.fill();
   }
 }

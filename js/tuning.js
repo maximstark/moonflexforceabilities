@@ -49,6 +49,7 @@ const TUNING = {
   FIRE_COOLDOWN: 20, FIREBALL_VX: 3.4, FIREBALL_BOUNCE: 3.0,
   PINK_COOLDOWN: 240, PINK_RADIUS: 64,
   NUT_COOLDOWN: 8, NUT_VX: 4.2,
+  MACE_RADIUS: 34, MACE_SPEED: 0.03, MACE_DMG: 2,   // slow CCW orbiting mace (no defense)
   SHED_HOP: 3.2, DROP_GRACE: 60,   // shed costume regrab grace
   MOON_TREX_FRAMES: 700, MOONFLEX_FRAMES: 480, MOONFLEX_SPEED: 1.4,
 
@@ -83,7 +84,7 @@ const TUNING = {
   NAME_MAX_LEN: 8,
 
   // --- progression ---
-  WORLD_COUNT: 6,                  // number of worlds; finale = the last one
+  WORLD_COUNT: 7,                  // number of worlds (the finale level sets finale:true)
 
   // --- camera & juice ---
   CAM_LERP: 0.12, CAM_LOOKAHEAD: 24, SHAKE_FRAMES: 6,

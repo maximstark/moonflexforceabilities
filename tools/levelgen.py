@@ -32,6 +32,7 @@ class L:
         self.boss = None; self.goalX = (w-4)*TS; self.spawn = (32, 8*TS)
         self.doors = []; self.elevator = None
         self.drain = drain; self.letterCost = 100; self.forceForm = None; self.next = None
+        self.startHappy = None; self.speedMult = 1.0; self.finale = False; self.story = None
     def set(s,c,r,t):
         if 0<=c<s.w and 0<=r<s.h: s.g[r][c]=IX[t]
     def fill(s,c0,c1,r0,r1,t):
@@ -64,6 +65,10 @@ class L:
                  pickups=s.pickups, boss=s.boss, goalX=s.goalX, doors=s.doors,
                  elevator=s.elevator, happinessDrain=s.drain, letterCost=s.letterCost,
                  forceForm=s.forceForm, next=s.next)
+        if s.startHappy is not None: d["startHappy"] = s.startHappy
+        if s.speedMult != 1.0:       d["speedMult"]  = s.speedMult
+        if s.finale:                 d["finale"]     = True
+        if s.story:                  d["story"]      = s.story
         json.dump(d, open(f"levels/{fname}","w"), separators=(",",":"))
         print(f"levels/{fname}: {s.w}x{s.h} tiles, {len(s.enemies)} enemies, {len(s.pickups)} pickups")
 
@@ -321,6 +326,52 @@ def level6():
 # =====================================================================
 #  THE HUB — the impossibly tall house (always neat)
 # =====================================================================
+# =====================================================================
+#  LEVEL 7 — THE BROKEN ASCENT  (the mech dies; on-foot, emboldened;
+#  a fiery vertical spring-gauntlet stuffed with treasure chests)
+# =====================================================================
+def level7():
+    v = L("THE BROKEN ASCENT", 7, 32, 60, "sky_fever", "par_fever", "fever", drain=0.05)
+    v.next = None
+    v.spawn = (3*TS, 55*TS)
+    v.startHappy = 130                 # the babies are back: +30% happiness reserve
+    v.speedMult = 1.3                  # ...and +30% zoom
+    v.story = [
+        ["THE MECHA SWAN SPUTTERS...", "gears grind. lights blink.", "...and it GIVES OUT.", "", "you leap free into the smoke."],
+        ["but wait —", "THE BABY SWANS ARE BACK!", "they cheer for you.", "", "you feel SO brave now.", "(+30% HAPPY   +30% ZOOM)"],
+        ["...also, everything is on fire.", "", "climb, brave swan. climb."],
+    ]
+    R,F,P = "rock_top","rock_fill","platform"
+    # hell floor + side walls
+    v.ground(0,31,56,R,F,edges=False)
+    v.fill(1,30,57,59,F)
+    v.fill(0,0,5,59,F); v.fill(31,31,5,59,F)
+    for c in (10,11,20,21): v.set(c,56,"fire1")                # lava pits to hop
+    # the climb: overlapping ONE-WAY ledges ~5 rows apart, weaving L/R
+    for row,c0,c1 in [(52,3,13),(47,11,21),(42,4,14),(37,12,22),(32,5,15),(27,13,23),(22,5,15),(17,12,22)]:
+        v.plat(c0,c1,row,P)
+    v.plat(7,19,12,R)                                          # SOLID summit (the trophy lands here)
+    # jumping springs (floor + several ledges)
+    v.set(6,56,"spring1"); v.set(11,52,"spring1"); v.set(13,42,"spring1")
+    v.set(14,32,"spring1"); v.set(13,22,"spring1"); v.set(20,47,"spring1"); v.set(8,37,"spring1")
+    # fire to dodge on the way up
+    v.set(8,52,"fire1"); v.set(18,47,"fire1"); v.set(10,42,"fire1"); v.set(20,37,"fire1")
+    v.set(8,32,"fire1"); v.set(20,27,"fire1"); v.set(8,22,"fire1"); v.set(15,17,"fire1")
+    v.deco([(2,55,"sign"),(15,55,"lantern"),(28,55,"cattail"),(4,37,"lantern"),(25,27,"lantern")])
+    # === treasure chests + stars to afford them (3 each) ===
+    v.pick("chest",5,51); v.pick("chest",18,26); v.pick("chest",13,11)
+    for c,r in [(7,51),(10,51),(14,46),(18,46),(6,41),(11,41),(15,36),(8,31),(16,26),(9,21),(16,16),(11,11)]:
+        v.pick("star",c,r)
+    v.pick("treat",4,51); v.pick("treat",22,36); v.pick("treat",16,11)
+    v.pops([4,6,8],51); v.pops([13,15,17],46); v.pops([6,8,10],41)
+    v.pops([18,20,22],36); v.pops([7,9,11],31); v.pops([20,22],26); v.pops([8,10],21)
+    # enemies: fiery dream-wisps + a few crawlers
+    v.enemy("wisp",16,44); v.enemy("wisp",13,33); v.enemy("wisp",19,20); v.enemy("wisp",9,25)
+    v.enemy("cockroach",12,51); v.enemy("cockroach",21,26); v.enemy("frog",13,36)
+    v.boss = None
+    v.goalX = 13*TS                                            # summit col 13 -> trophy on the solid top
+    return v
+
 def hub():
     v = L("HOME", 0, 26, 62, "sky_hub", "par_hub", "hub", drain=0.0)
     v.spawn = (5*TS, 57*TS)
@@ -362,5 +413,6 @@ if __name__ == "__main__":
     level4().out("level4.json")
     level5().out("level5.json")
     level6().out("level6.json")
+    level7().out("level7.json")
     hub().out("hub.json")
     print("all levels written")

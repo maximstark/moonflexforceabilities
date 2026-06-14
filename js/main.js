@@ -46,6 +46,7 @@ const Game = {
     this.state = "play";
     this.toast = 120;
     this.iris = 100;                       // iris back in
+    if (level.story) for (const c of level.story) this.queueCard(c);   // scripted intro dialogue
   },
   afterStore() {
     if (this.levelId === T.WORLD_COUNT) this.state = "scores";

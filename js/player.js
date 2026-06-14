@@ -33,6 +33,7 @@ function has(p, costume) { return p.stack.includes(costume); }
 function speedMultFor(p) {
   let m = Game.happiness <= 0 ? T.PANIC_PLAYER_MULT : 1;
   if (p.moonTimer > 0) m *= p.character === "swan" ? T.MOONFLEX_SPEED : 1.2;
+  m *= (level.speedMult || 1);                        // per-level zoom (e.g. babies-back boost)
   return m;
 }
 
@@ -49,6 +50,7 @@ function updatePlayer(p) {
   if (p.dropThrough > 0) p.dropThrough--;
   if (p.moonTimer > 0 && --p.moonTimer === 0) endMoon(p);
   if (p.squash !== 0) p.squash *= 0.82;
+  if (p.power === "mace") p.maceAngle = (p.maceAngle || 0) - T.MACE_SPEED;   // slow CCW spin
 
   if (p.form === "mecha") { updateMecha(p, pad); return; }
 
