@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>MoonFlex — Test Play</title>
+<!-- ===================================================================
+     TEST-PLAY HARNESS for the Level Builder.
+     Mirrors index.html so the REAL engine runs unchanged; the ONLY
+     addition is the fetch shim below, installed before the engine
+     scripts, which serves the builder's in-memory level (parent.
+     __EDITOR_LEVEL__) for any levels/level*.json request. Combined
+     with the engine's existing ?level= dev hook, this drops the
+     current design straight into the game. No game files are modified.
+     If opened standalone (no parent design), it falls through to the
+     real level files and behaves like a normal launch.
+=================================================================== -->
+<script>
+(function () {
+  const real = window.fetch.bind(window);
+  window.fetch = function (input, init) {
+    const url = typeof input === "string" ? input : (input && input.url) || "";
+    if (/levels\/level[^/]*\.json(\?.*)?$/.test(url)) {
+      let lvl = null;
+      try { lvl = window.parent && window.parent.__EDITOR_LEVEL__; } catch (e) { /* cross-origin */ }
+      if (lvl) {
+        return Promise.resolve(new Response(JSON.stringify(lvl),
+          { status: 200, headers: { "Content-Type": "application/json" } }));
+      }
+    }
+    return real(input, init);
+  };
+})();
+</script>
+<style>
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; height:100%; background:#15121d;
+    font-family:"Courier New",monospace; overflow:hidden;
+    -webkit-user-select:none; user-select:none; touch-action:none; }
+  body{ display:flex; align-items:center; justify-content:center; padding:6px; }
+  #cabinet{ display:flex; flex-direction:column; position:fixed; left:50%; top:50%;
+    width:420px; max-width:100vw; transform:translate(-50%,-50%); transform-origin:center center;
+    will-change:transform; padding:12px 12px 14px; gap:8px;
+    background:linear-gradient(160deg,#efedf4,#d7d4dd 40%,#b7b2c4);
+    border-radius:16px 16px 46px 16px;
+    box-shadow: inset 0 2px 0 #fff8, inset 0 -6px 14px #0003, 0 14px 40px #000a; }
+  #bezel{ background:linear-gradient(160deg,#46415f,#3a3550);
+    border-radius:10px 10px 22px 10px; padding:10px 16px; box-shadow: inset 0 3px 10px #000b; }
+  #screen{ position:relative; width:100%; aspect-ratio:384/240; background:#1d2b1e;
+    border-radius:4px; overflow:hidden; box-shadow: inset 0 0 0 2px #0007; }
+  #game{ position:absolute; inset:0; width:100%; height:100%;
+    image-rendering:pixelated; image-rendering:crisp-edges; display:block; }
+  #controls{ position:relative; display:grid; grid-template-columns:1fr 1fr; align-items:center;
+    gap:8px; padding:4px 4px 0; min-height:120px; }
+  #dpad{ position:relative; width:104px; height:104px; justify-self:center; }
+  #dpad .pad{ position:absolute; background:linear-gradient(#4a4258,#241f30);
+    box-shadow: inset 0 2px 0 #ffffff22, 0 3px 4px #0006; }
+  #dpad .pad:active, #dpad .pad.on{ background:#1b1726; }
+  #dpad .up   { left:35px; top:0;    width:34px; height:37px; border-radius:7px 7px 0 0; }
+  #dpad .down { left:35px; bottom:0; width:34px; height:37px; border-radius:0 0 7px 7px; }
+  #dpad .left { left:0;  top:35px;   width:37px; height:34px; border-radius:7px 0 0 7px; }
+  #dpad .right{ right:0; top:35px;   width:37px; height:34px; border-radius:0 7px 7px 0; }
+  #dpad .hub  { left:35px; top:35px; width:34px; height:34px; background:linear-gradient(#3a3346,#211c2d); }
+  #dpad .pad span{ position:absolute; inset:0; display:flex; align-items:center;
+    justify-content:center; color:#cbb9e0; font-size:12px; }
+  #ab{ justify-self:center; display:flex; gap:14px; align-items:flex-end; transform:rotate(-18deg); }
+  .face{ width:46px; height:46px; border-radius:50%; color:#ffd9ee; font-weight:bold; font-size:15px;
+    border:none; background:radial-gradient(circle at 35% 30%, #b8407f, #8a2c6a);
+    box-shadow: inset 0 2px 0 #ffffff44, 0 4px 6px #0007; }
+  .face.lift{ transform:translateY(-14px); }
+  .face:active, .face.on{ background:radial-gradient(circle at 35% 30%, #7c1f53, #5a1740);
+    box-shadow: inset 0 2px 5px #0008; }
+  #startselect{ grid-column:1 / -1; justify-self:center; display:flex; gap:16px; margin-top:2px; }
+  .pill{ color:#efe9f6; font-size:9px; letter-spacing:1px; font-weight:bold; padding:5px 12px;
+    border:none; border-radius:10px; background:linear-gradient(#4a4258,#2a2436); transform:rotate(-18deg);
+    box-shadow: inset 0 1px 0 #ffffff33, 0 3px 4px #0006; }
+  .pill:active, .pill.on{ background:#1b1726; }
+  #chips{ position:absolute; top:-2px; right:2px; display:flex; gap:6px; }
+  .chip{ font-size:8px; font-weight:bold; color:#5a5470; background:#0000; border:1px solid #8884;
+    border-radius:6px; padding:3px 6px; letter-spacing:.5px; }
+  .chip:active, .chip.on{ color:#15121d; background:#cbb9e0; }
+</style>
+</head>
+<body>
+  <div id="cabinet">
+    <div id="bezel">
+      <div id="screen"><canvas id="game"></canvas></div>
+    </div>
+    <div id="controls">
+      <div id="chips"><button class="chip" data-btn="mute">♪ MUTE</button></div>
+      <div id="dpad">
+        <div class="pad up"><span>▲</span></div>
+        <div class="pad left"><span>◀</span></div>
+        <div class="pad hub"></div>
+        <div class="pad right"><span>▶</span></div>
+        <div class="pad down"><span>▼</span></div>
+      </div>
+      <div id="ab">
+        <button class="face" data-btn="b">B</button>
+        <button class="face lift" data-btn="a">A</button>
+      </div>
+      <div id="startselect">
+        <button class="pill" data-btn="select">SELECT</button>
+        <button class="pill" data-btn="start">START</button>
+      </div>
+    </div>
+  </div>
+
+<!-- same engine, same load order as index.html (no shell-only extras needed) -->
+<script src="js/tuning.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/core.js"></script>
+<script src="js/physics.js"></script>
+<script src="js/player.js"></script>
+<script src="js/enemies.js"></script>
+<script src="js/bosses.js"></script>
+<script src="js/world.js"></script>
+<script src="js/overworld.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+<script src="js/shell.js"></script>
+</body>
+</html>

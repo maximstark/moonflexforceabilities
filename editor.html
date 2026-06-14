@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MoonFlex — LEVEL BUILDER</title>
+<style>
+  :root{
+    --bg:#15121d; --panel:#1d1830; --panel2:#241a34; --ink:#cabce0; --ink-dim:#8a7fb0;
+    --accent:#ffe48a; --accent2:#8a2c6a; --line:#3a3550; --good:#9fe8a0; --bad:#ff9a9a;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; height:100%; background:var(--bg); color:var(--ink);
+    font-family:"Courier New",monospace; overflow:hidden; }
+  button,select,input,textarea{ font-family:inherit; }
+  button{ background:linear-gradient(#4a4258,#2a2436); color:#efe9f6; border:1px solid var(--line);
+    border-radius:6px; padding:4px 8px; cursor:pointer; font-size:12px; }
+  button:hover{ border-color:var(--accent); }
+  button.on{ background:#3a2a50; border-color:var(--accent); color:var(--accent); }
+  select,input[type=text],input[type=number]{ background:#120f1c; color:var(--ink);
+    border:1px solid var(--line); border-radius:5px; padding:3px 5px; font-size:12px; }
+  input[type=number]{ width:72px; }
+  textarea{ background:#120f1c; color:var(--ink); border:1px solid var(--line); border-radius:5px;
+    width:100%; font-size:12px; padding:4px; resize:vertical; }
+  label{ font-size:11px; color:var(--ink-dim); }
+
+  #app{ display:grid; grid-template-columns:232px 1fr 300px; grid-template-rows:auto 1fr;
+    height:100vh; }
+  header{ grid-column:1 / -1; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:8px 10px; background:linear-gradient(160deg,#2a2440,#1a1528); border-bottom:1px solid var(--line); }
+  header .title{ color:var(--accent); font-weight:bold; letter-spacing:.5px; font-size:14px; }
+  header .led{ width:9px; height:9px; border-radius:50%; background:radial-gradient(circle at 30% 30%,#ff9b91,#ff5a4d);
+    box-shadow:0 0 6px #ff5a4d; }
+  header .sp{ flex:1; }
+
+  aside{ overflow-y:auto; padding:8px; border-right:1px solid var(--line); background:var(--panel); }
+  aside.right{ border-right:none; border-left:1px solid var(--line); }
+  aside h3{ font-size:11px; letter-spacing:1px; color:var(--accent); margin:12px 0 6px;
+    text-transform:uppercase; border-bottom:1px dashed var(--line); padding-bottom:3px; }
+  aside h3:first-child{ margin-top:2px; }
+
+  #tools{ display:flex; flex-wrap:wrap; gap:4px; }
+  #tools button{ flex:0 0 auto; }
+
+  #palette{ display:grid; grid-template-columns:repeat(6,1fr); gap:3px; }
+  #palette .swatch{ position:relative; width:100%; aspect-ratio:1; background:#0d0a16;
+    border:1px solid var(--line); border-radius:4px; cursor:pointer; display:flex;
+    align-items:center; justify-content:center; overflow:hidden; }
+  #palette .swatch.on{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+  #palette .swatch canvas{ image-rendering:pixelated; width:100%; height:100%; }
+  #palette .swatch.erase{ color:var(--bad); font-size:16px; }
+
+  .field{ display:flex; align-items:center; justify-content:space-between; gap:6px; margin:4px 0; }
+  .field label{ flex:0 0 auto; }
+  .field input[type=text]{ width:120px; }
+
+  #center{ position:relative; overflow:hidden; background:#0c0a14; }
+  #grid{ position:absolute; inset:0; display:block; cursor:crosshair; }
+  #coords{ position:absolute; left:8px; bottom:8px; font-size:11px; color:var(--ink-dim);
+    background:rgba(12,10,20,.7); padding:3px 7px; border-radius:5px; pointer-events:none; }
+  #zoombar{ position:absolute; right:8px; top:8px; display:flex; gap:4px;
+    background:rgba(12,10,20,.7); padding:4px; border-radius:7px; }
+  #zoombar button{ width:26px; padding:2px; }
+
+  /* type pickers */
+  .picker{ display:flex; align-items:center; gap:6px; margin:4px 0; }
+  .picker .sw{ width:28px; height:28px; background:#0d0a16; border:1px solid var(--line);
+    border-radius:4px; image-rendering:pixelated; }
+  .picker select{ flex:1; }
+
+  /* story cards */
+  .card{ background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:6px; margin:6px 0; }
+  .card .row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .card .row b{ font-size:11px; color:var(--accent); }
+  .mini{ padding:2px 6px; font-size:11px; }
+
+  #inspector{ background:var(--panel2); border:1px solid var(--line); border-radius:6px;
+    padding:8px; font-size:12px; min-height:40px; }
+  #inspector .empty{ color:var(--ink-dim); }
+
+  /* test-play dock */
+  #playdock{ position:absolute; right:10px; bottom:10px; width:460px; max-width:92vw;
+    background:#0a0812; border:1px solid var(--accent); border-radius:10px; overflow:hidden;
+    box-shadow:0 12px 40px #000c; display:none; z-index:20; }
+  #playdock.show{ display:block; }
+  #playdock .bar{ display:flex; align-items:center; gap:8px; padding:5px 8px;
+    background:linear-gradient(#2a2440,#1a1528); border-bottom:1px solid var(--line); }
+  #playdock .bar b{ color:var(--accent); font-size:11px; flex:1; }
+  #playframe{ width:100%; height:430px; border:0; display:block; background:#000; }
+
+  #err{ position:absolute; left:50%; top:14px; transform:translateX(-50%); z-index:50;
+    background:#3a1020; color:#ffd0d0; border:1px solid var(--bad); border-radius:7px;
+    padding:8px 14px; font-size:12px; display:none; max-width:80%; }
+  .hint{ font-size:10px; color:var(--ink-dim); line-height:1.5; }
+  hr{ border:none; border-top:1px dashed var(--line); margin:8px 0; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <span class="led"></span>
+    <span class="title">MOONFLEX · LEVEL BUILDER</span>
+    <span class="sp"></span>
+    <button id="btnNew">New</button>
+    <label>Load:</label>
+    <select id="loadExisting">
+      <option value="">—</option>
+      <option>level1</option><option>level2</option><option>level3</option>
+      <option>level4</option><option>level5</option><option>level6</option>
+      <option>level7</option><option>level8</option><option>hub</option>
+    </select>
+    <button id="btnImport">Import file…</button>
+    <input id="fileInput" type="file" accept=".json,application/json" hidden>
+    <span class="sp"></span>
+    <label>File:</label><input id="exportName" type="text" value="level9.json" style="width:110px">
+    <button id="btnExport">Export ⤓</button>
+    <button id="btnCopy">Copy JSON</button>
+    <button id="btnTest" class="on">▶ Test Play</button>
+  </header>
+
+  <!-- LEFT: tools + palette + object types -->
+  <aside class="left">
+    <h3>Tools</h3>
+    <div id="tools">
+      <button data-tool="paint" class="on">✎ Paint</button>
+      <button data-tool="erase">⌫ Erase</button>
+      <button data-tool="eyedrop">⊙ Pick</button>
+      <button data-tool="select">✦ Select</button>
+      <button data-tool="spawn">☆ Spawn</button>
+      <button data-tool="goal">⚑ Goal</button>
+      <button data-tool="enemy">☣ Enemy</button>
+      <button data-tool="pickup">◈ Pickup</button>
+      <button data-tool="boss">☠ Boss</button>
+      <button data-tool="water">≈ Water</button>
+    </div>
+    <p class="hint">Left-click acts with the tool · right-click erases/deletes · middle-drag or Space-drag pans · Ctrl+wheel zooms · Delete removes selected.</p>
+
+    <h3>Place</h3>
+    <div class="picker"><canvas class="sw" id="enemySw" width="28" height="28"></canvas>
+      <select id="enemyType"></select></div>
+    <div class="picker"><canvas class="sw" id="pickupSw" width="28" height="28"></canvas>
+      <select id="pickupType"></select></div>
+    <div class="picker"><canvas class="sw" id="bossSw" width="28" height="28"></canvas>
+      <select id="bossType"></select></div>
+
+    <h3>Tiles</h3>
+    <div id="palette"></div>
+  </aside>
+
+  <!-- CENTER: editing canvas -->
+  <div id="center">
+    <canvas id="grid"></canvas>
+    <div id="zoombar">
+      <button id="zoomOut">−</button><button id="zoomIn">+</button><button id="zoomFit">⤢</button>
+    </div>
+    <div id="coords">—</div>
+    <div id="playdock">
+      <div class="bar"><b>TEST PLAY · the real engine</b>
+        <button class="mini" id="playReload">↻ Reload</button>
+        <button class="mini" id="playClose">✕</button></div>
+      <iframe id="playframe" title="test play"></iframe>
+    </div>
+  </div>
+
+  <!-- RIGHT: metadata + inspector + story -->
+  <aside class="right">
+    <h3>Level</h3>
+    <div class="field"><label>name</label><input id="m_name" type="text"></div>
+    <div class="field"><label>world</label><input id="m_world" type="number"></div>
+    <div class="field"><label>sky</label><select id="m_sky"></select></div>
+    <div class="field"><label>parallax</label><select id="m_par"></select></div>
+    <div class="field"><label>music</label><select id="m_music"></select></div>
+    <div class="field"><label>size w×h</label>
+      <span><input id="m_w" type="number" style="width:54px"> ×
+      <input id="m_h" type="number" style="width:54px"></span></div>
+    <div class="field"><label>happinessDrain</label><input id="m_drain" type="number" step="0.005"></div>
+    <div class="field"><label>startHappy</label><input id="m_startHappy" type="number" placeholder="default"></div>
+    <div class="field"><label>speedMult</label><input id="m_speedMult" type="number" step="0.05"></div>
+    <div class="field"><label>letterCost</label><input id="m_letterCost" type="number"></div>
+    <div class="field"><label>forceForm</label><select id="m_forceForm">
+      <option value="">none</option><option value="mecha">mecha</option></select></div>
+    <div class="field"><label>next</label><input id="m_next" type="number" placeholder="null"></div>
+    <div class="field"><label>finale</label><input id="m_finale" type="checkbox"></div>
+    <div class="field"><label>goalX (px)</label><input id="m_goalX" type="number"></div>
+    <div class="field"><label>spawn x,y</label>
+      <span><input id="m_spawnX" type="number" style="width:54px">
+      <input id="m_spawnY" type="number" style="width:54px"></span></div>
+
+    <h3>Selected</h3>
+    <div id="inspector"><span class="empty">Nothing selected. Use ✦ Select.</span></div>
+
+    <h3>Water rects</h3>
+    <div id="waterList" class="hint">none</div>
+
+    <h3>Story cards</h3>
+    <div id="cards"></div>
+    <button id="addCard" class="mini">+ card</button>
+  </aside>
+</div>
+<div id="err"></div>
+
+<script src="js/editor.js"></script>
+</body>
+</html>

@@ -31,6 +31,26 @@ Open **http://localhost:8000**. Press `M` if the little bad music gets too
 little bad. Dev shortcut: `http://localhost:8000/?level=3` drops you straight
 into any world (1-6 or `hub`).
 
+## Level builder
+
+A buildless in-browser visual editor, same spirit as the rest of the project.
+Open **http://localhost:8000/editor.html** (it needs the http server — it
+fetches the sprite atlas).
+
+- **Paint** the tile grid (left-click/drag, right-click erases, `⊙ Pick`
+  eyedrops). Resize w×h and zoom (Ctrl+wheel) / pan (middle- or Space-drag).
+- **Place** the spawn, the goal line, enemies, pickups (incl. chests), and a
+  boss; `✦ Select` to move/delete and tweak per-object fields (dino `fly`,
+  baby-swan `rescue`, boss `flees`).
+- **Edit** every metadata field + the story cards in the right panel.
+- **▶ Test Play** loads the current design into the *real* engine in a panel
+  (via `playtest.html`, which feeds the live level through a fetch shim — no
+  export needed, no game files touched).
+- **Export ⤓ / Copy JSON** emits the exact compact JSON the engine loads from
+  `levels/` — byte-identical to what `tools/levelgen.py` produces, so an
+  imported level re-exports unchanged. Save it as `levels/levelN.json`, then
+  wire it up (bump `T.WORLD_COUNT`, add an overworld node) to ship it.
+
 ## Controls
 
 | Action | P1 | P2 (Charmgirl, joins with Right-Shift) |
