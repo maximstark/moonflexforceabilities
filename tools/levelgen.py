@@ -331,7 +331,7 @@ def level6():
 #  a fiery vertical spring-gauntlet stuffed with treasure chests)
 # =====================================================================
 def level7():
-    v = L("THE BROKEN ASCENT", 7, 32, 60, "sky_fever", "par_fever", "fever", drain=0.05)
+    v = L("THE BROKEN ASCENT", 7, 32, 60, "sky_fever", "", "fever", drain=0.05)   # no parallax (tall level)
     v.next = None
     v.spawn = (3*TS, 55*TS)
     v.startHappy = 130                 # the babies are back: +30% happiness reserve
@@ -359,6 +359,8 @@ def level7():
     v.set(8,32,"fire1"); v.set(20,27,"fire1"); v.set(8,22,"fire1"); v.set(15,17,"fire1")
     v.deco([(2,55,"sign"),(15,55,"lantern"),(28,55,"cattail"),(4,37,"lantern"),(25,27,"lantern")])
     # === treasure chests + stars to afford them (3 each) ===
+    v.pick("chest",8,55); v.pick("chest",24,55)                # starter chests — begin the stacking
+    for c in (5,7,14,17,26,28): v.pick("star",c,55)            # stars to afford them right away
     v.pick("chest",5,51); v.pick("chest",18,26); v.pick("chest",13,11)
     for c,r in [(7,51),(10,51),(14,46),(18,46),(6,41),(11,41),(15,36),(8,31),(16,26),(9,21),(16,16),(11,11)]:
         v.pick("star",c,r)

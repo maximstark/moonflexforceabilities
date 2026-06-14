@@ -46,7 +46,11 @@ const Game = {
     this.state = "play";
     this.toast = 120;
     this.iris = 100;                       // iris back in
-    if (level.story) for (const c of level.story) this.queueCard(c);   // scripted intro dialogue
+    if (level.story && level.story.length) {          // play the scripted intro first
+      this.cardQueue = level.story.slice();
+      this.card = this.cardQueue.shift();
+      this.state = "card"; this.stateTimer = 0;
+    }
   },
   afterStore() {
     if (this.levelId === T.WORLD_COUNT) this.state = "scores";
@@ -139,8 +143,8 @@ function update() {
     case "card":
       Game.stateTimer++;
       if (menuPad.pressed.has("confirm") || Game.stateTimer > 420) {
-        Game.card = null;
-        Game.state = "play";
+        if (Game.cardQueue.length) { Game.card = Game.cardQueue.shift(); Game.stateTimer = 0; }
+        else { Game.card = null; Game.state = "play"; }    // straight to next card, no level flash
       }
       break;
 

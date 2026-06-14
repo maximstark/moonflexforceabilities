@@ -145,7 +145,7 @@ const UI = (() => {
   const POWERS = [
     ["fire", "FIRE", "shoot fireballs (X)"],
     ["pink", "PINK", "a pink burst clears the room (X)"],
-    ["tree", "TREE", "hold DOWN: root + shoot nuts (X)"],
+    ["tree", "TREE", "X: throw nuts — hold DOWN to plant & rapid-fire"],
     ["kirby", "KIRBY COSTUME", "one more flap, very round"],
     ["mace", "SPIN MACE", "a slow mace orbits you — a WMD, but you stay exposed"],
   ];

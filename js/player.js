@@ -243,7 +243,7 @@ function doAttack(p, pad) {
   if (p.power === "pink" && p.pinkCD <= 0) {        // the pink burst
     p.pinkCD = T.PINK_COOLDOWN; pinkBurst(p); acted = true;
   }
-  if (p.power === "tree" && p.rooted && p.atkCD <= 0) { shootNut(p); acted = true; }
+  if (p.power === "tree" && p.atkCD <= 0) { shootNut(p); acted = true; }   // X throws a nut; rooting just rapid-fires
   return acted;
 }
 function fireLaser(p, dmg) {
