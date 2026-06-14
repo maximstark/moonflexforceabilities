@@ -65,6 +65,7 @@ const TUNING = {
   GATOR_RANGE: 56, GATOR_REVEAL: 26, GATOR_LUNGE: 2.6, GATOR_HP: 2, GATOR_REST: 80,
   FISH_SPEED: 0.7, MUSH_DMG_HAPPY: 12,
   WISP_SPEED: 1.15, WISP_RANGE: 200,   // dream-wisp: floaty homing flyer
+  FLY_SPEED: 2.4, FLY_RANGE: 280,      // the fly: fast, scary, 2 hits
   STINK_RADIUS: 26, STINK_LIFE: 320, STINK_DRAIN: 0.5,
 
   // --- bosses ---
@@ -84,7 +85,7 @@ const TUNING = {
   NAME_MAX_LEN: 8,
 
   // --- progression ---
-  WORLD_COUNT: 7,                  // number of worlds (the finale level sets finale:true)
+  WORLD_COUNT: 8,                  // number of worlds (the finale level sets finale:true)
 
   // --- camera & juice ---
   CAM_LERP: 0.12, CAM_LOOKAHEAD: 24, SHAKE_FRAMES: 6,

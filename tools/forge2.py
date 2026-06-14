@@ -898,12 +898,30 @@ def wisp_frames():
     def mk(t): im=cell(W,H); body(ImageDraw.Draw(im),t); return outline(im,W,H)
     return (W,H,[mk(0),mk(1)],["bob1","bob2"])
 
+def fly_frames():
+    """a fast, scary fly — two hits to kill. dark body, angry red eyes, fangs."""
+    W,H=22,16
+    RED=(238,58,70,255); REDH=(255,196,196,255); BODY=(54,40,66,255); BODYD=(34,24,44,255)
+    WING=(176,182,212,255); FANG=(245,245,236,255)
+    def base(d,flap):
+        wy = 1 if flap else 5
+        d.polygon([(7,8),(0,wy),(8,5)],fill=WING)                   # wings
+        d.polygon([(15,8),(22,wy),(14,5)],fill=WING)
+        d.ellipse([6,4,16,14],fill=BODY)                            # body
+        d.ellipse([7,9,15,14],fill=BODYD)
+        d.ellipse([6,4,10,9],fill=RED); d.ellipse([12,4,16,9],fill=RED)   # big red eyes
+        d.point((8,6),fill=REDH); d.point((14,6),fill=REDH)
+        d.line([(6,4),(9,6)],fill=BODYD); d.line([(16,4),(13,6)],fill=BODYD)   # angry brows
+        d.polygon([(9,13),(10,15),(11,13)],fill=FANG); d.polygon([(12,13),(13,15),(14,13)],fill=FANG)  # fangs
+    def mk(f): im=cell(W,H); base(ImageDraw.Draw(im),f); return outline(im,W,H)
+    return (W,H,[mk(0),mk(1)],["buzz1","buzz2"])
+
 # =====================================================================
 #  BUILD + MANIFEST MERGE + PREVIEW
 # =====================================================================
 REGISTRY2={
  "charmgirl":charmgirl_frames,"trex":trex_frames,"mecha":mecha_frames,
- "babyswan":babyswan_frames,"alligator":alligator_frames,"fish":fish_frames,"wisp":wisp_frames,
+ "babyswan":babyswan_frames,"alligator":alligator_frames,"fish":fish_frames,"wisp":wisp_frames,"fly":fly_frames,
  "turtles":turtles_frames,"boss_papa":boss_papa_frames,"boss_hogdog":boss_hogdog_frames,
  "gear":gear_frames,"fx":fx_frames,"items":items_frames,
  "tiles2":tiles2_frames,"hub":hub_frames,"elevator":elevator_frames,

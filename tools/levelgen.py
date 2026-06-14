@@ -374,6 +374,42 @@ def level7():
     v.goalX = 13*TS                                            # summit col 13 -> trophy on the solid top
     return v
 
+# =====================================================================
+#  LEVEL 8 — THE LONG FALL  (night; a plateau, then a wave of tiny steps
+#  over the void amid an onslaught of flies & wisps — come STACKED)
+# =====================================================================
+def level8():
+    v = L("THE LONG FALL", 8, 180, 20, "sky_night", "par_night", "night", drain=0.055)
+    v.next = None
+    v.spawn = (3*TS, 7*TS)
+    v.story = [
+        ["the dream goes DARK.", "", "a thin plateau over an endless fall."],
+        ["the air fills with wings and jelly.", "", "good thing you came STACKED."],
+    ]
+    G,D = "night_grass","night_dirt"
+    v.ground(0,32,9,G,D,edges=False)                              # the starting plateau
+    v.deco([(2,8,"sign"),(8,8,"cattail"),(14,8,"lantern"),(24,8,"flower"),(29,8,"lantern")])
+    v.pick("chest",10,8); v.pick("chest",18,8); v.pick("chest",26,8)   # stack up first
+    for c in (6,8,12,16,20,22,28,30): v.pick("star",c,8)
+    v.pick("treat",14,8); v.pick("treat",24,8)
+    steps=[]; c=36; i=0                                           # the long wave of tiny steps
+    while c < 158:
+        row = 11 + int(round(3*math.sin(i*0.7)))
+        v.plat(c,c+2,row,"platform"); steps.append((c,row))
+        c += 6; i += 1
+    v.ground(160,179,12,G,D,edges=False)                         # safe landing + goal
+    v.deco([(176,11,"lantern"),(170,11,"flower")])
+    for sc,sr in steps[1::3]: v.pick("star",sc+1,sr-1)
+    mid = steps[len(steps)//2]; v.pick("treat",mid[0]+1,mid[1]-1)
+    v.pops([164,166,168,170],11)
+    for k,(sc,sr) in enumerate(steps):                           # THE ONSLAUGHT
+        if k % 3 == 0: v.enemy("fly",sc+1,sr-4)
+        if k % 2 == 0: v.enemy("wisp",sc+1,sr-6)
+    v.enemy("fly",44,5); v.enemy("fly",96,4); v.enemy("fly",132,5)
+    v.boss = None
+    v.goalX = 176*TS
+    return v
+
 def hub():
     v = L("HOME", 0, 26, 62, "sky_hub", "par_hub", "hub", drain=0.0)
     v.spawn = (5*TS, 57*TS)
@@ -416,5 +452,6 @@ if __name__ == "__main__":
     level5().out("level5.json")
     level6().out("level6.json")
     level7().out("level7.json")
+    level8().out("level8.json")
     hub().out("hub.json")
     print("all levels written")

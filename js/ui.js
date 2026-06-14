@@ -37,9 +37,11 @@ const UI = (() => {
     const ICON = { goosefeet: ["items","pickup_goosefeet"], laser: ["items","pickup_laser"],
                    kirby: ["items","icon_kirby"], spoon: ["items","pickup_spoon"] };
     p1.stack.forEach((c, i) => { const s = ICON[c]; if (s) drawFrame(s[0], s[1], 6 + i * 14, 38); });
-    if (p1.power) {
-      const px = 6 + p1.stack.length * 14 + 4;
-      if (p1.power === "mace") drawMaceIcon(px + 8, 46); else drawFrame("items", "icon_" + p1.power, px, 38);
+    let ppx = 6 + p1.stack.length * 14 + 4;
+    for (const pw of p1.powers) {
+      if (pw === "mace") drawMaceIcon(ppx + 8, 46);
+      else { const ic = PICK_ICON[pw]; if (ic) drawFrame(ic[0], ic[1], ppx, 38); }
+      ppx += 14;
     }
     // moon timer
     if (p1.moonTimer > 0) {
@@ -143,12 +145,21 @@ const UI = (() => {
 
   /* ---------------- treasure chooser ---------------- */
   const POWERS = [
-    ["fire", "FIRE", "shoot fireballs (X)"],
-    ["pink", "PINK", "a pink burst clears the room (X)"],
-    ["tree", "TREE", "X: throw nuts — hold DOWN to plant & rapid-fire"],
-    ["kirby", "KIRBY COSTUME", "one more flap, very round"],
-    ["mace", "SPIN MACE", "a slow mace orbits you — a WMD, but you stay exposed"],
+    ["fire",      "FIRE",        "X: shoot fireballs"],
+    ["pink",      "PINK BURST",  "X: clear the room"],
+    ["tree",      "TREE NUTS",   "X: throw nuts (hold DOWN to plant)"],
+    ["mace",      "SPIN MACE",   "a slow orbiting WMD — no defense"],
+    ["laser",     "LASER EYES",  "X: a piercing beam (aim with up/down)"],
+    ["spoon",     "GIANT SPOON", "X: melee swat; deflects mushrooms"],
+    ["goosefeet", "GOOSE FEET",  "higher jump; down in mid-air = ground pound"],
+    ["kirby",     "KIRBY CAP",   "one extra flap, very round"],
   ];
+  const COSTUME_PICKS = { kirby: 1, laser: 1, spoon: 1, goosefeet: 1 };
+  const PICK_ICON = {
+    fire: ["items","icon_fire"], pink: ["items","icon_pink"], tree: ["items","icon_tree"],
+    laser: ["items","pickup_laser"], spoon: ["items","pickup_spoon"],
+    goosefeet: ["items","pickup_goosefeet"], kirby: ["items","icon_kirby"],
+  };
   function drawMaceIcon(cx, cy) {
     ctx.fillStyle = "#9a93b0";
     for (let i = 1; i <= 3; i++) ctx.fillRect(cx - 7 + i * 2, cy + 5 - i * 2, 2, 2);     // chain
@@ -158,38 +169,44 @@ const UI = (() => {
     ctx.beginPath(); ctx.arc(cx - 1, cy - 1, 2, 0, Math.PI * 2); ctx.fillStyle = "#8a84a0"; ctx.fill();
   }
   function drawChooser() {
-    ctx.fillStyle = "rgba(12,10,20,0.75)"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
+    ctx.fillStyle = "rgba(12,10,20,0.80)"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffe48a"; ctx.font = "bold 11px monospace";
-    ctx.fillText("THE TREASURE BOX OPENS...", T.VIEW_W / 2, 48);
+    ctx.fillText("THE TREASURE BOX OPENS...", T.VIEW_W / 2, 24);
     ctx.font = "8px monospace"; ctx.fillStyle = "#b9b2d8";
-    ctx.fillText("choose a power (this is how you beat that beast)", T.VIEW_W / 2, 62);
+    ctx.fillText("pick an ability — they STACK, so grab everything", T.VIEW_W / 2, 38);
+    const cols = 4, bw = 80, bh = 50, gap = 6, pitch = bw + gap;
+    const startX = (T.VIEW_W - (cols * pitch - gap)) / 2;
     POWERS.forEach((pw, i) => {
-      const x = (T.VIEW_W - (POWERS.length * 68 - 8)) / 2 + i * 68, y = 92;
+      const col = i % cols, row = (i / cols) | 0;
+      const x = startX + col * pitch, y = 54 + row * (bh + 10), cx = x + bw / 2;
       const sel = i === Game.chooserIdx;
-      ctx.fillStyle = sel ? "#3a2a50" : "#241a34";
-      ctx.fillRect(x, y, 60, 64);
-      if (sel) { ctx.strokeStyle = "#ffe48a"; ctx.strokeRect(x + 0.5, y + 0.5, 59, 63); }
-      if (pw[0] === "mace") drawMaceIcon(x + 30, y + 18); else drawFrame("items", "icon_" + pw[0], x + 22, y + 8);
+      ctx.fillStyle = sel ? "#3a2a50" : "#241a34"; ctx.fillRect(x, y, bw, bh);
+      if (sel) { ctx.strokeStyle = "#ffe48a"; ctx.strokeRect(x + 0.5, y + 0.5, bw - 1, bh - 1); }
+      if (pw[0] === "mace") drawMaceIcon(cx, y + 16);
+      else { const ic = PICK_ICON[pw[0]]; if (ic) drawFrame(ic[0], ic[1], cx - 8, y + 8); }
       ctx.fillStyle = sel ? "#ffe48a" : "#cabce0"; ctx.font = "7px monospace";
-      ctx.fillText(pw[1], x + 30, y + 38);
-      if (sel) {
-        ctx.fillStyle = "#fff6d8"; ctx.font = "8px monospace";
-        ctx.fillText(pw[2], T.VIEW_W / 2, 176);
-      }
+      ctx.fillText(pw[1], cx, y + bh - 6);
     });
-    ctx.fillStyle = "#b9b2d8"; ctx.font = "8px monospace";
-    ctx.fillText("ARROWS + ENTER", T.VIEW_W / 2, 196);
+    ctx.fillStyle = "#fff6d8"; ctx.font = "8px monospace";
+    ctx.fillText(POWERS[Game.chooserIdx][2], T.VIEW_W / 2, 188);
+    ctx.fillStyle = "#b9b2d8";
+    ctx.fillText("ARROWS + ENTER", T.VIEW_W / 2, 204);
     ctx.textAlign = "left";
   }
   function updateChooser() {
-    if (menuPad.pressed.has("left")) Game.chooserIdx = (Game.chooserIdx + POWERS.length - 1) % POWERS.length;
-    if (menuPad.pressed.has("right")) Game.chooserIdx = (Game.chooserIdx + 1) % POWERS.length;
+    const n = POWERS.length;
+    if (menuPad.pressed.has("left"))  Game.chooserIdx = (Game.chooserIdx + n - 1) % n;
+    if (menuPad.pressed.has("right")) Game.chooserIdx = (Game.chooserIdx + 1) % n;
+    if (menuPad.pressed.has("up") || menuPad.pressed.has("down")) Game.chooserIdx = (Game.chooserIdx + 4) % n;
     if (menuPad.pressed.has("confirm")) {
       const pw = POWERS[Game.chooserIdx][0];
       const p = Game.chooserFor || players[0];
-      if (pw === "kirby") wearCostume(p, "kirby");
-      else { p.power = pw; AudioSys.sfx("transform"); World.addFloater(p.x, p.y - 10, pw.toUpperCase() + "!"); }
+      if (COSTUME_PICKS[pw]) wearCostume(p, pw);                 // costumes stack in p.stack
+      else {
+        if (!p.powers.includes(pw)) p.powers.push(pw);          // powers stack in p.powers
+        AudioSys.sfx("transform"); World.addFloater(p.x, p.y - 10, pw.toUpperCase() + "!");
+      }
       Game.state = "play";
     }
   }

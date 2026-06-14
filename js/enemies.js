@@ -14,6 +14,7 @@ const ENEMY_DEFS = {
   alligator: { w: 40, h: 22, sheet: "alligator", hp: T.GATOR_HP, score: 300 },
   fish:      { w: 12, h: 8,  sheet: "fish",      hp: 1, score: 50, gentle: true },
   wisp:      { w: 14, h: 14, sheet: "wisp",      hp: 1, score: 150 },
+  fly:       { w: 18, h: 13, sheet: "fly",       hp: 2, score: 250 },
 };
 
 function makeEnemy(spec) {
@@ -46,7 +47,7 @@ function updateEnemies() {
     if (e.stun > 0) { e.stun--; e.vx = 0; }
     else updateEnemyBrain(e, mult);
 
-    if (e.type === "fish" || e.type === "alligator" || e.type === "wisp") {  // floaters: no gravity
+    if (e.type === "fish" || e.type === "alligator" || e.type === "wisp" || e.type === "fly") {  // floaters: no gravity
       e.x += e.vx; e.y += e.vy;
     } else {
       e.vy = Math.min(e.vy + T.ENEMY_GRAVITY, T.ENEMY_MAX_FALL);
@@ -128,6 +129,17 @@ function updateEnemyBrain(e, mult) {
     }
     e.vx = clamp(e.vx, -T.WISP_SPEED * mult, T.WISP_SPEED * mult);
     e.vy = clamp(e.vy, -T.WISP_SPEED * mult, T.WISP_SPEED * mult);
+    e.dir = e.vx < 0 ? -1 : 1;
+  } else if (e.type === "fly") {
+    if (pl) {
+      const dx = (pl.x + pl.w / 2) - (e.x + e.w / 2);
+      const dy = (pl.y + pl.h / 2) - (e.y + e.h / 2);
+      const dd = Math.hypot(dx, dy) || 1;
+      if (dd < T.FLY_RANGE) { e.vx += dx / dd * 0.22 * mult; e.vy += dy / dd * 0.22 * mult; }
+    }
+    e.vy += Math.sin(e.animTimer / 5) * 0.25;             // jittery menace
+    const sp = T.FLY_SPEED * mult;
+    e.vx = clamp(e.vx, -sp, sp); e.vy = clamp(e.vy, -sp, sp);
     e.dir = e.vx < 0 ? -1 : 1;
   }
 }
@@ -301,7 +313,7 @@ function updateCombat() {
 
   // spin-mace: a slow orbiting WMD (gives no defense — you stay exposed)
   for (const p of players) {
-    if (p.dead || p.power !== "mace") continue;
+    if (p.dead || !p.powers.includes("mace")) continue;
     const hx = p.x + p.w / 2 + Math.cos(p.maceAngle || 0) * T.MACE_RADIUS;
     const hy = p.y + p.h / 2 + Math.sin(p.maceAngle || 0) * T.MACE_RADIUS;
     const box = { x: hx - 8, y: hy - 8, w: 16, h: 16 };
@@ -341,6 +353,7 @@ function enemyFrame(e) {
   if (e.type === "alligator")
     return e.state === "idle" ? "catface" : e.state === "reveal" ? "reveal" : "chomp";
   if (e.type === "wisp") return (e.animTimer >> 3) % 2 ? "bob2" : "bob1";
+  if (e.type === "fly") return (e.animTimer >> 2) % 2 ? "buzz2" : "buzz1";
   return "idle";
 }
 function drawProjectiles(camX, camY) {
@@ -370,7 +383,7 @@ function drawProjectiles(camX, camY) {
   }
   // spin-mace: chain of dots out to a spiked ball
   for (const p of players) {
-    if (p.dead || p.power !== "mace") continue;
+    if (p.dead || !p.powers.includes("mace")) continue;
     const ccx = p.x + p.w / 2 - camX, ccy = p.y + p.h / 2 - camY;
     const hx = ccx + Math.cos(p.maceAngle || 0) * T.MACE_RADIUS;
     const hy = ccy + Math.sin(p.maceAngle || 0) * T.MACE_RADIUS;

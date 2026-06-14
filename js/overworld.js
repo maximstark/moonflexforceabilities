@@ -8,17 +8,18 @@
  * ===================================================================== */
 const Overworld = (() => {
   const NODES = [
-    { id: "home", x: 26, y: 192, label: "HOME · TROPHY ROOM" },
-    { id: 1, x: 64,  y: 160, label: "1   THE DREAM LAKE" },
-    { id: 2, x: 104, y: 190, label: "2   MOONLIGHT LAKE" },
-    { id: 3, x: 148, y: 150, label: "3   THE DEEP" },
-    { id: 4, x: 192, y: 188, label: "4   CANDY CLOUDS" },
-    { id: 5, x: 236, y: 146, label: "5   THE FEVER SWARM" },
-    { id: 6, x: 286, y: 184, label: "6   THE BIG HOG DOG" },
-    { id: 7, x: 344, y: 150, label: "7   THE BROKEN ASCENT" },
+    { id: "home", x: 40,  y: 192, label: "HOME · TROPHY ROOM" },
+    { id: 1, x: 104, y: 160, label: "1   THE DREAM LAKE" },
+    { id: 2, x: 160, y: 192, label: "2   MOONLIGHT LAKE" },
+    { id: 3, x: 220, y: 150, label: "3   THE DEEP" },
+    { id: 4, x: 280, y: 190, label: "4   CANDY CLOUDS" },
+    { id: 5, x: 340, y: 148, label: "5   THE FEVER SWARM" },
+    { id: 6, x: 400, y: 188, label: "6   THE BIG HOG DOG" },
+    { id: 7, x: 460, y: 150, label: "7   THE BROKEN ASCENT" },
+    { id: 8, x: 520, y: 188, label: "8   THE LONG FALL" },
   ];
   let idx = 1, tx = NODES[1].x, ty = NODES[1].y;
-  let moving = false, from = 1, to = 1, mt = 0, fr = 0;
+  let moving = false, from = 1, to = 1, mt = 0, fr = 0, camX = 0;
 
   // ---- top-down lake scenery (static, deterministic) ----
   const TAU = Math.PI * 2;
@@ -31,11 +32,13 @@ const Overworld = (() => {
   const nodeOpen = i => NODES[i].id === "home" || NODES[i].id <= save.unlocked;
   // path i links node i and i+1; open once the higher world on it is unlocked
   const pathOpen = i => Math.max(lvl(NODES[i]), lvl(NODES[i + 1])) <= save.unlocked;
+  const maxCam = () => Math.max(0, NODES[NODES.length - 1].x + 40 - T.VIEW_W);
 
   function enter(nodeId) {
     let i = NODES.findIndex(n => n.id === nodeId);
     if (i < 0) i = 1;
     idx = i; tx = NODES[i].x; ty = NODES[i].y; moving = false;
+    camX = clamp(tx - T.VIEW_W / 2, 0, maxCam());
   }
   function step(dir) {
     const j = idx + dir;
@@ -51,9 +54,7 @@ const Overworld = (() => {
       const a = NODES[from], b = NODES[to];
       tx = a.x + (b.x - a.x) * mt; ty = a.y + (b.y - a.y) * mt;
       if (mt >= 1) { moving = false; idx = to; }
-      return;
-    }
-    if (menuPad.pressed.has("left") || menuPad.pressed.has("up")) step(-1);
+    } else if (menuPad.pressed.has("left") || menuPad.pressed.has("up")) step(-1);
     else if (menuPad.pressed.has("right") || menuPad.pressed.has("down")) step(1);
     else if (menuPad.pressed.has("confirm")) {
       const n = NODES[idx];
@@ -61,6 +62,7 @@ const Overworld = (() => {
       if (n.id === "home") Game.state = "trophy";
       else Game.enterLevel(n.id);
     }
+    camX += (clamp(tx - T.VIEW_W / 2, 0, maxCam()) - camX) * 0.15;   // camera follows the token
   }
   function updateTrophy() {
     fr++;
@@ -75,7 +77,7 @@ const Overworld = (() => {
     for (let i = 0; i < NODES.length; i++) drawNode(NODES[i], nodeOpen(i), i === idx);
     const bob = Math.sin(fr / 8) * 1.5;
     drawFrame("swan", moving ? ((fr >> 3) % 2 ? "walk2" : "walk1") : "idle",
-              Math.round(tx - 20), Math.round(ty - 32 + bob), to < from);
+              Math.round(tx - 20 - camX), Math.round(ty - 32 + bob), to < from);
     // banner
     ctx.textAlign = "center";
     ctx.fillStyle = "rgba(20,14,30,0.55)"; ctx.fillRect(0, 3, T.VIEW_W, 27);
@@ -91,13 +93,13 @@ const Overworld = (() => {
   }
   function drawPath(a, b, open) {
     for (let k = 1; k < 10; k++) {
-      const x = a.x + (b.x - a.x) * k / 10, y = a.y + (b.y - a.y) * k / 10;
+      const x = a.x + (b.x - a.x) * k / 10 - camX, y = a.y + (b.y - a.y) * k / 10;
       ctx.fillStyle = open ? "#e8c878" : "#4a4458";
       ctx.fillRect(Math.round(x) - 1, Math.round(y) - 1, 2, 2);
     }
   }
   function drawNode(n, open, cur) {
-    const x = n.x, y = n.y;
+    const x = n.x - camX, y = n.y;
     if (cur) {
       ctx.strokeStyle = "#ffe48a"; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(x, y, 9 + Math.sin(fr / 6), 0, Math.PI * 2); ctx.stroke();
@@ -132,7 +134,7 @@ const Overworld = (() => {
     ctx.fillStyle = "#3c8038"; ctx.fillRect(x - 1, y - 1, 2, 2);
   }
   function drawIsland(n) {
-    const x = n.x, y = n.y;
+    const x = n.x - camX, y = n.y;
     ctx.fillStyle = "rgba(36,76,116,0.5)"; ctx.beginPath(); ctx.ellipse(x, y + 4, 18, 11, 0, 0, TAU); ctx.fill();
     ctx.fillStyle = "#e6d29a"; ctx.beginPath(); ctx.ellipse(x, y + 2, 16, 10, 0, 0, TAU); ctx.fill();   // sand
     ctx.fillStyle = "#6fb049"; ctx.beginPath(); ctx.ellipse(x, y, 13, 8, 0, 0, TAU); ctx.fill();        // grass

@@ -19,9 +19,9 @@ function makePlayer(idx, character) {
     hearts: T.MAX_HEARTS, maxHearts: T.MAX_HEARTS,
     iframes: 0, dead: false, deadTimer: 0,
     stack: [],                    // worn costumes, bottom->top: goosefeet|laser|kirby|spoon
-    power: null,                  // treasure-box power: fire|pink|tree
+    powers: [],                   // treasure powers held — they STACK and persist: fire|pink|tree|mace
     pounding: false, rooted: false, dropThrough: 0,
-    atkCD: 0, spoonTimer: 0, pinkCD: 0,
+    atkCD: 0, spoonTimer: 0, pinkCD: 0, fireCD: 0, nutCD: 0,
     moonTimer: 0,                 // trex (charmgirl) / moonflex (swan)
     carrying: 0,                  // baby swans in tow
     lastSafeX: 0, lastSafeY: 0,
@@ -45,12 +45,14 @@ function updatePlayer(p) {
   p.animTimer++;
   if (p.atkCD > 0) p.atkCD--;
   if (p.pinkCD > 0) p.pinkCD--;
+  if (p.fireCD > 0) p.fireCD--;
+  if (p.nutCD > 0) p.nutCD--;
   if (p.spoonTimer > 0) p.spoonTimer--;
   if (p.iframes > 0) p.iframes--;
   if (p.dropThrough > 0) p.dropThrough--;
   if (p.moonTimer > 0 && --p.moonTimer === 0) endMoon(p);
   if (p.squash !== 0) p.squash *= 0.82;
-  if (p.power === "mace") p.maceAngle = (p.maceAngle || 0) - T.MACE_SPEED;   // slow CCW spin
+  if (p.powers.includes("mace")) p.maceAngle = (p.maceAngle || 0) - T.MACE_SPEED;   // slow CCW spin
 
   if (p.form === "mecha") { updateMecha(p, pad); return; }
 
@@ -140,9 +142,9 @@ function updateLand(p, pad, dir) {
 
   // actions
   if (pad.pressed.has("action")) doAttack(p, pad);
-  if (p.rooted && p.power === "tree" && pad.held.action && p.atkCD <= 0) shootNut(p);
+  if (p.rooted && p.powers.includes("tree") && pad.held.action && p.nutCD <= 0) shootNut(p);
   // plant roots
-  if (p.power === "tree" && p.grounded && pad.held.down && !p.rooted) {
+  if (p.powers.includes("tree") && p.grounded && pad.held.down && !p.rooted) {
     p.rooted = true; World.burstAt(p.x + p.w / 2, p.y + p.h, "poof", 2);
   }
 }
@@ -236,14 +238,14 @@ function doAttack(p, pad) {
   } else if (has(p, "laser") && p.atkCD <= 0) {     // LASER BEAM EYES
     fireLaser(p, 1); p.atkCD = T.LASER_COOLDOWN; acted = true;
   }
-  if (p.power === "fire" && p.atkCD <= 0) {
+  if (p.powers.includes("fire") && p.fireCD <= 0) {
     spawnProjectile("fireball", p.x + p.w / 2, p.y + 6, p.facing * T.FIREBALL_VX, -1.5, "player", 1);
-    p.atkCD = T.FIRE_COOLDOWN; AudioSys.sfx("fire"); acted = true;
+    p.fireCD = T.FIRE_COOLDOWN; AudioSys.sfx("fire"); acted = true;
   }
-  if (p.power === "pink" && p.pinkCD <= 0) {        // the pink burst
+  if (p.powers.includes("pink") && p.pinkCD <= 0) {        // the pink burst
     p.pinkCD = T.PINK_COOLDOWN; pinkBurst(p); acted = true;
   }
-  if (p.power === "tree" && p.atkCD <= 0) { shootNut(p); acted = true; }   // X throws a nut; rooting just rapid-fires
+  if (p.powers.includes("tree") && p.nutCD <= 0) { shootNut(p); acted = true; }   // X throws a nut; rooting rapid-fires
   return acted;
 }
 function fireLaser(p, dmg) {
@@ -264,7 +266,7 @@ function pinkBurst(p) {
 }
 function shootNut(p) {
   spawnProjectile("nut", p.x + p.w / 2, p.y + 4, p.facing * T.NUT_VX, -0.6, "player", 1);
-  p.atkCD = T.NUT_COOLDOWN; AudioSys.sfx("nut");
+  p.nutCD = T.NUT_COOLDOWN; AudioSys.sfx("nut");
 }
 function landPound(p) {
   p.pounding = false;
