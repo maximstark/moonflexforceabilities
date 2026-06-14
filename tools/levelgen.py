@@ -405,7 +405,7 @@ def level8():
     # a thinner swarm — THE CHASER is the real threat now
     for k,(sc,sr) in enumerate(steps):
         if k % 5 == 0: v.enemy("fly",sc,sr-4)
-        if k % 4 == 0: v.enemy("wisp",sc,sr-6)
+        if k % 2 == 0: v.enemy("wisp",sc,sr-6)
     # THE BAD DREAMS — drops at the plateau edge, then chases you to the end
     v.boss = dict(type="badcode", x=480, y=104)   # drops at the plateau edge, BEHIND you
     v.goalX = 176*TS
