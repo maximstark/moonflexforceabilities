@@ -340,6 +340,18 @@ async function main() {
         cove ? cove.w + "/" + cove.maxHp : "no boss");
   check("the cove's bad dreams is sweep-armed", !!(cove && cove.sweep));
 
+  /* ============ level data integrity: rectangular grids, in-range tiles ============ */
+  // (a jagged row makes grid[y][x] undefined -> drawTiles crashes once it scrolls on-screen)
+  for (let i = 1; i <= T.WORLD_COUNT; i++) {
+    const L = await (await fetch("levels/level" + i + ".json")).json();
+    const w0 = L.grid[0].length;
+    check("level" + i + " grid is rectangular",
+          L.grid.every(r => r.length === w0), [...new Set(L.grid.map(r => r.length))].join(","));
+    let oob = 0;
+    for (const row of L.grid) for (const t of row) if (t >= 0 && L.tileNames[t] == null) oob++;
+    check("level" + i + " tiles all within tileNames", oob === 0, oob + " out-of-range");
+  }
+
   /* ============ the finale path (gated code: beads -> ending -> credits -> scores) ============ */
   await gotoLevel(9); step(5);
   level.finale = true;                                   // fabricate: no shipped level sets it yet
