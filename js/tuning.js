@@ -86,7 +86,7 @@ const TUNING = {
   NAME_MAX_LEN: 8,
 
   // --- progression ---
-  WORLD_COUNT: 8,                  // number of worlds (the finale level sets finale:true)
+  WORLD_COUNT: 9,                  // number of worlds (the finale level sets finale:true)
 
   // --- camera & juice ---
   CAM_LERP: 0.12, CAM_LOOKAHEAD: 24, SHAKE_FRAMES: 6,

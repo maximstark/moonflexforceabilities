@@ -331,8 +331,17 @@ async function main() {
   tap(menuPad, "confirm"); step(2);                      // fire again -> mirrored pair
   check("same power again stacks to a mirrored pair (lvl 2)", (P().lvl.fire || 0) === 2, P().lvl.fire);
 
+  /* ============ L9: SECRET COVE — the level-configured Bad Dreams ============ */
+  await gotoLevel(9); step(10);
+  check("L9 SECRET COVE loads", level.name === "Secret Cove" && level.world === 9, level.name);
+  const cove = Bosses.units[0];
+  check("the cove's bad dreams is bigger & tougher (64px / 65hp)",
+        cove && cove.sub === "badcode" && cove.w === 64 && cove.maxHp === 65,
+        cove ? cove.w + "/" + cove.maxHp : "no boss");
+  check("the cove's bad dreams is sweep-armed", !!(cove && cove.sweep));
+
   /* ============ the finale path (gated code: beads -> ending -> credits -> scores) ============ */
-  await gotoLevel(8); step(5);
+  await gotoLevel(9); step(5);
   level.finale = true;                                   // fabricate: no shipped level sets it yet
   World.spawnTrophy("beads");
   const beads = World.pickups.find(pk => pk.type === "beads");
@@ -367,6 +376,33 @@ async function main() {
   let revived = false;
   for (let i = 0; i < 200; i++) { step(); if (!players[0].dead) { revived = true; break; } }
   check("fallen player respawns beside the buddy", revived);
+
+  /* ====== the bad dreams, configured by a level: bigger / tougher / half-health sweep ====== */
+  releaseAll();
+  Bosses.spawn({ type: "badcode", x: 600, y: 200, hp: 65, size: 64, sweep: true,
+                 dialogue: ['"DROWNED."', "", '"STILL."'] });
+  let bc = Bosses.units[0];
+  check("badcode honors spec size", bc.w === 64 && bc.h === 64, bc.w + "x" + bc.h);
+  check("badcode honors spec hp", bc.maxHp === 65 && bc.hp === 65, bc.hp + "/" + bc.maxHp);
+  for (let i = 0; i < 120 && bc.state !== "chase"; i++) {            // activate -> drop -> (dialogue card) -> chase
+    P().x = 700; P().y = 200; P().iframes = 9999;
+    if (Game.state === "card") tap(menuPad, "confirm");
+    step();
+  }
+  check("badcode wakes and chases (phase 1)",
+        Bosses.activated && bc.phase === 1 && bc.state === "chase", bc.state + "/p" + bc.phase);
+  bc.hp = bc.maxHp / 2 - 1;                                          // shove it past half health
+  for (let i = 0; i < 50 && bc.state !== "sweep"; i++) { P().x = 700; P().y = 200; P().iframes = 9999; step(); }
+  check("at half health it becomes a sweeping sphere (phase 2)",
+        bc.phase === 2 && bc.state === "sweep", bc.state + "/p" + bc.phase);
+  const sx0 = bc.x;
+  for (let i = 0; i < 20; i++) { P().x = 700; P().y = 200; P().iframes = 9999; step(); }
+  check("the sphere actually sweeps (carries across)", Math.abs(bc.x - sx0) > 1, (bc.x - sx0).toFixed(1));
+  // a plain badcode (no level overrides) keeps the classic size, hp, and behavior
+  Bosses.spawn({ type: "badcode", x: 600, y: 200 });
+  bc = Bosses.units[0];
+  check("plain badcode stays 44px / default hp / no sweep",
+        bc.w === 44 && bc.maxHp === T.BADCODE_HP && !bc.sweep);
 
   console.log("\n" + passCount + " passed, " + failCount + " failed");
   process.exit(failCount ? 1 : 0);

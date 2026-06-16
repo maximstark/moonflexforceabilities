@@ -32,14 +32,21 @@ const Bosses = (() => {
       units.push(hog(spec.x, spec.y, kind === "hogdog_final"));
       arenaName = kind === "hogdog" ? "THE BIG HOG DOG" : "THE BIG HOG DOG (WE STILL HATE HIM)";
     } else if (kind === "badcode") {
-      units.push(badcode(spec.x, spec.y));
+      units.push(badcode(spec.x, spec.y, spec));
       arenaName = "THE BAD DREAMS";
     }
   }
-  const badcode = (x, y) => ({
-    sub: "badcode", sheet: "boss_badcode", x, y: y - 240, w: 44, h: 44,
-    hp: T.BADCODE_HP, maxHp: T.BADCODE_HP, state: "sleep", timer: 0, iframes: 0,
-    hurtFlash: 0, facing: -1, vx: 0, vy: 0, dropY: y, triggerX: x + 60, animTimer: 0, rage: 1 });
+  // a level's boss spec may oversize it (spec.size), buff it (spec.hp), rewrite its
+  // words (spec.dialogue), and arm a half-health sphere sweep (spec.sweep).
+  const badcode = (x, y, spec = {}) => {
+    const sz = spec.size || 44;
+    return {
+      sub: "badcode", sheet: "boss_badcode", x, y: y - 240, w: sz, h: sz,
+      hp: spec.hp || T.BADCODE_HP, maxHp: spec.hp || T.BADCODE_HP, state: "sleep", timer: 0,
+      iframes: 0, hurtFlash: 0, facing: -1, vx: 0, vy: 0, dropY: y, triggerX: x + 60,
+      animTimer: 0, rage: 1, dialogue: spec.dialogue || null,
+      sweep: !!spec.sweep, phase: 1, sweepDir: 1, sweepTimer: 0 };
+  };
   const grumpis = (x, y, hp, phase = 0) => ({
     sub: "grumpis", sheet: "boss_grumpis", x, y, w: 52, h: 48, vx: 0, vy: 0,
     hp, maxHp: hp, state: "windup", timer: T.GRUMPIS_WINDUP + phase, iframes: 0,
@@ -201,11 +208,36 @@ const Bosses = (() => {
       if (b.y >= b.dropY) {
         b.y = b.dropY; b.state = "speak"; b.timer = 6; Game.shake = 14;
         AudioSys.sfx("roar");
-        Game.queueCard(['"I AM THE BAD DREAMS."', "", '"GIVE ME YOUR... BABIES."']);
+        Game.queueCard(b.dialogue ||
+          ['"I AM THE BAD DREAMS."', "", '"GIVE ME YOUR... BABIES."']);
       }
       return;
     }
     if (b.state === "speak") { b.vx = b.vy = 0; if (--b.timer <= 0) b.state = "chase"; return; }
+    // at half health a sweep-armed dream collapses into a sphere and changes the rules
+    if (b.sweep && b.phase === 1 && b.hp <= b.maxHp / 2) {
+      b.phase = 2; b.state = "morph"; b.timer = 28; b.vx = b.vy = 0;
+      Game.shake = 14; AudioSys.sfx("roar");
+    }
+    if (b.state === "morph") {
+      b.vx = b.vy = 0;                                      // a held, shuddering beat
+      if (--b.timer <= 0) { b.state = "sweep"; b.sweepTimer = 0; b.sweepDir = pl && pl.x < b.x ? -1 : 1; }
+      return;
+    }
+    if (b.state === "sweep") {                              // a sphere carving wide passes across you
+      b.sweepTimer++;
+      const sp = T.BADCODE_SPEED * mult * 1.7;
+      b.vx = b.sweepDir * sp;
+      b.vy = Math.sin(b.sweepTimer / 9) * sp * 0.7;
+      if (pl) {                                             // ride the wave toward the player's height
+        b.vy += clamp((pl.y + pl.h / 2) - (b.y + b.h / 2), -1, 1) * 0.6;
+        const past = b.sweepDir > 0 ? b.x > pl.x + 240 : b.x + b.w < pl.x - 240;
+        if (past) b.sweepDir *= -1;                         // overshoot, then sweep back
+      }
+      b.facing = b.sweepDir;
+      b.x += b.vx; b.y += b.vy;
+      return;
+    }
     if (pl) {                                               // chase: relentless, a touch slower than the swan
       const dx = (pl.x + pl.w / 2) - (b.x + b.w / 2), dy = (pl.y + pl.h / 2) - (b.y + b.h / 2);
       const dd = Math.hypot(dx, dy) || 1, sp = T.BADCODE_SPEED * mult;
@@ -271,9 +303,27 @@ const Bosses = (() => {
     return false;
   }
 
+  function drawBadSphere(x, y, w, h, t, hurt) {            // phase 2: a tight orb of tangled dream-code
+    const cx = x + w / 2, cy = y + h / 2, r = w / 2;
+    ctx.fillStyle = hurt ? "#8a2a4a" : "#1c1430";
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = hurt ? "#aa3a5a" : "#2a1f44";
+    ctx.beginPath(); ctx.arc(cx, cy, r - 3, 0, Math.PI * 2); ctx.fill();
+    const span = Math.max(1, (r * 0.55) | 0);
+    for (let i = 0; i < 26; i++) {                          // code orbiting the core
+      const a = (i / 26) * Math.PI * 2 + t * 0.06, rr = r * 0.4 + ((i * 53 + t * 4) % span);
+      const gx = Math.round(cx + Math.cos(a) * rr), gy = Math.round(cy + Math.sin(a) * rr);
+      ctx.fillStyle = (i % 3 === 0) ? "#54ffd0" : (i % 3 === 1) ? "#ff5a8c" : "#9a7aff";
+      if (((t + i) >> 1) % 2) ctx.fillRect(gx, gy, 2, 2);
+    }
+    ctx.fillStyle = "#ff3a4a"; ctx.fillRect(Math.round(cx) - 3, Math.round(cy) - 3, 6, 6);   // one furious eye
+    ctx.fillStyle = "#ffd0d0"; ctx.fillRect(Math.round(cx) - 2, Math.round(cy) - 2, 2, 2);
+    ctx.strokeStyle = "#0a0814"; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  }
   function drawBadcode(b, camX, camY) {
     const x = Math.round(b.x - camX), y = Math.round(b.y - camY), w = b.w, h = b.h, t = b.animTimer;
     const hurt = b.hurtFlash > 0;
+    if (b.phase === 2) { drawBadSphere(x, y, w, h, t, hurt); return; }
     ctx.fillStyle = hurt ? "#8a2a4a" : "#1c1430"; ctx.fillRect(x + 2, y + 4, w - 4, h - 6);
     ctx.fillStyle = hurt ? "#aa3a5a" : "#2a1f44"; ctx.fillRect(x, y + 8, w, h - 14); ctx.fillRect(x + 6, y, w - 12, h);
     for (let i = 0; i < 28; i++) {                          // flickering tangled "code"
