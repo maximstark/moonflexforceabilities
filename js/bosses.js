@@ -34,6 +34,9 @@ const Bosses = (() => {
     } else if (kind === "badcode") {
       units.push(badcode(spec.x, spec.y, spec));
       arenaName = "THE BAD DREAMS";
+    } else if (kind === "giant") {
+      units.push(giant(spec.x, spec.y, spec));
+      arenaName = spec.name || "THE BIG GUY UPSTAIRS";
     }
   }
   // a level's boss spec may oversize it (spec.size), buff it (spec.hp), rewrite its
@@ -47,6 +50,14 @@ const Bosses = (() => {
       animTimer: 0, rage: 1, dialogue: spec.dialogue || null,
       sweep: !!spec.sweep, phase: 1, sweepDir: 1, sweepTimer: 0 };
   };
+  // THE GIANT IN THE CLOUDS — we only ever see his feet. 3 toy-pokes and he leaves
+  // in a huff. The (x,y) is the top-left of the hittable feet band on the cloud floor.
+  const giant = (x, y, spec = {}) => ({
+    sub: "giant", x, y: y - 54, w: spec.size || 156, h: 54,   // spec.y is the floor; lift so the feet rest on it
+    hp: spec.hp || T.GIANT_HP, maxHp: spec.hp || T.GIANT_HP,
+    state: "sleep", timer: 0, iframes: 0, hurtFlash: 0, facing: -1, vx: 0, vy: 0,
+    animTimer: 0, rage: 1, dialogue: spec.dialogue || null,
+    liftFoot: 0, lift: 0, retreat: 0 });
   const grumpis = (x, y, hp, phase = 0) => ({
     sub: "grumpis", sheet: "boss_grumpis", x, y, w: 52, h: 48, vx: 0, vy: 0,
     hp, maxHp: hp, state: "windup", timer: T.GRUMPIS_WINDUP + phase, iframes: 0,
@@ -83,6 +94,7 @@ const Bosses = (() => {
       else if (b.sub === "papa") updatePapa(b, mult);
       else if (b.sub === "hog") updateHog(b, mult);
       else if (b.sub === "badcode") updateBadcode(b, mult);
+      else if (b.sub === "giant") updateGiant(b, mult);
       if (b.state !== "dying" && !b.fleeing) bossContact(b);
     }
     units = units.filter(b => b.state !== "gone");
@@ -246,6 +258,41 @@ const Bosses = (() => {
     b.x += b.vx; b.y += b.vy;                               // floats — no gravity, no tiles
   }
 
+  function updateGiant(b, mult) {
+    const pl = nearestPlayer(b.x + b.w / 2, b.y);
+    if (b.state === "sleep") {                          // first activated frame: the sun goes out
+      b.state = "reveal"; b.timer = 70; Game.shake = 8;
+      Game.queueCard(b.dialogue ||
+        ["something BLOTS OUT THE SUN.", "", "it is... a foot?", "a REALLY, REALLY BIG foot."]);
+      return;
+    }
+    if (b.state === "reveal") { if (--b.timer <= 0) { b.state = "idle"; b.timer = T.GIANT_STOMP_GAP; } return; }
+    if (b.state === "dying") { b.retreat += 4; if (--b.timer <= 0) dieOff(b); return; }   // he LEAVES (rises away)
+    if (b.state === "idle") {
+      if (--b.timer <= 0) {                             // raise a foot over wherever you're standing
+        b.state = "windup"; b.timer = T.GIANT_WINDUP;
+        b.liftFoot = pl && pl.x > b.x + b.w / 2 ? 1 : 0;
+      }
+    } else if (b.state === "windup") {
+      b.lift = Math.min(b.lift + 2.2, 62);             // slow, hugely telegraphed
+      if (--b.timer <= 0) b.state = "stomp";
+    } else if (b.state === "stomp") {
+      if (b.lift > 0) {
+        b.lift = Math.max(b.lift - 15, 0);             // SLAM
+        if (b.lift === 0) {                            // impact (resolves once)
+          Game.shake = 12; AudioSys.sfx("pound");
+          const fx = b.x + (b.liftFoot ? b.w * 0.72 : b.w * 0.28);
+          World.burstAt(fx, b.y + b.h, "poof", 6);
+          for (const p of players)                     // only catches you if you stood right under it
+            if (!p.dead && p.grounded && Math.abs((p.x + p.w / 2) - fx) < 30) hurtPlayer(p, fx);
+          b.timer = 16;
+        }
+      } else if (--b.timer <= 0) { b.state = "recover"; b.timer = T.GIANT_RECOVER; }
+    } else if (b.state === "recover") {
+      if (--b.timer <= 0) { b.state = "idle"; b.timer = T.GIANT_STOMP_GAP; }
+    }
+  }
+
   function bossContact(b) {
     if (b.sub === "papa" && !b.onLand && (b.state === "submerged" || b.state === "rising")) return;
     const box = { x: b.x, y: b.y, w: b.w, h: b.h };
@@ -257,7 +304,7 @@ const Bosses = (() => {
         damageBoss(b, p.pounding || p.form === "trex" || p.form === "mecha" ? 3 : 1);
         if (kind2 === "stomp") bouncePlayer(p);
         Game.hitstop = T.HITSTOP_BOSS;
-      } else if (kind2 === "hurt") {
+      } else if (kind2 === "hurt" && b.sub !== "giant") {   // the giant's feet are just standing there
         hurtPlayer(p, b.x + b.w / 2);
       }
     }
@@ -266,11 +313,17 @@ const Bosses = (() => {
   function damageBoss(b, dmg) {
     if (b.iframes > 0 || b.state === "dying" || b.fleeing) return false;
     b.hp -= dmg;
-    b.iframes = b.sub === "badcode" ? 18 : T.BOSS_IFRAMES; b.hurtFlash = T.BOSS_HURT_FLASH;
+    b.iframes = (b.sub === "badcode" || b.sub === "giant") ? 18 : T.BOSS_IFRAMES; b.hurtFlash = T.BOSS_HURT_FLASH;
     AudioSys.sfx("bossHurt");
-    World.addFloater(b.x + b.w / 2, b.y - 8, "SCRUMPTIONED!");
+    World.addFloater(b.x + b.w / 2, b.y - 8, b.sub === "giant" ? "STUB!" : "SCRUMPTIONED!");
     if (b.hp <= 0) {
-      if (b.sub === "hog" && !b.final) {              // L5: he flees WITH THE BABIES
+      if (b.sub === "giant") {                         // 3 toy-pokes and the colossus storms off
+        b.state = "dying"; b.timer = T.BOSS_DEATH_FRAMES + 50; b.vx = 0; b.hurtFlash = 0; b.lift = 0;
+        Game.queueCard(['"YOU... YOU STUBBED MY BEST TOE!"', '"WITH YOUR... TOYS?!"', "",
+                        '"I HAVE NEVER BEEN SO INSULTED IN A DREAM."',
+                        '"i am LEAVING. and i am TELLING."']);
+        AudioSys.sfx("roar");
+      } else if (b.sub === "hog" && !b.final) {        // L5: he flees WITH THE BABIES
         b.fleeing = true; b.timer = 90; b.facing = 1; b.hurtFlash = 0;
         Game.queueCard(["\"HRMPH! NYEH HEH HEH!\"",
                         "THE BIG HOG DOG GRABBED THE BABY SWANS",
@@ -335,9 +388,50 @@ const Bosses = (() => {
     ctx.fillStyle = "#ffd0d0"; ctx.fillRect(x + 13, y + 17, 1, 1); ctx.fillRect(x + w - 15, y + 17, 1, 1);
     ctx.strokeStyle = "#0a0814"; ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
   }
+  function drawGiant(b, camX, camY) {
+    const rise = b.retreat || 0;
+    const x0 = Math.round(b.x - camX);
+    const floorY = Math.round(b.y + b.h - camY - rise);
+    const hurt = b.hurtFlash > 0;
+    const skin = hurt ? "#ffb0a0" : "#f3c39a", skinDk = hurt ? "#e0907c" : "#d29b6e";
+    const footW = b.w * 0.36;
+    const feet = [
+      { cx: x0 + b.w * 0.28, up: b.liftFoot === 0 ? b.lift : 0 },
+      { cx: x0 + b.w * 0.72, up: b.liftFoot === 1 ? b.lift : 0 },
+    ];
+    // the looming shadow of a raised foot (the "terrifying" telegraph)
+    if (b.lift > 0 && b.state !== "dying") {
+      const f = feet[b.liftFoot];
+      ctx.fillStyle = "rgba(10,8,16,0.32)";
+      ctx.beginPath(); ctx.ellipse(f.cx, floorY + 2, footW * 0.62, 5, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    // colossal legs, rising off the top of the screen
+    for (const f of feet) {
+      const legX = Math.round(f.cx - footW * 0.34), legW = Math.round(footW * 0.68);
+      const topOfFoot = floorY - 18 - f.up;
+      ctx.fillStyle = skin; ctx.fillRect(legX, -120, legW, topOfFoot + 120);
+      ctx.fillStyle = skinDk; ctx.fillRect(legX, topOfFoot - 6, legW, 6);   // ankle shade
+    }
+    // feet: cork Birkenstocks, leather straps, and very large toes
+    for (const f of feet) {
+      const fx = Math.round(f.cx - footW / 2), fw = Math.round(footW), fy = floorY - 14 - f.up;
+      ctx.fillStyle = "#caa46a"; ctx.fillRect(fx - 2, floorY - 6 - f.up, fw + 4, 7);   // cork sole
+      ctx.fillStyle = "#9c7b46"; ctx.fillRect(fx - 2, floorY + 1 - f.up, fw + 4, 2);   // rubber base
+      ctx.fillStyle = skin; ctx.fillRect(fx, fy, fw, 12);                              // top of foot
+      ctx.fillStyle = "#5a3b22";                                                       // two leather straps
+      ctx.fillRect(fx + 4, fy + 1, fw - 8, 3); ctx.fillRect(fx + 7, fy + 5, fw - 14, 3);
+      ctx.fillStyle = skin;                                                            // 5 toes at the front (left)
+      for (let t = 0; t < 5; t++) {
+        const r = (5 - t) * 0.9;
+        ctx.beginPath(); ctx.arc(fx, fy + 2 + t * 2.1, r, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.fillStyle = "#f7d9c0"; ctx.beginPath(); ctx.arc(fx - 2, fy + 2, 1.4, 0, Math.PI * 2); ctx.fill();  // the BEST toe's nail
+    }
+  }
   function draw(camX, camY) {
     for (const b of units) {
       if (b.state === "gone") continue;
+      if (b.sub === "giant") { drawGiant(b, camX, camY); continue; }
       if (b.iframes > 0 && b.hurtFlash <= 0 && (b.iframes >> 2) % 2 === 0) continue;
       if (b.state === "dying" && (b.animTimer >> 2) % 2 === 0) continue;
       if (b.sub === "badcode") { drawBadcode(b, camX, camY); continue; }

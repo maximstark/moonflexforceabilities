@@ -28,7 +28,7 @@ class L:
         self.meta = dict(name=name, world=world, sky=sky, par=par, music=music)
         self.w, self.h = w, h
         self.g = [[-1]*w for _ in range(h)]
-        self.water = []; self.enemies = []; self.pickups = []
+        self.water = []; self.enemies = []; self.pickups = []; self.npcs = []
         self.boss = None; self.goalX = (w-4)*TS; self.spawn = (32, 8*TS)
         self.doors = []; self.elevator = None
         self.drain = drain; self.letterCost = 100; self.forceForm = None; self.next = None
@@ -57,6 +57,8 @@ class L:
         for c,r,t in pairs: s.set(c,r,t)
     def enemy(s,typ,c,r,**kw): s.enemies.append(dict(type=typ,x=c*TS,y=r*TS,**kw))
     def pick(s,typ,c,r,**kw): s.pickups.append(dict(type=typ,x=c*TS,y=r*TS,**kw))
+    def npc(s,sheet,frame,c,r,line):     # adorable harmless standee; x=center, y=feet (ground-top row r)
+        s.npcs.append(dict(sheet=sheet,frame=frame,x=c*TS+TS//2,y=r*TS,line=line))
     def pops(s,cols,r):
         for c in cols: s.pick("popcorn",c,r)
     def out(s,fname):
@@ -69,6 +71,7 @@ class L:
         if s.speedMult != 1.0:       d["speedMult"]  = s.speedMult
         if s.finale:                 d["finale"]     = True
         if s.story:                  d["story"]      = s.story
+        if s.npcs:                   d["npcs"]       = s.npcs
         json.dump(d, open(f"levels/{fname}","w"), separators=(",",":"))
         print(f"levels/{fname}: {s.w}x{s.h} tiles, {len(s.enemies)} enemies, {len(s.pickups)} pickups")
 
@@ -411,6 +414,71 @@ def level8():
     v.goalX = 176*TS
     return v
 
+# =====================================================================
+#  LEVEL 10 — THE NICE PLACE  (suspiciously gentle: sunny meadow full of
+#  friends & toys, then an abusive stair-swarm, then the giant in sandals)
+# =====================================================================
+def level10():
+    v = L("THE NICE PLACE", 10, 132, 34, "sky_candy", "par_candy", "candy", drain=0.03)
+    v.next = None
+    v.spawn = (3*TS, 24*TS)
+    v.startHappy = 120
+    v.story = [
+        ["the dream turns SOFT and SUNNY.", "", "everyone here is so... nice?", "(this feels almost suspicious.)"],
+        ["the treasure boxes are STUFFED", "with brand-new toys:", "BUBBLEGUM · STICKY HAND",
+         "MERMAID SHELL · EGG-A-RANG"],
+        ["grab every single one, brave swan.", "", "...whatever is at the top of the stairs",
+         "is going to need ALL of it."],
+    ]
+    MEADOW = 26                                    # ground-top row of the sunny meadow
+    # --- the suspiciously nice meadow (cols 0..58), no enemies, just friends ---
+    v.ground(0, 58, MEADOW, edges=False)
+    v.deco([(3,MEADOW-1,"sign"),(6,MEADOW-1,"flower"),(11,MEADOW-1,"flower"),(13,MEADOW-1,"fence"),
+            (19,MEADOW-1,"cattail"),(27,MEADOW-1,"flower"),(31,MEADOW-1,"lantern"),(36,MEADOW-1,"flower"),
+            (42,MEADOW-1,"cattail"),(47,MEADOW-1,"flower"),(52,MEADOW-1,"lantern"),(57,MEADOW-1,"flower")])
+    # the friendly cast — they only ever say nice things
+    v.npc("babyswan","bob1",  7, MEADOW, "you are the BEST swan!")
+    v.npc("babyswan","bob2", 16, MEADOW, "we LOVE you!!")
+    v.npc("charmgirl","idle",24, MEADOW, "wow, look how brave you are!")
+    v.npc("turtles","calm1", 34, MEADOW, "take all the treasure, friend!")
+    v.npc("mermaid","idle",  45, MEADOW, "you make the dream so warm")
+    v.npc("babyswan","bob1", 55, MEADOW, "...too easy? nah. enjoy it!")
+    # tons of treats, popcorn, stars (generous to the point of suspicion)
+    v.pops([5,6,7,8,9], MEADOW-2); v.pops([14,15,16], MEADOW-3); v.pops([21,22,23,24], MEADOW-2)
+    v.pops([33,34,35], MEADOW-3); v.pops([43,44,45,46], MEADOW-2); v.pops([52,53,54], MEADOW-3)
+    for c in (5,9,12,17,20,25,29,32,37,40,44,49,53,57): v.pick("star", c, MEADOW-1)
+    for c in (10,26,42,56): v.pick("treat", c, MEADOW-1)
+    v.pick("moon", 39, MEADOW-4)
+    # the toy boxes — 6 chests so the new powers can be STACKED
+    for c in (8,18,28,38,48,56): v.pick("chest", c, MEADOW-1)
+    # --- the GREAT STAIRCASE (cols 59..97): 2-wide steps rising to the clouds ---
+    def stair_top(c): return max(7, MEADOW - (c - 59)//2)
+    for c in range(59, 98):
+        v.ground(c, c, stair_top(c), edges=False)
+    # the abusive swarm that keeps pouring down the steps
+    for c in range(61, 97, 2):
+        sr = stair_top(c)
+        typ = ("frog" if (c % 6 == 1) else "dino" if (c % 4 == 0) else "cockroach")
+        v.enemy(typ, c, sr-2)
+    for c in range(62, 96, 4): v.enemy("fly",  c, stair_top(c)-4)
+    for c in range(64, 96, 5): v.enemy("wisp", c, stair_top(c)-3)
+    # a few rewards while you climb (you will want the happiness)
+    for c in range(63, 96, 7): v.pick("treat", c, stair_top(c)-1)
+    for c in range(67, 96, 9): v.pick("star",  c, stair_top(c)-1)
+    # --- the cloud plateau + the GATE INTO THE CLOUDS (cols 98..131) ---
+    v.ground(98, 131, 7, "cloud_top", "cloud_fill", edges=False)
+    v.set(97, 6, "sign")
+    GTOP, GFILL = "candy_top", "candy_fill"
+    for c in range(100, 107): v.set(c, 2, GTOP)                 # the gate's top beam (well above your head)
+    for r in range(2, 5): v.set(100, r, GFILL); v.set(106, r, GFILL)   # the two jambs
+    v.set(101, 3, "lantern"); v.set(105, 3, "lantern")
+    # --- THE BIG GUY UPSTAIRS: we only ever see his feet ---
+    v.boss = dict(type="giant", x=116*TS, y=7*TS, name="THE BIG GUY UPSTAIRS",
+                  dialogue=["a shadow falls across the clouds...", "", "it is a FOOT.",
+                            "in a sandal. a VERY big sandal."])
+    v.goalX = 128*TS
+    return v
+
 def hub():
     v = L("HOME", 0, 26, 62, "sky_hub", "par_hub", "hub", drain=0.0)
     v.spawn = (5*TS, 57*TS)
@@ -454,5 +522,6 @@ if __name__ == "__main__":
     level6().out("level6.json")
     level7().out("level7.json")
     level8().out("level8.json")
+    level10().out("level10.json")
     hub().out("hub.json")
     print("all levels written")

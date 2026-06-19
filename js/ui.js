@@ -10,6 +10,8 @@ const UI = (() => {
     const p1 = players[0];
     for (let i = 0; i < p1.maxHearts; i++)
       drawFrame("hud", i < p1.hearts ? "heart_full" : "heart_empty", 6 + i * 15, 5);
+    for (let i = 0; i < p1.bubble; i++)             // bubblegum buffer hearts, in vibrant pink
+      drawBubbleHeart(6 + (p1.maxHearts + i) * 15, 5);
     // happiness
     const panic = Game.happiness <= 0;
     if (!panic || (Game.frame >> 3) % 2) drawFrame("hud", "happy_smiley", 6, 22);
@@ -39,8 +41,11 @@ const UI = (() => {
     p1.stack.forEach((c, i) => { const s = ICON[c]; if (s) drawFrame(s[0], s[1], 6 + i * 14, 38); });
     let ppx = 6 + p1.stack.length * 14 + 4;
     for (const pw of p1.powers) {
-      if (pw === "mace") drawMaceIcon(ppx + 8, 46);
-      else { const ic = PICK_ICON[pw]; if (ic) drawFrame(ic[0], ic[1], ppx, 38); }
+      drawPowerIcon(pw, ppx + 8, 46);
+      if ((p1.lvl[pw] || 1) >= 2) {                 // a tiny stack badge: x2 / x3
+        ctx.font = "6px monospace"; ctx.fillStyle = "#ffe48a"; ctx.textAlign = "left";
+        ctx.fillText("x" + p1.lvl[pw], ppx + 11, 54);
+      }
       ppx += 14;
     }
     // moon timer
@@ -144,22 +149,33 @@ const UI = (() => {
   }
 
   /* ---------------- treasure chooser ---------------- */
+  // 4th entry = the world a power first appears in a chest (default 1). The
+  // bubblegum/sticky/shell/egg toys unlock at world 10 — the Vampire-Survivors turn.
   const POWERS = [
-    ["fire",      "FIRE",        "X: shoot fireballs"],
-    ["pink",      "PINK BURST",  "X: clear the room"],
-    ["tree",      "TREE NUTS",   "X: throw nuts (hold DOWN to plant)"],
-    ["mace",      "SPIN MACE",   "a slow orbiting WMD — no defense"],
-    ["laser",     "LASER EYES",  "X: a piercing beam (aim with up/down)"],
-    ["spoon",     "GIANT SPOON", "X: melee swat; deflects mushrooms"],
-    ["goosefeet", "GOOSE FEET",  "higher jump; down in mid-air = ground pound"],
-    ["kirby",     "KIRBY CAP",   "one extra flap, very round"],
+    ["fire",      "FIRE",         "X: shoot fireballs"],
+    ["pink",      "PINK BURST",   "X: clear the room"],
+    ["tree",      "TREE NUTS",    "X: throw nuts (hold DOWN to plant)"],
+    ["mace",      "SPIN MACE",    "a slow orbiting WMD — no defense"],
+    ["laser",     "LASER EYES",   "X: a piercing beam (aim with up/down)"],
+    ["spoon",     "GIANT SPOON",  "X: melee swat; deflects mushrooms"],
+    ["goosefeet", "GOOSE FEET",   "higher jump; down in mid-air = ground pound"],
+    ["kirby",     "KIRBY CAP",    "one extra flap, very round"],
+    ["bubble",    "BUBBLEGUM",    "a pink shield — buffer hearts (stack to 3)", 10],
+    ["sticky",    "STICKY HAND",  "X: a grabby 45-degree snap (stack to 3)", 10],
+    ["shell",     "MERMAID SHELL","X: lob shells up a 60-degree arc (stack to 3)", 10],
+    ["egg",       "EGG-A-RANG",   "X: a fried egg loops around you", 10],
   ];
+  const STACK_MAX = { bubble: 3, sticky: 3, shell: 3 };   // these climb past the usual mirrored pair
   const COSTUME_PICKS = { kirby: 1, laser: 1, spoon: 1, goosefeet: 1 };
   const PICK_ICON = {
     fire: ["items","icon_fire"], pink: ["items","icon_pink"], tree: ["items","icon_tree"],
     laser: ["items","pickup_laser"], spoon: ["items","pickup_spoon"],
     goosefeet: ["items","pickup_goosefeet"], kirby: ["items","icon_kirby"],
   };
+  function visiblePowers() {
+    const w = typeof Game.levelId === "number" ? Game.levelId : 1;
+    return POWERS.filter(pw => (pw[3] || 1) <= w);
+  }
   function drawMaceIcon(cx, cy) {
     ctx.fillStyle = "#9a93b0";
     for (let i = 1; i <= 3; i++) ctx.fillRect(cx - 7 + i * 2, cy + 5 - i * 2, 2, 2);     // chain
@@ -168,46 +184,93 @@ const UI = (() => {
     ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fillStyle = "#4a4458"; ctx.fill();
     ctx.beginPath(); ctx.arc(cx - 1, cy - 1, 2, 0, Math.PI * 2); ctx.fillStyle = "#8a84a0"; ctx.fill();
   }
+  // procedural icons for the toys that have no sprite sheet (centered on cx,cy)
+  function drawBubbleIcon(cx, cy) {
+    ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,120,200,0.30)"; ctx.fill();
+    ctx.lineWidth = 1; ctx.strokeStyle = "#ff5fb0"; ctx.stroke();
+    ctx.fillStyle = "#fff0fb"; ctx.beginPath(); ctx.arc(cx - 2, cy - 2, 1.4, 0, Math.PI * 2); ctx.fill();
+  }
+  function drawStickyIcon(cx, cy) {
+    ctx.strokeStyle = "#ff7ec0"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx - 5, cy + 5); ctx.lineTo(cx + 3, cy - 3); ctx.stroke();
+    ctx.fillStyle = "#ff5fb0"; ctx.beginPath(); ctx.arc(cx + 4, cy - 4, 3, 0, Math.PI * 2); ctx.fill();
+  }
+  function drawShellIcon(cx, cy) {
+    ctx.fillStyle = "#ffe7d2"; ctx.beginPath(); ctx.arc(cx, cy + 3, 6, Math.PI, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#d98fb0"; ctx.lineWidth = 1;
+    for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(cx, cy + 3); ctx.lineTo(cx + i * 2.4, cy - 3); ctx.stroke(); }
+  }
+  function drawEggIcon(cx, cy) {
+    ctx.fillStyle = "#fff8ef"; ctx.beginPath(); ctx.ellipse(cx, cy, 6, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#ffba2e"; ctx.beginPath(); ctx.arc(cx - 1, cy - 1, 2.6, 0, Math.PI * 2); ctx.fill();
+  }
+  function drawBubbleHeart(x, y) {                          // a vibrant-pink buffer heart for the HUD
+    const cx = x + 7, cy = y + 6;
+    ctx.fillStyle = "#ff3ea5";
+    ctx.beginPath(); ctx.arc(cx - 3, cy - 1, 3, 0, Math.PI * 2); ctx.arc(cx + 3, cy - 1, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx - 6, cy); ctx.lineTo(cx + 6, cy); ctx.lineTo(cx, cy + 7); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "rgba(255,205,238,0.95)"; ctx.beginPath(); ctx.arc(cx - 2, cy - 2, 1, 0, Math.PI * 2); ctx.fill();
+  }
+  function drawPowerIcon(pw, cx, cy) {                      // dispatch: (cx,cy) is the icon CENTER
+    if (pw === "mace")   return drawMaceIcon(cx, cy);
+    if (pw === "bubble") return drawBubbleIcon(cx, cy);
+    if (pw === "sticky") return drawStickyIcon(cx, cy);
+    if (pw === "shell")  return drawShellIcon(cx, cy);
+    if (pw === "egg")    return drawEggIcon(cx, cy);
+    const ic = PICK_ICON[pw]; if (ic) drawFrame(ic[0], ic[1], cx - 8, cy - 8);
+  }
   function drawChooser() {
     ctx.fillStyle = "rgba(12,10,20,0.80)"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffe48a"; ctx.font = "bold 11px monospace";
-    ctx.fillText("THE TREASURE BOX OPENS...", T.VIEW_W / 2, 24);
+    ctx.fillText("THE TREASURE BOX OPENS...", T.VIEW_W / 2, 20);
     ctx.font = "8px monospace"; ctx.fillStyle = "#b9b2d8";
-    ctx.fillText("pick an ability — they STACK, so grab everything", T.VIEW_W / 2, 38);
-    const cols = 4, bw = 80, bh = 50, gap = 6, pitch = bw + gap;
+    ctx.fillText("pick an ability — they STACK, so grab everything", T.VIEW_W / 2, 32);
+    const vis = visiblePowers();
+    if (Game.chooserIdx >= vis.length) Game.chooserIdx = 0;
+    const cols = 4, rows = Math.ceil(vis.length / cols);
+    const bw = 80, gap = 6, pitch = bw + gap;
     const startX = (T.VIEW_W - (cols * pitch - gap)) / 2;
-    POWERS.forEach((pw, i) => {
+    const top = 40, rowH = rows <= 2 ? 56 : 44, bh = rows <= 2 ? 48 : 38;
+    vis.forEach((pw, i) => {
       const col = i % cols, row = (i / cols) | 0;
-      const x = startX + col * pitch, y = 54 + row * (bh + 10), cx = x + bw / 2;
+      const x = startX + col * pitch, y = top + row * rowH, cx = x + bw / 2;
       const sel = i === Game.chooserIdx;
       ctx.fillStyle = sel ? "#3a2a50" : "#241a34"; ctx.fillRect(x, y, bw, bh);
       if (sel) { ctx.strokeStyle = "#ffe48a"; ctx.strokeRect(x + 0.5, y + 0.5, bw - 1, bh - 1); }
-      if (pw[0] === "mace") drawMaceIcon(cx, y + 16);
-      else { const ic = PICK_ICON[pw[0]]; if (ic) drawFrame(ic[0], ic[1], cx - 8, y + 8); }
+      drawPowerIcon(pw[0], cx, y + 15);
       ctx.fillStyle = sel ? "#ffe48a" : "#cabce0"; ctx.font = "7px monospace";
-      ctx.fillText(pw[1], cx, y + bh - 6);
+      ctx.fillText(pw[1], cx, y + bh - 5);
     });
+    const descY = top + rows * rowH + 8;
     ctx.fillStyle = "#fff6d8"; ctx.font = "8px monospace";
-    ctx.fillText(POWERS[Game.chooserIdx][2], T.VIEW_W / 2, 188);
+    ctx.fillText(vis[Game.chooserIdx][2], T.VIEW_W / 2, descY);
     ctx.fillStyle = "#b9b2d8";
-    ctx.fillText("ARROWS + ENTER", T.VIEW_W / 2, 204);
+    ctx.fillText("ARROWS + ENTER", T.VIEW_W / 2, descY + 14);
     ctx.textAlign = "left";
   }
   function updateChooser() {
-    const n = POWERS.length;
+    const vis = visiblePowers();
+    const n = vis.length;
+    if (Game.chooserIdx >= n) Game.chooserIdx = 0;
     if (menuPad.pressed.has("left"))  Game.chooserIdx = (Game.chooserIdx + n - 1) % n;
     if (menuPad.pressed.has("right")) Game.chooserIdx = (Game.chooserIdx + 1) % n;
     if (menuPad.pressed.has("up") || menuPad.pressed.has("down")) Game.chooserIdx = (Game.chooserIdx + 4) % n;
     if (menuPad.pressed.has("confirm")) {
-      const pw = POWERS[Game.chooserIdx][0];
+      const pw = vis[Game.chooserIdx][0];
       const p = Game.chooserFor || players[0];
-      if (COSTUME_PICKS[pw]) wearCostume(p, pw);                 // costumes stack in p.stack
-      else {
+      if (pw === "bubble") {                                     // the shield isn't an action power — it's buffer hearts
+        p.bubble = Math.min(T.BUBBLE_MAX, p.bubble + 1);
+        AudioSys.sfx("bubble");
+        World.addFloater(p.x, p.y - 10, "BUBBLEGUM x" + p.bubble + "!");
+      } else if (COSTUME_PICKS[pw]) {
+        wearCostume(p, pw);                                      // costumes stack in p.stack
+      } else {
         if (!p.powers.includes(pw)) p.powers.push(pw);          // powers stack in p.powers
-        p.lvl[pw] = Math.min(2, (p.lvl[pw] || 0) + 1);          // 2nd = mirrored pair
+        p.lvl[pw] = Math.min(STACK_MAX[pw] || 2, (p.lvl[pw] || 0) + 1);
         AudioSys.sfx("transform");
-        World.addFloater(p.x, p.y - 10, (p.lvl[pw] >= 2 ? "x2 " : "") + pw.toUpperCase() + "!");
+        World.addFloater(p.x, p.y - 10, (p.lvl[pw] >= 2 ? "x" + p.lvl[pw] + " " : "") + pw.toUpperCase() + "!");
       }
       Game.state = "play";
     }

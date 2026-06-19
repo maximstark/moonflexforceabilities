@@ -53,6 +53,11 @@ const TUNING = {
   PINK_COOLDOWN: 240, PINK_RADIUS: 64,
   NUT_COOLDOWN: 8, NUT_VX: 4.2,
   MACE_RADIUS: 34, MACE_SPEED: 0.03, MACE_DMG: 2,   // slow CCW orbiting mace (no defense)
+  // --- the new toys (world 10+): the road to a Vampire-Survivors loadout ---
+  BUBBLE_R: 17, BUBBLE_MAX: 3,                       // bubblegum shield: buffer hearts + a fat round hitbox
+  STICKY_LEN: 72, STICKY_OUT: 9, STICKY_IN: 5, STICKY_COOLDOWN: 24, STICKY_DMG: 1,  // ~4 body-lengths, snaps back fast
+  SHELL_SPEED: 5.1, SHELL_GRAV: 0.17, SHELL_SPREAD: 0.11, SHELL_COOLDOWN: 34, SHELL_DMG: 1,  // 60-degree lob
+  EGG_RADIUS: 30, EGG_SPEED: 0.17, EGG_LIFE: 46, EGG_COOLDOWN: 60, EGG_DMG: 1,     // a fried-egg boomerang orbit
   SHED_HOP: 3.2, DROP_GRACE: 60,   // shed costume regrab grace
   MOON_TREX_FRAMES: 700, MOONFLEX_FRAMES: 480, MOONFLEX_SPEED: 1.4,
 
@@ -82,6 +87,7 @@ const TUNING = {
   MUSH_VX: 2.2, MUSH_VY: 4.5,
   BOSS_ACTIVATE_DIST: 280, BOSS_DEATH_FRAMES: 80,
   BADCODE_HP: 45, BADCODE_SPEED: 1.4,   // the chasing bad-dreams mass (clearly slower than the swan)
+  GIANT_HP: 3, GIANT_STOMP_GAP: 150, GIANT_WINDUP: 70, GIANT_STOMP: 16, GIANT_RECOVER: 90,  // looks terrifying, dies in 3
 
   // --- scoring ---
   POINTS_POPCORN: 50, POINTS_STOMP: 100, POINTS_BOSS: 5000,
@@ -89,7 +95,7 @@ const TUNING = {
   NAME_MAX_LEN: 8,
 
   // --- progression ---
-  WORLD_COUNT: 9,                  // number of worlds (the finale level sets finale:true)
+  WORLD_COUNT: 10,                 // number of worlds (the finale level sets finale:true)
 
   // --- camera & juice ---
   CAM_LERP: 0.12, CAM_LOOKAHEAD: 24, SHAKE_FRAMES: 6,

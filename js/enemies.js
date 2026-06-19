@@ -5,7 +5,8 @@
  *  transient attack volumes (lasers, spoon arcs, pink bursts, pounds).
  * ===================================================================== */
 let enemies = [], projectiles = [], stinkClouds = [];
-const Combat = { laserShots: [], spoonSwings: [], pinkBursts: [], poundShocks: [] };
+const Combat = { laserShots: [], spoonSwings: [], pinkBursts: [], poundShocks: [],
+                 stickyHands: [], eggs: [] };
 
 const ENEMY_DEFS = {
   frog:      { w: 20, h: 16, sheet: "frog",      hp: 1, score: 100 },
@@ -235,6 +236,9 @@ function updateProjectiles() {
         pr.life = 0;
         World.burstAt(pr.x + 8, pr.y + 8, "poof", 2);
       }
+    } else if (pr.kind === "shell") {                 // mermaid shell: a lightweight thrown-arc lob
+      pr.vy += T.SHELL_GRAV; pr.y += pr.vy;
+      if (rectHitsSolid(pr.x + 4, pr.y + 4, 8, 8)) { pr.life = 0; World.burstAt(pr.x + 8, pr.y + 8, "splash", 2); }
     } else {                                          // nut: straight-ish
       pr.vy += 0.04; pr.y += pr.vy;
       if (rectHitsSolid(pr.x + 4, pr.y + 4, 8, 8)) pr.life = 0;
@@ -366,6 +370,38 @@ function updateCombat() {
       Bosses.hitByBox(box, T.MACE_DMG);
     }
   }
+
+  // sticky hand: reaches out at 45 degrees, hits along the arm, then snaps back
+  for (const h of Combat.stickyHands) {
+    const p = h.owner;
+    if (p.dead) { h.dead = true; continue; }
+    if (h.phase === "out") { h.len += T.STICKY_LEN / T.STICKY_OUT; if (h.len >= T.STICKY_LEN) { h.len = T.STICKY_LEN; h.phase = "in"; } }
+    else { h.len -= T.STICKY_LEN / T.STICKY_IN; if (h.len <= 0) { h.dead = true; continue; } }
+    const bx = p.x + p.w / 2, by = p.y + p.h * 0.42;
+    const dx = h.facing * Math.cos(h.ang), dy = Math.sin(h.ang);
+    for (let s = 1; s <= 4; s++) {                          // sample boxes along the reaching arm
+      const d = h.len * s / 4, hx = bx + dx * d, hy = by + dy * d;
+      const box = { x: hx - 7, y: hy - 7, w: 14, h: 14 };
+      for (const e of enemies)
+        if (e.alive && e.deadTimer <= 0 && e.iframes <= 0 && overlaps(box, e)) damageEnemy(e, T.STICKY_DMG, p);
+      Bosses.hitByBox(box, T.STICKY_DMG);
+    }
+  }
+  Combat.stickyHands = Combat.stickyHands.filter(h => !h.dead);
+
+  // egg-a-rang: a fried egg loops around you (shared orbit phase) then comes home
+  for (const eg of Combat.eggs) {
+    const p = eg.owner;
+    if (p.dead || ++eg.t >= eg.life) { eg.dead = true; continue; }
+    const ang = p.eggAngle + eg.off;
+    const ex = p.x + p.w / 2 + Math.cos(ang) * T.EGG_RADIUS;
+    const ey = p.y + p.h / 2 + Math.sin(ang) * T.EGG_RADIUS;
+    const box = { x: ex - 8, y: ey - 8, w: 16, h: 16 };
+    for (const e of enemies)
+      if (e.alive && e.deadTimer <= 0 && e.iframes <= 0 && overlaps(box, e)) damageEnemy(e, T.EGG_DMG, p);
+    Bosses.hitByBox(box, T.EGG_DMG);
+  }
+  Combat.eggs = Combat.eggs.filter(eg => !eg.dead);
 }
 
 /* ---------------- drawing ---------------- */
@@ -401,8 +437,32 @@ function enemyFrame(e) {
   if (e.type === "fly") return (e.animTimer >> 2) % 2 ? "buzz2" : "buzz1";
   return "idle";
 }
+function drawShell(cx, cy) {
+  cx = Math.round(cx); cy = Math.round(cy);
+  ctx.fillStyle = "#ffe7d2";                                  // cream scallop fan
+  ctx.beginPath(); ctx.arc(cx, cy + 3, 6, Math.PI, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#d98fb0"; ctx.lineWidth = 1;             // pink ribs
+  for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(cx, cy + 3); ctx.lineTo(cx + i * 2.4, cy - 3); ctx.stroke(); }
+  ctx.fillStyle = "#e98fb0"; ctx.fillRect(cx - 1, cy + 2, 2, 2);   // hinge
+}
+function drawStickyHand(h, camX, camY) {
+  const p = h.owner;
+  const bx = p.x + p.w / 2 - camX, by = p.y + p.h * 0.42 - camY;
+  const dx = h.facing * Math.cos(h.ang), dy = Math.sin(h.ang);
+  const tx = bx + dx * h.len, ty = by + dy * h.len;
+  ctx.fillStyle = "#ff7ec0";                                  // stretchy gum-pink arm
+  const seg = Math.max(2, Math.round(h.len / 6));
+  for (let i = 1; i < seg; i++)
+    ctx.fillRect(Math.round(bx + (tx - bx) * i / seg) - 1, Math.round(by + (ty - by) * i / seg) - 1, 3, 3);
+  ctx.fillStyle = "#ff5fb0";                                  // the hand
+  ctx.beginPath(); ctx.arc(tx, ty, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#ffa6d6";
+  for (let f = -1; f <= 1; f++)
+    ctx.fillRect(Math.round(tx + dx * 4 + f * 2) - 1, Math.round(ty + dy * 4) - 1, 2, 2);
+}
 function drawProjectiles(camX, camY) {
   for (const pr of projectiles) {
+    if (pr.kind === "shell") { drawShell(pr.x + 8 - camX, pr.y + 8 - camY); continue; }
     const f = pr.kind === "fireball" ? ((pr.animTimer >> 2) % 2 ? "fireball2" : "fireball1")
             : pr.kind === "mushroom" ? "mushroom" : "nut";
     drawFrame("fx", f, pr.x - camX, pr.y - camY, pr.vx < 0);
@@ -442,5 +502,20 @@ function drawProjectiles(camX, camY) {
       ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI * 2); ctx.fillStyle = "#4a4458"; ctx.fill();
       ctx.beginPath(); ctx.arc(hx - 1, hy - 1, 2, 0, Math.PI * 2); ctx.fillStyle = "#8a84a0"; ctx.fill();
     }
+  }
+  // sticky hands reaching out
+  for (const h of Combat.stickyHands) drawStickyHand(h, camX, camY);
+  // egg-a-rangs orbiting
+  for (const eg of Combat.eggs) {
+    const p = eg.owner, ang = p.eggAngle + eg.off;
+    const ex = p.x + p.w / 2 + Math.cos(ang) * T.EGG_RADIUS - camX;
+    const ey = p.y + p.h / 2 + Math.sin(ang) * T.EGG_RADIUS - camY;
+    ctx.fillStyle = "#fff8ef";                                // fried egg white
+    ctx.beginPath(); ctx.ellipse(ex, ey, 6, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(ex + 3, ey + 2, 3, 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#ffba2e";                                // yolk
+    ctx.beginPath(); ctx.arc(ex - 1, ey - 1, 2.6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff0b0";
+    ctx.beginPath(); ctx.arc(ex - 1.8, ey - 1.8, 1, 0, Math.PI * 2); ctx.fill();
   }
 }

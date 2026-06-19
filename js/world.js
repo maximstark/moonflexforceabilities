@@ -4,7 +4,7 @@
  *  particles, floaters, parallax + tile rendering, level events.
  * ===================================================================== */
 const World = (() => {
-  let pickups = [], floaters = [], particles = [];
+  let pickups = [], floaters = [], particles = [], npcs = [];
   let doors = [], elevator = null;
   let trophySpawned = false, firesLeft = 0, rescueArmed = false;
   let camX = 0, camY = 0;
@@ -22,10 +22,11 @@ const World = (() => {
   }
 
   function resetWorld(id) {
-    pickups = []; floaters = []; particles = [];
+    pickups = []; floaters = []; particles = []; npcs = [];
     enemies.length = 0; projectiles.length = 0; stinkClouds.length = 0;
     Combat.laserShots.length = 0; Combat.spoonSwings.length = 0;
     Combat.pinkBursts.length = 0; Combat.poundShocks.length = 0;
+    Combat.stickyHands.length = 0; Combat.eggs.length = 0;
     trophySpawned = false;
     Game.levelId = id;
     Game.happiness = level.startHappy != null ? level.startHappy : T.HAPPINESS_MAX;
@@ -34,6 +35,7 @@ const World = (() => {
     for (const e of level.enemies) enemies.push(makeEnemy(e));
     for (const pk of level.pickups)
       pickups.push({ ...pk, taken: false, seed: pickups.length * 1.7, grace: 0 });
+    npcs = (level.npcs || []).map(n => ({ ...n }));         // adorable, harmless, full of compliments
     doors = (level.doors || []).map(d => ({ ...d }));
     elevator = level.elevator
       ? { x: level.elevator.x, y: level.elevator.stops[0], stops: level.elevator.stops,
@@ -311,6 +313,7 @@ const World = (() => {
     drawWaterTint(cx, cy);
     drawHubBits(cx, cy);
     drawPickups(cx, cy);
+    drawNpcs(cx, cy);
     drawEnemies(cx, cy);
     Bosses.draw(cx, cy);
     for (const p of players) drawPlayer(p, cx, cy);
@@ -421,6 +424,26 @@ const World = (() => {
     ctx.fillStyle = "#ffe48a"; ctx.fillText(text, x, y - 1);
     ctx.textAlign = "left";
   }
+  // the friendly cast of world 10: standees that compliment you as you pass
+  function drawNpcs(cx, cy) {
+    for (const n of npcs) {
+      const s = sheets[n.sheet];
+      if (!s) continue;
+      const bob = Math.sin((Game.frame + n.x) / 16) * 1.5;
+      drawFrame(n.sheet, n.frame, n.x - s.frame_w / 2 - cx, n.y - s.frame_h - cy + bob);
+      let near = false;
+      for (const p of players)
+        if (!p.dead && Math.abs((p.x + p.w / 2) - n.x) < 44 && Math.abs((p.y + p.h) - n.y) < 64) near = true;
+      if (near && n.line) {
+        ctx.font = "7px monospace"; ctx.textAlign = "center";
+        const w = ctx.measureText(n.line).width + 8;
+        const sx = Math.round(n.x - cx), sy = Math.round(n.y - s.frame_h - 6 - cy + bob);
+        ctx.fillStyle = "rgba(20,12,28,0.82)"; ctx.fillRect(sx - w / 2, sy - 9, w, 11);
+        ctx.fillStyle = "#fff6d8"; ctx.fillText(n.line, sx, sy - 1);
+        ctx.textAlign = "left";
+      }
+    }
+  }
   function drawPickups(cx, cy) {
     for (const pk of pickups) {
       if (pk.taken) continue;
@@ -454,5 +477,5 @@ const World = (() => {
            draw, burstAt, addFloater, dropCostume, spawnTrophy, onFirePutOut,
            onBossesCleared, levelClear,
            get camX() { return camX; }, get camY() { return camY; },
-           get pickups() { return pickups; } };
+           get pickups() { return pickups; }, get npcs() { return npcs; } };
 })();

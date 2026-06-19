@@ -358,6 +358,61 @@ async function main() {
         cove ? cove.w + "/" + cove.maxHp : "no boss");
   check("the cove's bad dreams is sweep-armed", !!(cove && cove.sweep));
 
+  /* ============ L10: THE NICE PLACE — the four new toys + the giant ============ */
+  await gotoLevel(10); step(10);
+  check("L10 THE NICE PLACE loads", level.name === "THE NICE PLACE" && level.world === 10, level.name);
+  check("L10 has its friendly NPC cast", World.npcs.length === 6, World.npcs.length);
+  // the four new toys appear in chests only from world 10 (the chooser gains a third row)
+  P().powers = []; P().lvl = {}; P().bubble = 0; P().stack = [];
+  const chests10 = World.pickups.filter(pk => pk.type === "chest");
+  check("L10 is generous with chests", chests10.length >= 4, chests10.length);
+  // BUBBLEGUM: stack three chests into a 3-heart buffer (it isn't an action power)
+  function openChest(k) {
+    Game.stars = 3;
+    P().x = chests10[k].x; P().y = chests10[k].y - 10; P().vy = 0; P().iframes = 9999; step(4);
+  }
+  openChest(0); check("L10 chest opens the chooser", Game.state === "chooser");
+  Game.chooserIdx = 8; tap(menuPad, "confirm"); step(2);            // bubble = first world-10 toy
+  openChest(1); Game.chooserIdx = 8; tap(menuPad, "confirm"); step(2);
+  openChest(2); Game.chooserIdx = 8; tap(menuPad, "confirm"); step(2);
+  check("bubblegum stacks to a 3-heart buffer (not an action power)",
+        P().bubble === 3 && !P().powers.includes("bubble"), "bubble=" + P().bubble);
+  const hb = hurtbox(P());
+  check("the bubble becomes the hitbox (bigger & round)", hb.w > P().w && hb.h > P().h, hb.w + "x" + hb.h);
+  const hearts0 = P().hearts;
+  P().iframes = 0; hurtPlayer(P(), P().x + 40); step(2);
+  check("a hit pops one bubble, sparing a heart", P().bubble === 2 && P().hearts === hearts0);
+  // STICKY HAND: an action power that snaps out
+  openChest(3); Game.chooserIdx = 9; tap(menuPad, "confirm"); step(2);
+  check("sticky hand is an action power", P().powers.includes("sticky"));
+  P().iframes = 9999; P().stickyCD = 0; tap(pads[0], "action"); step(2);
+  check("the sticky hand snaps out", Combat.stickyHands.length >= 1);
+  // MERMAID SHELL: a lobbed-arc projectile
+  openChest(4); Game.chooserIdx = 10; tap(menuPad, "confirm"); step(2);
+  P().shellCD = 0; tap(pads[0], "action"); step(2);
+  check("the mermaid shell lobs an arc", projectiles.some(pr => pr.kind === "shell"));
+  // EGG-A-RANG: an orbiting boomerang
+  openChest(5); Game.chooserIdx = 11; tap(menuPad, "confirm"); step(2);
+  P().eggCD = 0; tap(pads[0], "action"); step(2);
+  check("the egg-a-rang orbits", Combat.eggs.length >= 1);
+  // THE BIG GUY UPSTAIRS — looks terrifying, dies in three
+  const big = Bosses.units[0];
+  check("the giant boss is present (we only see his feet)",
+        big && big.sub === "giant" && big.maxHp === T.GIANT_HP, big ? big.sub : "none");
+  for (let i = 0; i < 12; i++) { P().x = 1650; P().y = 90; P().vx = 0; P().vy = 0; P().iframes = 9999; step(); if (Game.state === "card") { tap(menuPad, "confirm"); step(); } }
+  check("the giant reveals once you cross the gate", Bosses.activated);
+  let stubs = 0;
+  for (let i = 0; i < 500 && big.hp > 0; i++) {
+    if (Game.state === "card") { tap(menuPad, "confirm"); step(); continue; }
+    P().x = 1650; P().y = 90; P().iframes = 9999;
+    if (big.iframes <= 0) { Bosses.hitByBox({ x: big.x, y: big.y, w: big.w, h: big.h }, 1); stubs++; }
+    step();
+  }
+  check("three toy-pokes fell the giant", big.hp <= 0 && stubs === T.GIANT_HP, "stubs=" + stubs + " hp=" + big.hp);
+  let trophy10 = null;
+  for (let i = 0; i < 500 && !trophy10; i++) { if (Game.state === "card") tap(menuPad, "confirm"); step(); trophy10 = World.pickups.find(pk => pk.type === "trophy"); }
+  check("the giant storms off and the world clears (trophy)", !!trophy10);
+
   /* ============ level data integrity: rectangular grids, in-range tiles ============ */
   // (a jagged row makes grid[y][x] undefined -> drawTiles crashes once it scrolls on-screen)
   for (let i = 1; i <= T.WORLD_COUNT; i++) {
@@ -371,7 +426,7 @@ async function main() {
   }
 
   /* ============ the finale path (gated code: beads -> ending -> credits -> scores) ============ */
-  await gotoLevel(9); step(5);
+  await gotoLevel(10); Bosses.spawn(); step(5);          // clear the giant so the fabricated beads aren't interrupted
   level.finale = true;                                   // fabricate: no shipped level sets it yet
   World.spawnTrophy("beads");
   const beads = World.pickups.find(pk => pk.type === "beads");
@@ -400,7 +455,7 @@ async function main() {
   check("moonlight makes her a T-REX", players[1].form === "trex");
   players[1].moonTimer = 1; step(2);
   check("the moon sets; small again", players[1].form === "charmgirl");
-  players[0].hearts = 1; players[0].iframes = 0; players[0].stack = [];
+  players[0].hearts = 1; players[0].iframes = 0; players[0].stack = []; players[0].bubble = 0;
   hurtPlayer(players[0], players[0].x + 50); step(2);
   check("P1 down but P2 keeps the dream alive", players[0].dead && Game.state === "play");
   let revived = false;

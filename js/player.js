@@ -19,10 +19,11 @@ function makePlayer(idx, character) {
     hearts: T.MAX_HEARTS, maxHearts: T.MAX_HEARTS,
     iframes: 0, dead: false, deadTimer: 0,
     stack: [],                    // worn costumes, bottom->top: goosefeet|laser|kirby|spoon
-    powers: [],                   // treasure powers held — they STACK and persist: fire|pink|tree|mace
-    lvl: {}, maceAngle: 0, maceAngle2: 0,   // ability level 1/2 (2 = mirrored pair) + the two mace spin angles
+    powers: [],                   // treasure powers held — they STACK and persist: fire|pink|tree|mace|sticky|shell|egg
+    lvl: {}, maceAngle: 0, maceAngle2: 0,   // ability level (mirrored pair / stack count) + the two mace spin angles
+    bubble: 0, eggAngle: 0,       // bubblegum buffer hearts (0..3); egg-a-rang orbit phase
     pounding: false, rooted: false, dropThrough: 0,
-    atkCD: 0, spoonTimer: 0, pinkCD: 0, fireCD: 0, nutCD: 0,
+    atkCD: 0, spoonTimer: 0, pinkCD: 0, fireCD: 0, nutCD: 0, stickyCD: 0, shellCD: 0, eggCD: 0,
     moonTimer: 0,                 // trex (charmgirl) / moonflex (swan)
     carrying: 0,                  // baby swans in tow
     lastSafeX: 0, lastSafeY: 0,
@@ -48,6 +49,9 @@ function updatePlayer(p) {
   if (p.pinkCD > 0) p.pinkCD--;
   if (p.fireCD > 0) p.fireCD--;
   if (p.nutCD > 0) p.nutCD--;
+  if (p.stickyCD > 0) p.stickyCD--;
+  if (p.shellCD > 0) p.shellCD--;
+  if (p.eggCD > 0) p.eggCD--;
   if (p.spoonTimer > 0) p.spoonTimer--;
   if (p.iframes > 0) p.iframes--;
   if (p.dropThrough > 0) p.dropThrough--;
@@ -57,6 +61,7 @@ function updatePlayer(p) {
     p.maceAngle = (p.maceAngle || 0) - T.MACE_SPEED;                       // CCW mace
     if (p.lvl.mace >= 2) p.maceAngle2 = (p.maceAngle2 || 0) + T.MACE_SPEED;   // a second, CW mace
   }
+  p.eggAngle += T.EGG_SPEED;            // egg-a-rang orbit phase (advances even when none are out — harmless)
 
   if (p.form === "mecha") { updateMecha(p, pad); return; }
 
@@ -261,7 +266,42 @@ function doAttack(p, pad) {
     p.pinkCD = T.PINK_COOLDOWN; pinkBurst(p); acted = true;
   }
   if (p.powers.includes("tree") && p.nutCD <= 0) { shootNut(p); acted = true; }   // X throws a nut; rooting rapid-fires
+  if (p.powers.includes("sticky") && p.stickyCD <= 0) { shootSticky(p); acted = true; }
+  if (p.powers.includes("shell") && p.shellCD <= 0) { shootShell(p); acted = true; }
+  if (p.powers.includes("egg") && p.eggCD <= 0) { throwEgg(p); acted = true; }
   return acted;
+}
+// THE STICKY HAND — snaps out at 45 degrees and yanks back fast; stacks fan it out.
+function shootSticky(p) {
+  p.stickyCD = T.STICKY_COOLDOWN;
+  const n = p.lvl.sticky || 1;
+  const angs = [-Math.PI / 4];                          // 1: up-forward 45 degrees
+  if (n >= 2) angs.push(Math.PI / 4);                   // 2: + down-forward 45 degrees
+  if (n >= 3) angs.push(0);                             // 3: + straight ahead
+  for (const a of angs)
+    Combat.stickyHands.push({ owner: p, facing: p.facing, ang: a, len: 0, phase: "out", t: 0,
+                              hit: new Set() });
+  AudioSys.sfx("spoon");
+}
+// THE MERMAID SHELL — lobbed up a 60-degree arc; stacks add close-clustered shells.
+function shootShell(p) {
+  p.shellCD = T.SHELL_COOLDOWN;
+  const n = p.lvl.shell || 1;
+  const base = Math.PI / 3;                             // 60 degrees above the horizon
+  for (let i = 0; i < n; i++) {
+    const a = base + (i - (n - 1) / 2) * T.SHELL_SPREAD;
+    spawnProjectile("shell", p.x + p.w / 2 - 8, p.y + 4,
+                    p.facing * Math.cos(a) * T.SHELL_SPEED, -Math.sin(a) * T.SHELL_SPEED, "player", T.SHELL_DMG);
+  }
+  AudioSys.sfx("splash");
+}
+// THE EGG-A-RANG — a fried egg loops once around you and comes home.
+function throwEgg(p) {
+  p.eggCD = T.EGG_COOLDOWN;
+  const n = p.lvl.egg || 1;
+  for (let i = 0; i < n; i++)
+    Combat.eggs.push({ owner: p, off: i * Math.PI, t: 0, life: T.EGG_LIFE, hit: new Set() });
+  AudioSys.sfx("pink");
 }
 function fireLaser(p, dmg, dir) {
   AudioSys.sfx("laser");
@@ -335,7 +375,12 @@ function grantMoon(p) {
 function hurtPlayer(p, fromX) {
   if (p.iframes > 0 || p.dead || Game.state !== "play") return;
   if (p.moonTimer > 0 && p.character === "swan") return;      // moonflex: untouchable
-  if (p.stack.length) {                                        // costumes absorb the hit
+  if (p.bubble > 0) {                                          // the bubblegum shield pops first (outermost)
+    p.bubble--;
+    World.burstAt(p.x + p.w / 2, p.y + p.h / 2, "ring", 6);
+    World.addFloater(p.x + p.w / 2, p.y - 8, "POP!");
+    AudioSys.sfx("bubble");
+  } else if (p.stack.length) {                                 // costumes absorb the hit
     const costume = p.stack.pop();
     World.dropCostume(costume, p.x + p.w / 2 - 8, p.y - 4);
   } else {
@@ -366,7 +411,12 @@ function updateDeadPlayer(p) {
 }
 
 /* ---------------- hitboxes ---------------- */
+function bubbleR(p) { return T.BUBBLE_R + (p.bubble - 1) * 3; }   // grows a touch per stacked bubble
 function hurtbox(p) {
+  if (p.bubble > 0) {                            // the bubble IS the hitbox now — a bigger, rounder target
+    const r = bubbleR(p), cx = p.x + p.w / 2, cy = p.y + p.h / 2;
+    return { x: cx - r, y: cy - r, w: 2 * r, h: 2 * r };
+  }
   const i = T.HURTBOX_INSET;
   return { x: p.x + i, y: p.y + i, w: p.w - 2 * i, h: p.h - 2 * i };
 }
@@ -444,6 +494,20 @@ function drawPlayer(p, camX, camY) {
     const swing = p.spoonTimer > T.SPOON_ARC_FRAMES / 2;
     drawFrame("gear", swing ? "spoon_down" : "spoon_up",
               cx + (flip ? -26 : -2), footY - 30, flip);
+  }
+  // bubblegum shield: a vibrant pink bubble wrapping the body (one ring per stack)
+  if (p.bubble > 0) {
+    const bcx = p.x + p.w / 2 - camX, bcy = p.y + p.h / 2 - camY;
+    const wob = Math.sin(p.animTimer / 12) * 0.8;
+    for (let i = 0; i < p.bubble; i++) {
+      const r = bubbleR(p) - i * 3 + wob;
+      ctx.beginPath(); ctx.arc(bcx, bcy, r, 0, Math.PI * 2);
+      ctx.fillStyle = i === 0 ? "rgba(255,120,200,0.18)" : "rgba(255,150,215,0.10)"; ctx.fill();
+      ctx.lineWidth = 1; ctx.strokeStyle = "rgba(255,110,195,0.85)"; ctx.stroke();
+    }
+    const r = bubbleR(p) + wob;                 // a little glint
+    ctx.fillStyle = "rgba(255,245,255,0.85)";
+    ctx.beginPath(); ctx.arc(bcx - r * 0.42, bcy - r * 0.42, 1.6, 0, Math.PI * 2); ctx.fill();
   }
   // carried babies bob behind
   for (let i = 0; i < p.carrying; i++) {
