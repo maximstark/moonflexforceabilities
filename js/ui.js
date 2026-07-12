@@ -5,6 +5,18 @@
  * ===================================================================== */
 const UI = (() => {
 
+  /* ---------------- shared bits ---------------- */
+  // NES-bootleg dialog panel: dark fill, gold frame, corner studs
+  function drawPanel(x, y, w, h) {
+    ctx.fillStyle = "rgba(16,10,26,0.90)"; ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = "#ffe48a"; ctx.lineWidth = 1;
+    ctx.strokeRect(x + 2.5, y + 2.5, w - 5, h - 5);
+    ctx.fillStyle = "#ffe48a";
+    for (const [px, py] of [[x+1,y+1],[x+w-3,y+1],[x+1,y+h-3],[x+w-3,y+h-3]])
+      ctx.fillRect(px, py, 2, 2);
+  }
+  const h01 = i => { const s = Math.sin(i * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+
   /* ---------------- HUD ---------------- */
   let dispScore = 0;                 // the shown score chases the real one
   function drawHUD() {
@@ -72,17 +84,27 @@ const UI = (() => {
       ctx.textAlign = "left";
     }
     drawBossBar();
-    // level name toast
+    // level-name ribbon: slides in, holds, fades out
     if (Game.toast > 0) {
-      ctx.font = "bold 12px monospace"; ctx.textAlign = "center";
-      ctx.fillStyle = Game.toast > 30 ? "#ffe48a" : "rgba(255,228,138," + Game.toast / 30 + ")";
-      ctx.fillText(level.name, T.VIEW_W / 2, 80);
+      const slide = Math.min(1, (120 - Game.toast) / 12 + 0.001);
+      const fade = Game.toast > 30 ? 1 : Game.toast / 30;
+      const y = Math.round(62 - (1 - slide) * 24);
+      ctx.globalAlpha = fade;
+      ctx.fillStyle = "rgba(16,10,26,0.78)"; ctx.fillRect(0, y, T.VIEW_W, 34);
+      ctx.fillStyle = "#ffe48a";
+      ctx.fillRect(0, y, T.VIEW_W, 1); ctx.fillRect(0, y + 33, T.VIEW_W, 1);
+      ctx.textAlign = "center";
+      ctx.font = "7px monospace"; ctx.fillStyle = "#ffd9f0";
+      ctx.fillText(typeof Game.levelId === "number" ? "· DREAM " + Game.levelId + " ·" : "· HOME ·",
+                   T.VIEW_W / 2, y + 11);
+      ctx.font = "bold 12px monospace"; ctx.fillStyle = "#ffe48a";
+      ctx.fillText(level.name, T.VIEW_W / 2, y + 25);
       if (level.world === 0 && save.unlocked > 1) {     // back in the hub with progress
-        ctx.font = "8px monospace";
-        ctx.fillStyle = Game.toast > 30 ? "#9fe8a0" : "rgba(159,232,160," + Game.toast / 30 + ")";
-        ctx.fillText("FLOOR " + save.unlocked + " IS OPEN — RIDE THE ELEVATOR UP", T.VIEW_W / 2, 94);
+        ctx.font = "8px monospace"; ctx.fillStyle = "#9fe8a0";
+        ctx.fillText("FLOOR " + save.unlocked + " IS OPEN — RIDE THE ELEVATOR UP", T.VIEW_W / 2, y + 44);
       }
       ctx.textAlign = "left";
+      ctx.globalAlpha = 1;
     }
   }
   function drawBossBar() {
@@ -103,20 +125,49 @@ const UI = (() => {
   /* ---------------- title ---------------- */
   function drawTitle() {
     drawStretched("sky_lake", "g", 0, 0, T.VIEW_W, T.VIEW_H);
+    // early stars over the lake
+    for (let i = 0; i < 20; i++) {
+      const tw = Math.abs(Math.sin(Game.frame / 26 + i * 1.7));
+      ctx.fillStyle = `rgba(255,246,216,${0.12 + 0.5 * tw})`;
+      ctx.fillRect(Math.round(h01(i) * T.VIEW_W), Math.round(h01(i + 41) * 88), 1, 1);
+    }
+    // two shorelines drifting at different speeds
+    const off2 = Math.floor(Game.frame * 0.08) % 192;
+    ctx.globalAlpha = 0.45;
+    for (let x = -off2 - 96; x < T.VIEW_W; x += 192) drawFrame("par_lake", "s", x, T.VIEW_H - 136);
+    ctx.globalAlpha = 1;
     const off = Math.floor(Game.frame * 0.2) % 192;
     for (let x = -off; x < T.VIEW_W; x += 192) drawFrame("par_lake", "s", x, T.VIEW_H - 110);
     ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(30,16,40,0.45)"; ctx.fillRect(0, 26, T.VIEW_W, 74);
-    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 17px monospace";
-    ctx.fillText("MOONFLEX", T.VIEW_W / 2, 50);
-    ctx.fillText("FORCE ABILITIES", T.VIEW_W / 2, 68);
+    drawPanel(10, 24, T.VIEW_W - 20, 76);
+    // the logo bobs, letter by letter, with a plum shadow
+    ctx.font = "bold 17px monospace";
+    const cw = ctx.measureText("M").width;
+    const wave = (s, y) => {
+      const x0 = T.VIEW_W / 2 - (s.length - 1) * cw / 2;
+      for (let i = 0; i < s.length; i++) {
+        const wy = Math.sin(Game.frame / 11 + i * 0.7) * 1.6;
+        ctx.fillStyle = "#3a1f4a"; ctx.fillText(s[i], x0 + i * cw + 1, y + wy + 2);
+        ctx.fillStyle = "#ffe48a"; ctx.fillText(s[i], x0 + i * cw, y + wy);
+      }
+    };
+    wave("MOONFLEX", 50); wave("FORCE ABILITIES", 68);
+    if ((Game.frame >> 3) % 5 < 2)      // a passing glint on the frame
+      drawFrame("fx", (Game.frame >> 3) % 2 ? "spark1" : "spark2",
+                (Game.frame >> 3) % 4 < 2 ? 18 : T.VIEW_W - 34, 28);
     ctx.font = "8px monospace"; ctx.fillStyle = "#ffd9f0";
     ctx.fillText("a dream made by Josie, age 4", T.VIEW_W / 2, 82);
     ctx.fillText("(now with 100% more everything)", T.VIEW_W / 2, 92);
-    // the cast paddles by
+    // the cast paddles by, doubled faintly in the lake
     const wob = Math.sin(Game.frame / 24) * 3;
-    drawFrame("swan", (Game.frame >> 4) % 2 ? "walk1" : "idle", T.VIEW_W / 2 - 46, 112 + wob);
-    drawFrame("charmgirl", (Game.frame >> 4) % 2 ? "walk2" : "idle", T.VIEW_W / 2 + 14, 118 - wob);
+    const swanF = (Game.frame >> 4) % 2 ? "walk1" : "idle";
+    const charmF = (Game.frame >> 4) % 2 ? "walk2" : "idle";
+    ctx.globalAlpha = 0.16;
+    drawFrame("swan", swanF, T.VIEW_W / 2 - 46, 112 + wob + sheets.swan.frame_h, false, true);
+    drawFrame("charmgirl", charmF, T.VIEW_W / 2 + 14, 118 - wob + sheets.charmgirl.frame_h, false, true);
+    ctx.globalAlpha = 1;
+    drawFrame("swan", swanF, T.VIEW_W / 2 - 46, 112 + wob);
+    drawFrame("charmgirl", charmF, T.VIEW_W / 2 + 14, 118 - wob);
     ctx.fillStyle = "#fff6d8"; ctx.font = "9px monospace";
     ctx.fillText("MOVE  WASD / ARROWS", T.VIEW_W / 2, 154);
     ctx.fillText("JUMP  SPACE   ·   tap jump in the air to FLAP", T.VIEW_W / 2, 166);
@@ -141,17 +192,24 @@ const UI = (() => {
   const PAUSE_OPTS = ["KEEP DREAMING", "RESTART THIS DREAM", "WORLD MAP", "MUTE MUSIC", "ERASE ALL DREAMS"];
   function drawPause() {
     ctx.fillStyle = "rgba(12,10,20,0.6)"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
+    drawPanel(T.VIEW_W / 2 - 110, 52, 220, 138);
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px monospace";
-    ctx.fillText("PAUSED", T.VIEW_W / 2, 70);
+    ctx.fillText("PAUSED", T.VIEW_W / 2, 74);
     ctx.font = "9px monospace";
+    const bounce = Math.round(Math.sin(Game.frame / 8) * 1.5);
     PAUSE_OPTS.forEach((o, i) => {
       const sel = i === Game.pauseIdx;
       let label = o;
       if (i === 3 && AudioSys.muted) label = "UNMUTE MUSIC";
       if (i === 4 && Game.confirmErase) label = "REALLY ERASE? — CONFIRM";
       ctx.fillStyle = i === 4 ? (sel ? "#ff9a9a" : "#c08a9a") : (sel ? "#ffe48a" : "#b9b2d8");
-      ctx.fillText((sel ? "> " : "") + label, T.VIEW_W / 2, 100 + i * 16);
+      ctx.fillText(label, T.VIEW_W / 2, 100 + i * 16);
+      if (sel) {
+        ctx.textAlign = "left";
+        ctx.fillText("▶", T.VIEW_W / 2 - 92 + bounce, 100 + i * 16);
+        ctx.textAlign = "center";
+      }
     });
     ctx.textAlign = "left";
   }
@@ -355,17 +413,35 @@ const UI = (() => {
   }
 
   /* ---------------- story cards ---------------- */
+  // typewriter reveal: shown-character budget grows with stateTimer.
+  // first ENTER completes the line; the next ENTER turns the page (main.js).
+  function cardTotalChars() { return (Game.card || []).join("").length; }
+  function cardDone() { return Math.floor(Game.stateTimer * 1.4) >= cardTotalChars(); }
+  function cardRevealFrames() { return Math.ceil(cardTotalChars() / 1.4); }
   function drawCard() {
     ctx.fillStyle = "#16131f"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
-    ctx.textAlign = "center"; ctx.font = "9px monospace";
+    // faint drifting motes so the dark screen still dreams
+    for (let i = 0; i < 10; i++) {
+      const tw = Math.abs(Math.sin(Game.frame / 30 + i * 2.3));
+      ctx.fillStyle = `rgba(216,200,240,${0.06 + tw * 0.10})`;
+      ctx.fillRect(Math.round(h01(i + 7) * T.VIEW_W),
+                   Math.round((h01(i + 91) * T.VIEW_H + Game.frame * 0.1) % T.VIEW_H), 1, 1);
+    }
     const lines = Game.card || [];
+    const ph = Math.max(90, lines.length * 16 + 52);
+    drawPanel(22, T.VIEW_H / 2 - ph / 2, T.VIEW_W - 44, ph);
+    ctx.textAlign = "center"; ctx.font = "9px monospace";
+    let budget = Math.floor(Game.stateTimer * 1.4);
+    const y0 = T.VIEW_H / 2 - ph / 2 + 30;
     lines.forEach((ln, i) => {
+      const shown = budget > 0 ? ln.slice(0, budget) : "";
+      budget -= ln.length;
       ctx.fillStyle = i === 0 ? "#ffe48a" : "#e8e0f4";
-      ctx.fillText(ln, T.VIEW_W / 2, 86 + i * 16);
+      ctx.fillText(shown, T.VIEW_W / 2, y0 + i * 16);
     });
-    if ((Game.frame >> 4) % 2) {
+    if (cardDone() && (Game.frame >> 4) % 2) {
       ctx.fillStyle = "#b9b2d8"; ctx.font = "8px monospace";
-      ctx.fillText("ENTER", T.VIEW_W / 2, 200);
+      ctx.fillText("ENTER ▸", T.VIEW_W / 2, T.VIEW_H / 2 + ph / 2 - 12);
     }
     ctx.textAlign = "left";
   }
@@ -412,6 +488,11 @@ const UI = (() => {
   ];
   function drawCredits() {
     ctx.fillStyle = "#16131f"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
+    for (let i = 0; i < 16; i++) {                    // the night sky applauds
+      const tw = Math.abs(Math.sin(Game.frame / 24 + i * 2.1));
+      ctx.fillStyle = `rgba(232,224,255,${0.08 + tw * 0.25})`;
+      ctx.fillRect(Math.round(h01(i + 13) * T.VIEW_W), Math.round(h01(i + 77) * T.VIEW_H), 1, 1);
+    }
     const scroll = Game.stateTimer * 0.4;
     ctx.textAlign = "center";
     CREDITS.forEach((ln, i) => {
@@ -427,15 +508,18 @@ const UI = (() => {
   /* ---------------- clear tally ---------------- */
   function drawClear() {
     ctx.fillStyle = "rgba(12,10,20,0.55)"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
+    drawPanel(T.VIEW_W / 2 - 92, 48, 184, 104);
     ctx.textAlign = "center";
-    drawFrame("hud", "trophy", T.VIEW_W / 2 - 8, 64);
+    const hop = Math.round(Math.abs(Math.sin(Game.frame / 12)) * -3);
+    drawFrame("hud", "trophy", T.VIEW_W / 2 - 8, 60 + hop);
     ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px monospace";
-    ctx.fillText("DREAM CLEAR!", T.VIEW_W / 2, 102);
-    ctx.font = "9px monospace"; ctx.fillStyle = "#fff6d8";
-    ctx.fillText("SCORE " + Game.score.toLocaleString(), T.VIEW_W / 2, 122);
+    ctx.fillText("DREAM CLEAR!", T.VIEW_W / 2, 98);
+    ctx.font = "9px monospace";
+    ctx.fillStyle = dispScore < Game.score ? "#ffe48a" : "#fff6d8";
+    ctx.fillText("SCORE " + dispScore.toLocaleString(), T.VIEW_W / 2, 118);
     if (Game.babiesThisLevel > 0) {
       ctx.fillStyle = "#ffd9f0";
-      ctx.fillText("BABY SWANS RESCUED: " + Game.babiesThisLevel, T.VIEW_W / 2, 138);
+      ctx.fillText("BABY SWANS RESCUED: " + Game.babiesThisLevel, T.VIEW_W / 2, 134);
     }
     ctx.textAlign = "left";
   }
@@ -448,10 +532,13 @@ const UI = (() => {
     ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px monospace";
     ctx.fillText("HALL OF DREAMERS", T.VIEW_W / 2, 60);
     ctx.font = "9px monospace";
+    const medal = ["#ffd96a", "#cfd4e8", "#e0a35f"];
     save.highScores.slice(0, 8).forEach((h, i) => {
-      ctx.fillStyle = i === 0 ? "#fff6d8" : "#b9b2d8";
+      ctx.fillStyle = medal[i] || "#b9b2d8";
       ctx.fillText((i + 1) + ". " + h.name.padEnd(8, ".") + "  " + String(h.score).padStart(9, "0"),
                    T.VIEW_W / 2, 82 + i * 14);
+      if (i === 0 && (Game.frame >> 4) % 2)
+        drawFrame("fx", "spark1", T.VIEW_W / 2 - 92, 74);
     });
     if ((Game.frame >> 4) % 2) {
       ctx.fillStyle = "#ffe48a";
@@ -474,6 +561,6 @@ const UI = (() => {
   }
 
   return { drawHUD, drawTitle, drawPause, drawChooser, updateChooser,
-           openStore, updateStore, drawStore, drawCard, drawEnding, drawCredits,
+           openStore, updateStore, drawStore, drawCard, cardDone, cardRevealFrames, drawEnding, drawCredits,
            drawClear, drawScores, drawIris, PAUSE_OPTS };
 })();

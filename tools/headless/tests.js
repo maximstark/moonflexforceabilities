@@ -283,7 +283,8 @@ async function main() {
   check("beaten, he grabs the babies and flees", hog.fleeing === true || Game.cardQueue.length > 0 || Game.state === "card");
   await waitState("card", 300);
   check("the steal cutscene plays", Game.state === "card");
-  tap(menuPad, "confirm"); step(2);
+  // typewriter cards: first confirm completes the line, the next turns the page
+  for (let g = 0; g < 8 && Game.state === "card"; g++) { tap(menuPad, "confirm"); step(2); }
   let trophy5 = null;
   for (let i = 0; i < 400 && !trophy5; i++) { step(); trophy5 = World.pickups.find(pk => pk.type === "trophy"); }
   check("the chase goal appears", !!trophy5);

@@ -142,7 +142,9 @@ function update() {
 
     case "card":
       Game.stateTimer++;
-      if (menuPad.pressed.has("confirm") || Game.stateTimer > 420) {
+      if (menuPad.pressed.has("confirm") && !UI.cardDone()) {
+        Game.stateTimer = UI.cardRevealFrames();           // finish the typewriter line first
+      } else if (menuPad.pressed.has("confirm") || Game.stateTimer > UI.cardRevealFrames() + 420) {
         if (Game.cardQueue.length) { Game.card = Game.cardQueue.shift(); Game.stateTimer = 0; }
         else { Game.card = null; Game.state = "play"; }    // straight to next card, no level flash
       }
@@ -159,6 +161,11 @@ function update() {
 
     case "clear":
       World.updateFx();
+      if (Game.stateTimer % 12 === 0) {                    // little fireworks over the tally
+        const p = players[0];
+        World.burstAt(p.x + (Math.random() - 0.5) * 200, p.y - 30 - Math.random() * 70,
+                      Math.random() < 0.5 ? "confetti" : "spark", 7);
+      }
       if (--Game.stateTimer <= 0) UI.openStore();
       break;
 
