@@ -128,7 +128,9 @@ async function main() {
   let trophy = null;
   for (let i = 0; i < 200 && !trophy; i++) { step(); trophy = World.pickups.find(pk => pk.type === "trophy"); }
   check("trophy spawns at the goal", !!trophy);
-  P().x = trophy.x; P().y = trophy.y - 4; P().vx = 0; P().vy = 0; P().iframes = 0; step(3);
+  // step(8): residual juice hitstop (e.g. a hit taken as the boss died) can
+  // freeze up to ~4 update frames before the pickup touch registers
+  P().x = trophy.x; P().y = trophy.y - 4; P().vx = 0; P().vy = 0; P().iframes = 0; step(8);
   check("trophy triggers DREAM CLEAR", Game.state === "clear");
   check("clear unlocks floor 2", save.unlocked >= 2);
   while (Game.state === "clear") step();
@@ -479,7 +481,7 @@ async function main() {
   const beads = World.pickups.find(pk => pk.type === "beads");
   check("finale: the gold beads appear", !!beads);
   const scorePre = Game.score;
-  P().x = beads.x; P().y = beads.y - 6; P().vx = 0; P().vy = 0; P().iframes = 0; step(4);
+  P().x = beads.x; P().y = beads.y - 6; P().vx = 0; P().vy = 0; P().iframes = 0; step(8);
   check("beads pay TEN MILLION points", Game.score >= scorePre + T.POINTS_FINALE);
   check("the ending begins (turtles)", Game.state === "ending");
   step(340); tap(menuPad, "confirm"); step(2);
