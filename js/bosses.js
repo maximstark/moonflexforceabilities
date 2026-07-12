@@ -451,6 +451,8 @@ const Bosses = (() => {
     if (b.sub === "bigguy" && b.state !== "dip") return false;          // the face is armored unless dipped low
     b.hp -= dmg;
     b.iframes = (b.sub === "badcode" || b.sub === "giant") ? 18 : T.BOSS_IFRAMES; b.hurtFlash = T.BOSS_HURT_FLASH;
+    World.burstAt(b.x + b.w / 2, b.y + b.h / 3, "spark", 5);
+    Game.shake = Math.max(Game.shake, 3);
     AudioSys.sfx("bossHurt");
     World.addFloater(b.x + b.w / 2, b.y - 8, b.sub === "giant" ? "STUB!" : "SCRUMPTIONED!");
     if (b.hp <= 0) {

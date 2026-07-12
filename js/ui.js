@@ -6,10 +6,16 @@
 const UI = (() => {
 
   /* ---------------- HUD ---------------- */
+  let dispScore = 0;                 // the shown score chases the real one
   function drawHUD() {
     const p1 = players[0];
-    for (let i = 0; i < p1.maxHearts; i++)
-      drawFrame("hud", i < p1.hearts ? "heart_full" : "heart_empty", 6 + i * 15, 5);
+    if (dispScore < Game.score)
+      dispScore = Math.min(Game.score, dispScore + Math.max(1, Math.ceil((Game.score - dispScore) * 0.12)));
+    else if (dispScore > Game.score) dispScore = Game.score;   // new run: snap down
+    for (let i = 0; i < p1.maxHearts; i++) {
+      const beat = p1.hearts === 1 && i === 0 ? Math.round(Math.abs(Math.sin(Game.frame / 6)) * 2) : 0;
+      drawFrame("hud", i < p1.hearts ? "heart_full" : "heart_empty", 6 + i * 15, 5 - beat);
+    }
     for (let i = 0; i < p1.bubble; i++)             // bubblegum buffer hearts, in vibrant pink
       drawBubbleHeart(6 + (p1.maxHearts + i) * 15, 5);
     // happiness
@@ -24,7 +30,9 @@ const UI = (() => {
     // score / stars / babies
     ctx.font = "8px monospace"; ctx.fillStyle = "#fff6d8";
     drawFrame("hud", "popcorn", T.VIEW_W - 70, 5);
-    ctx.fillText(String(Game.score).padStart(8, "0"), T.VIEW_W - 52, 16);
+    ctx.fillStyle = dispScore < Game.score ? "#ffe48a" : "#fff6d8";   // gold while counting up
+    ctx.fillText(String(dispScore).padStart(8, "0"), T.VIEW_W - 52, 16);
+    ctx.fillStyle = "#fff6d8";
     drawFrame("hud", "star", T.VIEW_W - 70, 22);
     ctx.fillText("x" + Game.stars, T.VIEW_W - 52, 33);
     drawFrame("items", "baby_icon", T.VIEW_W - 70, 39);

@@ -52,7 +52,7 @@ const World = (() => {
     for (const p of players) {
       const i = players.indexOf(p);
       p.x = level.spawn.x + i * 20; p.y = level.spawn.y;
-      p.vx = 0; p.vy = 0; p.dead = false;
+      p.vx = 0; p.vy = 0; p.dead = false; p.trail = [];
       p.lastSafeX = p.x; p.lastSafeY = p.y;
       p.carrying = 0; p.rooted = false; p.pounding = false; p.moonTimer = 0;
       if (level.forceForm === "mecha") {
@@ -112,6 +112,7 @@ const World = (() => {
       if (Game.stars >= 3) {
         pk.type = "chest_open";
         Game.stars -= 3;
+        World.burstAt(pk.x + 8, pk.y + 4, "spark", 6);
         Game.state = "chooser"; Game.chooserIdx = 0; Game.chooserFor = p;
         AudioSys.sfx("star");
       } else if (Game.frame % 30 === 0) {
@@ -261,13 +262,15 @@ const World = (() => {
     moonspark:{ frames: ["moonspark"], grav: 0, life: 30, vy: -0.6, spread: 0.8 },
     ring:    { frames: ["ring1","ring2"], grav: 0, life: 16, vy: 0, spread: 2.2 },
     ember:   { frames: ["spark1"], grav: -0.03, life: 30, vy: -0.8, spread: 0.6 },
+    confetti:{ rect: ["#ff6ea8","#7ee0ff","#ffe48a","#b5f78e","#d8a6ff"], grav: 0.08, life: 38, vy: -1.6, spread: 2.2 },
   };
   function burstAt(x, y, type, n) {
     const def = PARTS[type];
     if (!def || particles.length > 220) return;
     for (let i = 0; i < n; i++)
       particles.push({ type, x, y, vx: (Math.random() - 0.5) * 2 * def.spread,
-                       vy: def.vy + (Math.random() - 0.5), life: def.life + Math.random() * 10, t: 0 });
+                       vy: def.vy + (Math.random() - 0.5), life: def.life + Math.random() * 10, t: 0,
+                       col: def.rect ? def.rect[(Math.random() * def.rect.length) | 0] : null });
   }
   function addFloater(x, y, text) { floaters.push({ x, y, text, timer: 50 }); }
   function updateFx() {
@@ -525,8 +528,13 @@ const World = (() => {
   function drawParticles(cx, cy) {
     for (const pt of particles) {
       const def = PARTS[pt.type];
-      const f = def.frames[(pt.t >> 3) % def.frames.length];
       if (pt.life < 8 && pt.life % 2 === 0) continue;
+      if (def.rect) {                          // confetti: little colored squares
+        ctx.fillStyle = pt.col;
+        ctx.fillRect(Math.round(pt.x - cx) - 1, Math.round(pt.y - cy) - 1, 2, 2);
+        continue;
+      }
+      const f = def.frames[(pt.t >> 3) % def.frames.length];
       drawFrame("fx", f, pt.x - 8 - cx, pt.y - 8 - cy);
     }
   }

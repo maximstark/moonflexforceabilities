@@ -193,7 +193,7 @@ function contactPlayers(e) {
     if (!kind) continue;
     if ((kind === "stomp" || kind === "moon") && e.iframes <= 0) {
       damageEnemy(e, p.pounding || kind === "moon" ? 2 : 1, p);
-      if (kind === "stomp") bouncePlayer(p);
+      if (kind === "stomp") { bouncePlayer(p); World.burstAt(p.x + p.w / 2, e.y, "ring", 1); }
       Game.hitstop = T.HITSTOP_STOMP;
     } else if (kind === "hurt" && !e.gentle && e.deadTimer <= 0 && e.stun <= 0 &&
                !(e.type === "alligator" && !e.revealed)) {
@@ -211,9 +211,11 @@ function damageEnemy(e, dmg, byPlayer) {
     Game.score += e.score;
     World.addFloater(e.x + e.w / 2, e.y - 4, "+" + e.score);
     World.burstAt(e.x + e.w / 2, e.y + e.h / 2, "poof", 4);
+    World.burstAt(e.x + e.w / 2, e.y + e.h / 2, "confetti", 6);   // the pop of joy
   } else {
     e.iframes = T.ENEMY_HIT_IFRAMES;
     World.addFloater(e.x + e.w / 2, e.y - 4, "BONK");
+    World.burstAt(e.x + e.w / 2, e.y + e.h / 2, "spark", 2);
   }
 }
 

@@ -44,6 +44,7 @@ function updatePlayer(p) {
   const pad = pads[p.idx];
   if (p.dead) { updateDeadPlayer(p); return; }
   p.prevBottom = p.y + p.h;
+  p.wasGrounded = p.grounded;
   p.animTimer++;
   if (p.atkCD > 0) p.atkCD--;
   if (p.pinkCD > 0) p.pinkCD--;
@@ -82,6 +83,7 @@ function updatePlayer(p) {
   if (p.inWater) updateSwim(p, pad, dir, waterRect);
   else updateLand(p, pad, dir);
 
+  p.fallV = p.vy;                    // remembered for landing juice (the mover zeroes vy)
   moveAndCollide(p, { corner: true, oneway: true, dropThrough: p.dropThrough > 0 });
   afterMove(p, pad);
 }
@@ -210,6 +212,7 @@ function updateMecha(p, pad) {
     if (p.animTimer % 5 === 0) World.burstAt(p.x + p.w / 2, p.y + p.h, "spark", 1);
   }
   p.vy = Math.min(p.vy + 0.3, 5.5);
+  p.fallV = p.vy;
   moveAndCollide(p, { corner: true, oneway: true });
   // a giant mecha swan does not go around mushroom masonry
   breakBlocksInRect(p.x - 2, p.y - 2, p.w + 4, p.h + 4);
@@ -217,12 +220,28 @@ function updateMecha(p, pad) {
   afterMove(p, pad);
 }
 
+
 function afterMove(p, pad) {
   if (p.bounced) {                                  // spring tiles
     p.vy = -SPRING_VEL; p.grounded = false; p.jumping = false;
     p.squash = -0.35; AudioSys.sfx("spring");
+    World.burstAt(p.x + p.w / 2, p.y + p.h, "poof", 3);
   }
   if (p.grounded && p.pounding) landPound(p);
+  else if (p.grounded && !p.wasGrounded && p.fallV > 2.2) {   // landing: dust + a little squat
+    p.squash = Math.max(p.squash, Math.min(0.4, p.fallV * 0.06));
+    World.burstAt(p.x + p.w / 2, p.y + p.h, "poof", p.fallV > 5 ? 4 : 2);
+    if (p.fallV >= T.MAX_FALL_SPEED - 0.5) Game.shake = Math.max(Game.shake, 2);
+  }
+  // speed ghosts while dashing past the walk cap (or moonflexed)
+  const ghosting = Math.abs(p.vx) > T.MAX_RUN_SPEED * speedMultFor(p) + 0.1 ||
+                   (p.moonTimer > 0 && p.character === "swan");
+  if (ghosting && p.animTimer % 3 === 0)
+    (p.trail = p.trail || []).push({ x: p.x, y: p.y, facing: p.facing, t: 12 });
+  if (p.trail && p.trail.length) {
+    for (const g of p.trail) g.t--;
+    p.trail = p.trail.filter(g => g.t > 0);
+  }
   if (p.grounded && !p.inWater) { p.lastSafeX = p.x; p.lastSafeY = p.y; }
   // fire tiles: stomp out from above, burn from the side
   if (p.standTile && fireAt(p.standTile.tx, p.standTile.ty)) {
@@ -390,8 +409,11 @@ function hurtPlayer(p, fromX) {
   p.vx = (p.x + p.w / 2 < fromX ? -1 : 1) * T.KNOCKBACK_X;
   p.vy = -T.KNOCKBACK_Y;
   p.rooted = false; p.pounding = false;
+  Game.hitstop = Math.max(Game.hitstop, 3);
+  Game.shake = Math.max(Game.shake, 3);
   AudioSys.sfx("hurt");
   World.burstAt(p.x + p.w / 2, p.y, "feather", 4);
+  World.burstAt(p.x + p.w / 2, p.y + p.h / 2, "ring", 1);
   if (p.hearts <= 0) killPlayer(p);
 }
 function killPlayer(p) {
@@ -470,6 +492,16 @@ function drawPlayer(p, camX, camY) {
   const dx = p.x + p.w / 2 - s.frame_w / 2 - camX;
   const dy = p.y + p.h - s.frame_h - camY;
   const flip = p.facing < 0;
+
+  // speed ghosts fade out behind a dashing swan
+  if (p.trail && p.trail.length) {
+    for (const g of p.trail) {
+      ctx.globalAlpha = 0.08 + 0.14 * (g.t / 12);
+      drawFrame(sheet, frame, g.x + p.w / 2 - s.frame_w / 2 - camX,
+                g.y + p.h - s.frame_h - camY, g.facing < 0);
+    }
+    ctx.globalAlpha = 1;
+  }
 
   // squash & stretch around the feet
   if (Math.abs(p.squash) > 0.02) {
