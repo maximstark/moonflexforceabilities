@@ -108,7 +108,9 @@ const Bosses = (() => {
                             : Math.abs(pl.x - units[0].x) < T.BOSS_ACTIVATE_DIST)) {
       activated = true;
       AudioSys.sfx("roar");
-      AudioSys.playSong(kind === "hogdog" || kind === "hogdog_final" ? "hogdog" : "boss");
+      // the finale keeps its own theme; hog dogs get theirs; everyone else, boss music
+      AudioSys.playSong(level.music === "biggest" ? "biggest"
+                      : kind === "hogdog" || kind === "hogdog_final" ? "hogdog" : "boss");
       Game.shake = 6;
     }
     if (!activated) return;
