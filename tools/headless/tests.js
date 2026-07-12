@@ -23,10 +23,20 @@ function releaseAll() {
 }
 const P = () => players[0];
 function groundY(p) { return p.y + p.h; }
-// enter a world directly, dismissing any scripted story cards (L7/L8 have them)
+// enter a world directly, dismissing any scripted story cards (all worlds
+// have them now — level.story from the JSON, or the STORY fallback table)
 async function gotoLevel(id) {
   await Game.enterLevel(id); step(2);
   for (let g = 0; g < 24 && Game.state === "card"; g++) { tap(menuPad, "confirm"); step(2); }
+}
+// reach "play" from an async level entry, turning any story cards on the way
+async function settlePlay(max = 900) {
+  for (let i = 0; i < max; i++) {
+    if (Game.state === "play") return true;
+    if (Game.state === "card") { tap(menuPad, "confirm"); step(2); }
+    else { update(); await tick(); }
+  }
+  return Game.state === "play";
 }
 async function stompUnit(b, maxTries = 40) {
   for (let t = 0; t < maxTries && b.hp > 0; t++) {
@@ -52,9 +62,9 @@ async function main() {
   save.unlocked = 1;
   tap(menuPad, "right"); update();
   check("locked path refuses (still on the map)", Game.state === "map");
-  // confirm on the current node dives into world 1
+  // confirm on the current node dives into world 1 (turning its story cards)
   tap(menuPad, "confirm");
-  check("map enters THE DREAM LAKE", await waitState("play", 900) && Game.levelId === 1,
+  check("map enters THE DREAM LAKE", await settlePlay(900) && Game.levelId === 1,
         Game.state + "/" + Game.levelId);
 
   /* ============ the sacred movement regression (in L1) ============ */
@@ -161,7 +171,7 @@ async function main() {
   P().x = opened.x; P().y = opened.y; P().vy = 0; step(5);
   tap(pads[0], "down"); update();
   check("an open door dives into its world",
-        await waitState("play", 900) && Game.levelId === opened.level, Game.levelId);
+        await settlePlay(900) && Game.levelId === opened.level, Game.levelId);
 
   /* ============ L2: goose feet, pound, tree rescue, twins ============ */
   await gotoLevel(2); step(20);

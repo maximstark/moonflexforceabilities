@@ -46,8 +46,10 @@ const Game = {
     this.state = "play";
     this.toast = 120;
     this.iris = 100;                       // iris back in
-    if (level.story && level.story.length) {          // play the scripted intro first
-      this.cardQueue = level.story.slice();
+    // scripted intro: the level's own story wins; STORY fills in for the rest
+    const story = (level.story && level.story.length) ? level.story : STORY[id];
+    if (story && story.length) {
+      this.cardQueue = story.slice();
       this.card = this.cardQueue.shift();
       this.state = "card"; this.stateTimer = 0;
     }
