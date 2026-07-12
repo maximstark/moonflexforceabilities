@@ -5,7 +5,7 @@
  *  click play identically. Multi-touch works: each button captures its
  *  own pointer, so "move + jump" is two fingers, no conflict.
  * ===================================================================== */
-(() => {
+const Shell = (() => {
   // button -> { pad: gameplay action, menu: ui action }
   const MAP = {
     up:    { pad: "jump",   menu: "up" },
@@ -125,4 +125,17 @@
   // belt-and-suspenders against mobile zoom/scroll gestures
   ["gesturestart", "gesturechange", "dblclick"].forEach(ev =>
     document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
+
+  // the cabinet takes the hit too: a brief punchy jostle on damage (~200ms).
+  // Uses the independent translate/rotate props so it composes with the
+  // inline fit-to-screen transform; honors prefers-reduced-motion.
+  function jostle() {
+    const c = document.getElementById("cabinet");
+    if (!c || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    c.classList.remove("jostle");
+    void c.offsetWidth;                        // restart the animation from 0
+    c.classList.add("jostle");
+  }
+
+  return { jostle };
 })();

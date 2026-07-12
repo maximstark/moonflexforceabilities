@@ -122,6 +122,11 @@ function eraseSave() {
 }
 
 /* ---------------- helpers ---------------- */
+// a tiny haptic thump on devices that support it (phones); no-op elsewhere
+function buzz(ms) {
+  try { if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(ms); }
+  catch (e) { /* ignore */ }
+}
 const overlaps = (a, b) =>
   a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));

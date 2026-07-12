@@ -44,6 +44,15 @@
     background:linear-gradient(160deg,#efedf4,#d7d4dd 40%,#b7b2c4);
     border-radius:16px 16px 46px 16px;
     box-shadow: inset 0 2px 0 #fff8, inset 0 -6px 14px #0003, 0 14px 40px #000a; }
+  @keyframes cab-jostle{
+    0%  { translate:0 0;      rotate:0deg; }
+    18% { translate:-4px 2px; rotate:-0.7deg; }
+    45% { translate:4px -2px; rotate:0.6deg; }
+    72% { translate:-2px 1px; rotate:-0.3deg; }
+    100%{ translate:0 0;      rotate:0deg; }
+  }
+  #cabinet.jostle{ animation:cab-jostle .2s linear; }
+  @media (prefers-reduced-motion: reduce){ #cabinet.jostle{ animation:none; } }
   #bezel{ background:linear-gradient(160deg,#46415f,#3a3550);
     border-radius:10px 10px 22px 10px; padding:10px 16px; box-shadow: inset 0 3px 10px #000b; }
   #screen{ position:relative; width:100%; aspect-ratio:384/240; background:#1d2b1e;

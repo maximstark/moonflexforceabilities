@@ -29,6 +29,20 @@
     border-radius:16px 16px 46px 16px;
     box-shadow: inset 0 2px 0 #fff8, inset 0 -6px 14px #0003, 0 14px 40px #000a;
   }
+  /* damage jostle: the whole handheld takes the hit. translate/rotate are the
+     independent props, so this rides ON TOP of the inline fit-to-screen
+     transform instead of fighting it. Punchy but brief. */
+  @keyframes cab-jostle{
+    0%  { translate:0 0;      rotate:0deg; }
+    18% { translate:-4px 2px; rotate:-0.7deg; }
+    45% { translate:4px -2px; rotate:0.6deg; }
+    72% { translate:-2px 1px; rotate:-0.3deg; }
+    100%{ translate:0 0;      rotate:0deg; }
+  }
+  #cabinet.jostle{ animation:cab-jostle .2s linear; }
+  @media (prefers-reduced-motion: reduce){
+    #cabinet.jostle{ animation:none; }
+  }
   #brand{ display:flex; align-items:center; gap:8px; color:#5a5470;
     font-weight:bold; letter-spacing:.5px; font-size:11px; padding:0 2px; }
   #brand .led{ width:8px; height:8px; border-radius:50%;

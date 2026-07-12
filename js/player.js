@@ -259,6 +259,8 @@ function afterMove(p, pad) {
   if (p.y > gridH * TS + 48) {
     p.hearts--;
     AudioSys.sfx("hurt");
+    buzz(80);
+    if (typeof Shell !== "undefined") Shell.jostle();
     if (p.hearts <= 0) killPlayer(p);
     else { p.x = p.lastSafeX; p.y = p.lastSafeY; p.vx = 0; p.vy = 0; p.iframes = T.IFRAMES; }
   }
@@ -395,17 +397,20 @@ function grantMoon(p) {
 function hurtPlayer(p, fromX) {
   if (p.iframes > 0 || p.dead || Game.state !== "play") return;
   if (p.moonTimer > 0 && p.character === "swan") return;      // moonflex: untouchable
+  let soaked = false;                                          // shield/costume ate it (lighter buzz)
   if (p.bubble > 0) {                                          // the bubblegum shield pops first (outermost)
-    p.bubble--;
+    p.bubble--; soaked = true;
     World.burstAt(p.x + p.w / 2, p.y + p.h / 2, "ring", 6);
     World.addFloater(p.x + p.w / 2, p.y - 8, "POP!");
     AudioSys.sfx("bubble");
   } else if (p.stack.length) {                                 // costumes absorb the hit
-    const costume = p.stack.pop();
+    const costume = p.stack.pop(); soaked = true;
     World.dropCostume(costume, p.x + p.w / 2 - 8, p.y - 4);
   } else {
     p.hearts--;
   }
+  buzz(soaked ? 30 : 80);                                      // the hit reaches your hands
+  if (typeof Shell !== "undefined") Shell.jostle();            // ...and the whole cabinet
   p.iframes = T.IFRAMES;
   p.vx = (p.x + p.w / 2 < fromX ? -1 : 1) * T.KNOCKBACK_X;
   p.vy = -T.KNOCKBACK_Y;
