@@ -120,8 +120,8 @@ function update() {
 
     case "pause": {
       const nopts = UI.PAUSE_OPTS.length;
-      if (menuPad.pressed.has("up")) { Game.pauseIdx = (Game.pauseIdx + nopts - 1) % nopts; Game.confirmErase = false; }
-      if (menuPad.pressed.has("down")) { Game.pauseIdx = (Game.pauseIdx + 1) % nopts; Game.confirmErase = false; }
+      if (menuPad.pressed.has("up")) { Game.pauseIdx = (Game.pauseIdx + nopts - 1) % nopts; Game.confirmErase = false; AudioSys.sfx("menu"); }
+      if (menuPad.pressed.has("down")) { Game.pauseIdx = (Game.pauseIdx + 1) % nopts; Game.confirmErase = false; AudioSys.sfx("menu"); }
       if (menuPad.pressed.has("pause")) { Game.state = "play"; Game.confirmErase = false; }
       if (menuPad.pressed.has("confirm")) {
         if (Game.pauseIdx === 0) Game.state = "play";

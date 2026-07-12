@@ -47,6 +47,11 @@ const AudioSys = (() => {
       ["square",.16,4,"e3 - g3 - c4 - - - c4 - c4 - g3 - - - a3 - c4 - f4 - - - e4 - - - d4 - - -"],
       ["triangle",.5,0,"c3 - - - g2 - - - a2 - - - e2 - - - f2 - - - c3 - - - g2 - - - g2 - - -"],
       ["drums",.5,0,"k . . . s . . h k . . . s . h h"]]},
+    map: { bpm: 92, tracks: [    // paddling between dreams — a calm little rowing tune
+      ["triangle",.42,0,"e4 - g4 - a4 - g4 - e4 - d4 - c4 - - - e4 - g4 - a4 - c5 - g4 - a4 - - - - -"],
+      ["square",.10,5,"c3 - - - e3 - - - f3 - - - d3 - - - c3 - - - e3 - - - g3 - - - e3 - - -"],
+      ["triangle",.45,0,"c3 - - - a2 - - - f2 - - - g2 - - - c3 - - - a2 - - - f2 - - - g2 - - -"],
+      ["drums",.3,0,". . h . . . h . . . h . . . h ."]]},
     hub: { bpm: 84, tracks: [
       ["triangle",.42,0,"c5 - g4 - e5 - g4 - d5 - g4 - f5 - e5 - c5 - g4 - e5 - g4 - d5 - b4 - c5 - - -"],
       ["triangle",.3,0,"c3 - - - e3 - - - f3 - - - g3 - - - a3 - - - f3 - - - g3 - - - c3 - - -"]]},
@@ -233,6 +238,8 @@ const AudioSys = (() => {
     win:       () => arp(["c4","e4","g4","c5","e5","g5","c6"], 0.09, 0.25, 0.25),
     tenmil:    () => arp(["c4","g4","c5","e5","g5","c6","e6","g6"], 0.07, 0.3, 0.28),
     moonflex:  () => arp(["c4","e4","g4","b4","d5","f#5","a5"], 0.05, 0.12, 0.22),
+    menu:      () => env("square", 520, 660, 0.05, 0.10),
+    checkpoint:() => arp(["g4","c5","e5","g5"], 0.06, 0.14, 0.22, "triangle"),
   };
   function sfx(name) { if (SFX[name]) SFX[name](); }
 

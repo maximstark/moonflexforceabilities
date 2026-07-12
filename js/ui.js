@@ -320,9 +320,9 @@ const UI = (() => {
     const vis = visiblePowers();
     const n = vis.length;
     if (Game.chooserIdx >= n) Game.chooserIdx = 0;
-    if (menuPad.pressed.has("left"))  Game.chooserIdx = (Game.chooserIdx + n - 1) % n;
-    if (menuPad.pressed.has("right")) Game.chooserIdx = (Game.chooserIdx + 1) % n;
-    if (menuPad.pressed.has("up") || menuPad.pressed.has("down")) Game.chooserIdx = (Game.chooserIdx + 4) % n;
+    if (menuPad.pressed.has("left"))  { Game.chooserIdx = (Game.chooserIdx + n - 1) % n; AudioSys.sfx("menu"); }
+    if (menuPad.pressed.has("right")) { Game.chooserIdx = (Game.chooserIdx + 1) % n; AudioSys.sfx("menu"); }
+    if (menuPad.pressed.has("up") || menuPad.pressed.has("down")) { Game.chooserIdx = (Game.chooserIdx + 4) % n; AudioSys.sfx("menu"); }
     if (menuPad.pressed.has("confirm")) {
       const pw = vis[Game.chooserIdx][0];
       const p = Game.chooserFor || players[0];

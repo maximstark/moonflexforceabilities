@@ -43,6 +43,7 @@ const Overworld = (() => {
     if (i < 0) i = 1;
     idx = i; tx = NODES[i].x; ty = NODES[i].y; moving = false;
     camX = clamp(tx - T.VIEW_W / 2, 0, maxCam());
+    AudioSys.playSong("map");
   }
   function step(dir) {
     const j = idx + dir;
@@ -76,24 +77,54 @@ const Overworld = (() => {
   /* ---------------- draw ---------------- */
   function draw() {
     drawWater();
+    drawClouds();
     for (const n of NODES) drawIsland(n);
     for (let i = 0; i < NODES.length - 1; i++) drawPath(NODES[i], NODES[i + 1], pathOpen(i));
     for (let i = 0; i < NODES.length; i++) drawNode(NODES[i], nodeOpen(i), i === idx);
+    // the swan token, with a little wake while paddling
     const bob = Math.sin(fr / 8) * 1.5;
+    if (moving) {
+      ctx.strokeStyle = "rgba(207,234,246,0.5)"; ctx.lineWidth = 1;
+      for (let k = 1; k <= 2; k++) {
+        const t = ((fr + k * 22) % 44) / 44;
+        const wx = tx - (to > from ? 1 : -1) * (6 + t * 12), wy = ty - 2;
+        ctx.globalAlpha = 1 - t;
+        ctx.beginPath(); ctx.ellipse(wx - camX, wy, 2 + t * 5, 1 + t * 2, 0, 0, TAU); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
     drawFrame("swan", moving ? ((fr >> 3) % 2 ? "walk2" : "walk1") : "idle",
               Math.round(tx - 20 - camX), Math.round(ty - 32 + bob), to < from);
     // banner
     ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(20,14,30,0.55)"; ctx.fillRect(0, 3, T.VIEW_W, 27);
-    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 11px monospace";
-    ctx.fillText("CHOOSE YOUR DREAM", T.VIEW_W / 2, 15);
+    ctx.fillStyle = "rgba(16,10,26,0.72)"; ctx.fillRect(0, 0, T.VIEW_W, 31);
+    ctx.fillStyle = "#ffe48a"; ctx.fillRect(0, 30, T.VIEW_W, 1);
+    ctx.font = "bold 11px monospace";
+    ctx.fillStyle = "#ffe48a";
+    ctx.fillText("CHOOSE YOUR DREAM", T.VIEW_W / 2, 13);
     ctx.font = "8px monospace"; ctx.fillStyle = "#fff6d8";
-    ctx.fillText(NODES[idx].label, T.VIEW_W / 2, 27);
+    ctx.fillText(NODES[idx].label, T.VIEW_W / 2, 25);
     if ((fr >> 4) % 2) {
       ctx.fillStyle = "#9fe8a0"; ctx.font = "8px monospace";
       ctx.fillText("← →  WALK      X / ENTER  GO IN", T.VIEW_W / 2, T.VIEW_H - 8);
     }
     ctx.textAlign = "left";
+  }
+  // soft clouds adrift over the lake (they cast little shadows)
+  function drawClouds() {
+    for (let i = 0; i < 4; i++) {
+      const w = 34 + (i * 13) % 22;
+      const cx = ((i * 173 + fr * (0.12 + i * 0.03)) % (T.VIEW_W + 120)) - 60;
+      const cy = 34 + (i * 67) % 150;
+      ctx.fillStyle = "rgba(28,60,92,0.25)";
+      ctx.beginPath(); ctx.ellipse(cx + 8, cy + 26, w * 0.8, 6, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = "rgba(240,248,255,0.85)";
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, w, 8, 0, 0, TAU);
+      ctx.ellipse(cx - w * 0.35, cy - 4, w * 0.45, 6, 0, 0, TAU);
+      ctx.ellipse(cx + w * 0.3, cy - 3, w * 0.4, 5, 0, 0, TAU);
+      ctx.fill();
+    }
   }
   function drawPath(a, b, open) {
     for (let k = 1; k < 10; k++) {
@@ -104,6 +135,13 @@ const Overworld = (() => {
   }
   function drawNode(n, open, cur) {
     const x = n.x - camX, y = n.y;
+    const beaten = n.id !== "home" && typeof n.id === "number" && save.unlocked > n.id;
+    const frontier = n.id === save.unlocked && !beaten;
+    if (frontier) {                                   // the next dream calls softly
+      const pr = 10 + Math.sin(fr / 9) * 2;
+      ctx.strokeStyle = "rgba(255,228,138,0.45)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(x, y, pr, 0, Math.PI * 2); ctx.stroke();
+    }
     if (cur) {
       ctx.strokeStyle = "#ffe48a"; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(x, y, 9 + Math.sin(fr / 6), 0, Math.PI * 2); ctx.stroke();
@@ -114,6 +152,25 @@ const Overworld = (() => {
     ctx.font = "7px monospace"; ctx.textAlign = "center"; ctx.fillStyle = "#241a30";
     ctx.fillText(n.id === "home" ? "H" : open ? String(n.id) : "×", x, y + 2);
     ctx.textAlign = "left";
+    if (beaten) {                                     // a wee victory pennant
+      const px = Math.round(x + 6), py = Math.round(y - 16);
+      ctx.fillStyle = "#7a5a34"; ctx.fillRect(px, py, 1, 10);
+      const flap = Math.sin(fr / 10 + n.id) > 0 ? 1 : 0;
+      ctx.fillStyle = "#ffd96a";
+      ctx.fillRect(px + 1, py, 5, 3); ctx.fillRect(px + 1 + 5, py + 1 - flap, 2, 2);
+      if (save.babies[n.id - 1]) {                    // babies rescued here: a pink heart
+        ctx.fillStyle = "#ff7ab0";
+        ctx.fillRect(px + 1, py - 4, 2, 2); ctx.fillRect(px + 4, py - 4, 2, 2);
+        ctx.fillRect(px + 2, py - 3, 3, 2); ctx.fillRect(px + 3, py - 1, 1, 1);
+      }
+    }
+    if (n.id === "home") {                            // a tiny house on the home island
+      const hx = Math.round(x - 3), hy = Math.round(y - 16);
+      ctx.fillStyle = "#c8b8e8"; ctx.fillRect(hx, hy + 3, 7, 5);
+      ctx.fillStyle = "#8a2c6a";
+      ctx.fillRect(hx - 1, hy + 2, 9, 1); ctx.fillRect(hx, hy + 1, 7, 1); ctx.fillRect(hx + 1, hy, 5, 1);
+      ctx.fillStyle = "#3a2a50"; ctx.fillRect(hx + 2, hy + 5, 2, 3);
+    }
   }
   function drawWater() {
     ctx.fillStyle = "#3f86b5"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);                       // lake
