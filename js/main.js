@@ -8,7 +8,7 @@
 const Game = {
   state: "loading", stateTimer: 0, frame: 0,
   levelId: null, score: 0, stars: 0, happiness: 100, babiesThisLevel: 0,
-  shake: 0, hitstop: 0, toast: 0, iris: 0,
+  shake: 0, hitstop: 0, toast: 0, iris: 0, checkpoint: null,
   pauseIdx: 0, chooserIdx: 0, chooserFor: null, confirmErase: false,
   card: null, cardQueue: [],
   pendingLevel: null,
@@ -127,7 +127,7 @@ function update() {
       if (menuPad.pressed.has("pause")) { Game.state = "play"; Game.confirmErase = false; }
       if (menuPad.pressed.has("confirm")) {
         if (Game.pauseIdx === 0) Game.state = "play";
-        else if (Game.pauseIdx === 1) { World.resetWorld(Game.levelId); Game.state = "play"; }
+        else if (Game.pauseIdx === 1) { Game.checkpoint = null; World.resetWorld(Game.levelId); Game.state = "play"; }
         else if (Game.pauseIdx === 2) Game.toMap(Game.levelId);
         else if (Game.pauseIdx === 3) AudioSys.toggleMute();
         else if (Game.pauseIdx === 4) {

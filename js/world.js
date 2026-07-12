@@ -18,6 +18,7 @@ const World = (() => {
     level = JSON.parse(JSON.stringify(levelCache[file]));
     grid = level.grid; gridH = grid.length; gridW = grid[0].length;
     buildTileSets();
+    if (Game.checkpoint && Game.checkpoint.levelId !== id) Game.checkpoint = null;
     resetWorld(id);
   }
 
@@ -43,15 +44,26 @@ const World = (() => {
       : null;
     Bosses.spawn(level.boss);
     if (!level.boss && id !== "hub") spawnTrophy("trophy");   // bossless level: reach the goal
+    // checkpoint flag (the long dreams): plant it on its ledge
+    const cpDef = typeof CHECKPOINTS !== "undefined" && CHECKPOINTS[id];
+    if (cpDef) {
+      let fy = cpDef.ty;
+      while (fy < gridH && !(isSolid(cpDef.tx, fy) || isOneway(cpDef.tx, fy))) fy++;
+      const claimed = Game.checkpoint && Game.checkpoint.levelId === id;
+      pickups.push({ type: claimed ? "flag_up" : "flag", x: cpDef.tx * TS, y: fy * TS - 20,
+                     taken: false, seed: 3.3, grace: 0 });
+    }
     firesLeft = 0;
     for (const row of grid) for (const t of row)
       if (t >= 0 && level.tileNames[t] === "fire1") firesLeft++;
     rescueArmed = firesLeft > 0;
 
-    // players
+    // players (a claimed checkpoint wins over the level spawn)
+    const cp = Game.checkpoint && Game.checkpoint.levelId === id ? Game.checkpoint : null;
     for (const p of players) {
       const i = players.indexOf(p);
-      p.x = level.spawn.x + i * 20; p.y = level.spawn.y;
+      p.x = (cp ? cp.x : level.spawn.x) + i * 20;
+      p.y = cp ? cp.gy - p.h : level.spawn.y;
       p.vx = 0; p.vy = 0; p.dead = false; p.trail = [];
       p.lastSafeX = p.x; p.lastSafeY = p.y;
       p.carrying = 0; p.rooted = false; p.pounding = false; p.moonTimer = 0;
@@ -65,8 +77,8 @@ const World = (() => {
         p.hearts = p.maxHearts = T.MAX_HEARTS;
       }
     }
-    camX = clamp(level.spawn.x - T.VIEW_W / 2, 0, Math.max(0, gridW * TS - T.VIEW_W));
-    camY = clamp(level.spawn.y - T.VIEW_H / 2, 0, Math.max(0, gridH * TS - T.VIEW_H));
+    camX = clamp((cp ? cp.x : level.spawn.x) - T.VIEW_W / 2, 0, Math.max(0, gridW * TS - T.VIEW_W));
+    camY = clamp((cp ? cp.gy : level.spawn.y) - T.VIEW_H / 2, 0, Math.max(0, gridH * TS - T.VIEW_H));
     AudioSys.playSong(level.music);
   }
 
@@ -108,6 +120,15 @@ const World = (() => {
   }
   function collectPickup(pk, p) {
     const t = pk.type;
+    if (t === "flag") {                       // raise the checkpoint flag
+      pk.type = "flag_up";
+      Game.checkpoint = { levelId: Game.levelId, x: pk.x, gy: pk.y + 20 };
+      addFloater(pk.x + 8, pk.y - 8, "CHECKPOINT!");
+      AudioSys.sfx("checkpoint");
+      burstAt(pk.x + 8, pk.y + 4, "spark", 5);
+      return false;
+    }
+    if (t === "flag_up") return false;
     if (t === "chest") {
       if (Game.stars >= 3) {
         pk.type = "chest_open";
@@ -157,6 +178,7 @@ const World = (() => {
     if (!fled) AudioSys.playSong(level.music);
   }
   function levelClear() {
+    Game.checkpoint = null;
     AudioSys.sfx("win");
     for (const p of players) if (p.carrying) {
       Game.score += p.carrying * T.POINTS_BABY;
@@ -171,6 +193,7 @@ const World = (() => {
     Game.state = "clear"; Game.stateTimer = 130;
   }
   function finaleClear() {
+    Game.checkpoint = null;
     Game.score += T.POINTS_FINALE;
     AudioSys.sfx("tenmil");
     Game.shake = 10;
@@ -513,9 +536,25 @@ const World = (() => {
       }
     }
   }
+  // the checkpoint flag has no sprite sheet — a little pole and pennant
+  function drawFlag(pk, cx, cy) {
+    const x = Math.round(pk.x + 6 - cx), gy = Math.round(pk.y + 20 - cy);
+    const up = pk.type === "flag_up";
+    ctx.fillStyle = "#5a4a6a"; ctx.fillRect(x - 2, gy - 2, 6, 2);      // base
+    ctx.fillStyle = "#8a7a9a"; ctx.fillRect(x, gy - 18, 1, 17);        // pole
+    const flap = Math.sin(Game.frame / 8 + pk.x) > 0 ? 1 : 0;
+    ctx.fillStyle = up ? "#ffd96a" : "#9a8ab0";
+    ctx.fillRect(x + 1, gy - 18, 6, 4);
+    ctx.fillRect(x + 7, gy - 17 - flap, 3, 2);
+    if (up) {
+      ctx.fillStyle = "#fff6d8"; ctx.fillRect(x + 2, gy - 17, 1, 1);
+      if ((Game.frame >> 4) % 3 === 0) drawFrame("fx", "spark1", x - 6, gy - 32);
+    }
+  }
   function drawPickups(cx, cy) {
     for (const pk of pickups) {
       if (pk.taken) continue;
+      if (pk.type === "flag" || pk.type === "flag_up") { drawFlag(pk, cx, cy); continue; }
       const bob = Math.sin((Game.frame + pk.seed * 37) / 18) * 2;
       const spr = PICKUP_SPRITE[pk.type];
       if (!spr) continue;

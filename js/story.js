@@ -6,6 +6,17 @@
  *  House style: dream logic, four-year-old canon, never more than a
  *  few cards — the mystery is fun only if it never blocks the game.
  * ===================================================================== */
+/* Checkpoint flags for the long dreams — {tx, ty} tile coords; the flag
+ * plants on the first standable ledge at/below ty in that column.
+ * L8 gets none on purpose: its badcode chase triggers behind the steps,
+ * and respawning past the trigger would leave the boss dormant forever. */
+const CHECKPOINTS = {
+  7:  { tx: 17, ty: 25 },   // mid-ascent ledge, clear of the fire
+  10: { tx: 95, ty: 6 },    // top of the enemy staircase, before the cloud gate
+  11: { tx: 12, ty: 28 },   // halfway up the long way up
+  12: { tx: 15, ty: 17 },   // two hops below the battle balcony
+};
+
 const STORY = {
   1: [
     ["THE DREAM LAKE", "",

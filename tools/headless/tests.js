@@ -473,6 +473,25 @@ async function main() {
   for (let i = 0; i < 500 && !beads12; i++) { if (Game.state === "card") tap(menuPad, "confirm"); P().x = 5 * 16; P().y = 26 * 16; P().iframes = 9999; step(); beads12 = World.pickups.find(pk => pk.type === "beads"); }
   check("beating the finale boss drops the GOLD BEADS (not a plain trophy)", !!beads12);
 
+  /* ============ checkpoint flags: plant, raise, respawn, forget ============ */
+  await gotoLevel(7); step(5);
+  const flag7 = World.pickups.find(pk => pk.type === "flag");
+  check("L7 plants a checkpoint flag", !!flag7, World.pickups.map(pk => pk.type).join(","));
+  P().x = flag7.x; P().y = flag7.y - 4; P().vx = 0; P().vy = 0; P().iframes = 0; step(8);
+  check("touching the flag raises it",
+        World.pickups.some(pk => pk.type === "flag_up") &&
+        Game.checkpoint && Game.checkpoint.levelId === 7, JSON.stringify(Game.checkpoint));
+  P().iframes = 0; P().hearts = 1; P().bubble = 0; P().stack = []; hurtPlayer(P(), P().x + 30);
+  check("the last heart fades", P().dead || Game.state === "dying", Game.state);
+  for (let i = 0; i < 300 && Game.state !== "play"; i++) step();
+  check("you wake at the checkpoint, not the spawn",
+        Game.state === "play" && Math.abs(P().x - flag7.x) < 24 && P().y < flag7.y + 40,
+        P().x.toFixed(0) + "," + P().y.toFixed(0) + " vs flag " + flag7.x + "," + flag7.y);
+  check("the flag stays raised after waking", World.pickups.some(pk => pk.type === "flag_up"));
+  await gotoLevel(8); step(2);
+  check("a different dream forgets the checkpoint (L8 has none, by design)",
+        !Game.checkpoint && !World.pickups.some(pk => pk.type === "flag" || pk.type === "flag_up"));
+
   /* ============ level data integrity: rectangular grids, in-range tiles ============ */
   // (a jagged row makes grid[y][x] undefined -> drawTiles crashes once it scrolls on-screen)
   for (let i = 1; i <= T.WORLD_COUNT; i++) {
