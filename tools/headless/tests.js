@@ -568,6 +568,69 @@ async function main() {
   check("plain badcode stays 44px / default hp / no sweep",
         bc.w === 44 && bc.maxHp === T.BADCODE_HP && !bc.sweep);
 
+  /* ============ GENTLE DREAMS: the soft mode for little dreamers ============ */
+  releaseAll();
+  Bosses.spawn();                                        // clear the leftover badcode
+  await gotoLevel(1); step(5);
+  check("normal dreams start with three hearts", P().maxHearts === T.MAX_HEARTS, P().maxHearts);
+  // flip it from the pause menu (row 3), the way a kid would
+  tap(menuPad, "pause"); step(1);
+  check("pause opens", Game.state === "pause");
+  for (let i = 0; i < 3; i++) { tap(menuPad, "down"); step(1); }
+  check("the cursor rests on GENTLE DREAMS",
+        Game.pauseIdx === 3 && UI.PAUSE_OPTS[3] === "GENTLE DREAMS", Game.pauseIdx);
+  tap(menuPad, "confirm"); step(1);
+  check("gentle dreams turns on and heals to a doubled max",
+        save.gentle === true && P().maxHearts === T.MAX_HEARTS * T.GENTLE_HEART_MULT &&
+        P().hearts === P().maxHearts, P().hearts + "/" + P().maxHearts);
+  check("the choice persists into the save",
+        JSON.parse(localStorage.getItem(SAVE_KEY)).gentle === true);
+  tap(menuPad, "pause"); step(1);
+  check("back to dreaming", Game.state === "play");
+  // a beaten baddie drops a heart on the 25% roll (forced here)
+  const victim = enemies.find(e => e.alive);
+  const heartsOnGround = () => World.pickups.filter(pk => pk.type === "heart" && !pk.taken).length;
+  const before25 = heartsOnGround();
+  const realRandom = Math.random; Math.random = () => 0.0;
+  damageEnemy(victim, 99);
+  Math.random = realRandom;
+  check("a beaten baddie leaves a heart (gentle 25% roll)", heartsOnGround() === before25 + 1);
+  // a fresh world seeds doubled hearts AND sprinkles hearts near its treasures
+  await gotoLevel(7); step(5);
+  check("a gentle world wakes with six hearts", P().hearts === 6 && P().maxHearts === 6,
+        P().hearts + "/" + P().maxHearts);
+  check("hearts sprinkle near the chests and the flag", heartsOnGround() >= 2, heartsOnGround());
+  // the heart heals one heart — and politely waits if you're already full
+  const warm = World.pickups.find(pk => pk.type === "heart");
+  P().x = warm.x; P().y = warm.y; P().vx = 0; P().vy = 0; P().iframes = 9999; step(4);
+  check("a full dreamer leaves the heart floating", !warm.taken);
+  P().hearts = 1; step(4);
+  check("a warm heart heals exactly one heart", P().hearts === 2 && warm.taken,
+        P().hearts + "/taken=" + warm.taken);
+  // a beaten boss leaves one where it fell
+  Bosses.spawn({ type: "grumpis", x: P().x + 80, y: P().y });
+  const gb = Bosses.units[0];
+  for (let i = 0; i < 20 && !Bosses.activated; i++) { P().iframes = 9999; step(); }
+  const beforeBoss = heartsOnGround();
+  gb.hp = 1; gb.iframes = 0;
+  Bosses.hitByBox({ x: gb.x, y: gb.y, w: gb.w, h: gb.h }, 1);
+  check("a beaten boss leaves a warm heart where it fell", heartsOnGround() === beforeBoss + 1);
+  // the mecha path doubles too
+  await gotoLevel(6); step(5);
+  check("the gentle mecha gets doubled hearts", P().maxHearts === T.MECHA_HEARTS * T.GENTLE_HEART_MULT,
+        P().maxHearts);
+  // toggling off returns the dream to normal — clamped hearts, no sprinkles
+  tap(menuPad, "pause"); step(1);
+  for (let i = 0; i < 3; i++) { tap(menuPad, "down"); step(1); }
+  tap(menuPad, "confirm"); step(1);
+  check("toggling off clamps back to the mecha base",
+        save.gentle === false && P().maxHearts === T.MECHA_HEARTS && P().hearts <= T.MECHA_HEARTS,
+        P().hearts + "/" + P().maxHearts);
+  tap(menuPad, "pause"); step(1);
+  await gotoLevel(7); step(5);
+  check("normal dreams keep three hearts (unchanged)", P().maxHearts === T.MAX_HEARTS);
+  check("no gentle hearts in a normal dream", heartsOnGround() === 0, heartsOnGround());
+
   console.log("\n" + passCount + " passed, " + failCount + " failed");
   process.exit(failCount ? 1 : 0);
 }

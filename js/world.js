@@ -53,6 +53,17 @@ const World = (() => {
       pickups.push({ type: claimed ? "flag_up" : "flag", x: cpDef.tx * TS, y: fy * TS - 20,
                      taken: false, seed: 3.3, grace: 0 });
     }
+    // GENTLE DREAMS: the dream leaves warm hearts near its treasures
+    // (engine-injected like the flag — the level JSONs never carry them)
+    if (save.gentle) {
+      const spots = [];
+      for (const pk of pickups) {
+        if (pk.type === "chest") spots.push({ x: pk.x + 22, y: pk.y - 2 });
+        if (pk.type === "flag" || pk.type === "flag_up") spots.push({ x: pk.x + 18, y: pk.y + 4 });
+      }
+      for (const s of spots)
+        pickups.push({ type: "heart", x: s.x, y: s.y, taken: false, seed: pickups.length * 1.7, grace: 0 });
+    }
     firesLeft = 0;
     for (const row of grid) for (const t of row)
       if (t >= 0 && level.tileNames[t] === "fire1") firesLeft++;
@@ -67,14 +78,15 @@ const World = (() => {
       p.vx = 0; p.vy = 0; p.dead = false; p.trail = [];
       p.lastSafeX = p.x; p.lastSafeY = p.y;
       p.carrying = 0; p.rooted = false; p.pounding = false; p.moonTimer = 0;
+      const hm = save.gentle ? T.GENTLE_HEART_MULT : 1;   // GENTLE DREAMS: twice the hearts
       if (level.forceForm === "mecha") {
         p.form = "mecha"; p.w = T.MECHA_W; p.h = T.MECHA_H;
-        p.hearts = p.maxHearts = T.MECHA_HEARTS;
+        p.hearts = p.maxHearts = T.MECHA_HEARTS * hm;
         p.stack = [];
       } else {
         p.form = p.character === "charmgirl" ? "charmgirl" : "swan";
         p.w = T.PLAYER_W; p.h = T.PLAYER_H;
-        p.hearts = p.maxHearts = T.MAX_HEARTS;
+        p.hearts = p.maxHearts = T.MAX_HEARTS * hm;
       }
     }
     camX = clamp((cp ? cp.x : level.spawn.x) - T.VIEW_W / 2, 0, Math.max(0, gridW * TS - T.VIEW_W));
@@ -95,6 +107,10 @@ const World = (() => {
   function dropCostume(costume, x, y) {
     pickups.push({ type: "pickup_" + costume, x, y, taken: false,
                    seed: Math.random() * 9, grace: T.DROP_GRACE });
+  }
+  // GENTLE DREAMS: beaten baddies sometimes leave a little love behind
+  function dropHeart(x, y) {
+    pickups.push({ type: "heart", x, y, taken: false, seed: Math.random() * 9, grace: 12 });
   }
   function spawnTrophy(kind) {
     if (trophySpawned) return;
@@ -129,6 +145,15 @@ const World = (() => {
       return false;
     }
     if (t === "flag_up") return false;
+    if (t === "heart") {                      // GENTLE DREAMS: one warm heart back
+      if (p.hearts >= p.maxHearts) return false;   // it waits until you need it
+      p.hearts++;
+      pk.taken = true;
+      addFloater(pk.x + 8, pk.y - 6, "A WARM HEART!");
+      AudioSys.sfx("treat");
+      burstAt(pk.x + 8, pk.y + 6, "spark", 4);
+      return true;
+    }
     if (t === "chest") {
       if (Game.stars >= 3) {
         pk.type = "chest_open";
@@ -551,10 +576,32 @@ const World = (() => {
       if ((Game.frame >> 4) % 3 === 0) drawFrame("fx", "spark1", x - 6, gy - 32);
     }
   }
+  // the gentle heart has no sprite sheet either — warm, round, softly aglow
+  function drawHeart(pk, cx, cy) {
+    const bob = Math.sin((Game.frame + pk.seed * 37) / 18) * 2;
+    const x = Math.round(pk.x + 8 - cx), y = Math.round(pk.y + 8 + bob - cy);
+    const r = 3.2 * (1 + Math.sin(Game.frame / 14 + pk.seed) * 0.08);
+    ctx.fillStyle = "rgba(255,90,140,0.18)";
+    ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#ff5a7d";
+    ctx.beginPath();
+    ctx.arc(x - r * 0.9, y - r * 0.5, r, 0, Math.PI * 2);
+    ctx.arc(x + r * 0.9, y - r * 0.5, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x - r * 1.85, y); ctx.lineTo(x + r * 1.85, y); ctx.lineTo(x, y + r * 2.2);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "rgba(255,230,240,0.95)";
+    ctx.beginPath(); ctx.arc(x - r * 0.8, y - r * 0.9, 1.1, 0, Math.PI * 2); ctx.fill();
+  }
   function drawPickups(cx, cy) {
     for (const pk of pickups) {
       if (pk.taken) continue;
       if (pk.type === "flag" || pk.type === "flag_up") { drawFlag(pk, cx, cy); continue; }
+      if (pk.type === "heart") {
+        if (!(pk.grace > 0 && (pk.grace >> 2) % 2)) drawHeart(pk, cx, cy);
+        continue;
+      }
       const bob = Math.sin((Game.frame + pk.seed * 37) / 18) * 2;
       const spr = PICKUP_SPRITE[pk.type];
       if (!spr) continue;
@@ -587,7 +634,7 @@ const World = (() => {
   }
 
   return { loadLevel, resetWorld, updatePickups, updateHubBits, updateFx, updateCamera,
-           draw, burstAt, addFloater, dropCostume, spawnTrophy, onFirePutOut,
+           draw, burstAt, addFloater, dropCostume, dropHeart, spawnTrophy, onFirePutOut,
            onBossesCleared, levelClear,
            get camX() { return camX; }, get camY() { return camY; },
            get pickups() { return pickups; }, get npcs() { return npcs; } };

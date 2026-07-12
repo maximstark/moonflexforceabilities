@@ -8,6 +8,7 @@ const SPRING_VEL = 8.2;
 let players = [];                 // [p1] or [p1,p2]
 
 function makePlayer(idx, character) {
+  const mh = T.MAX_HEARTS * (save.gentle ? T.GENTLE_HEART_MULT : 1);   // GENTLE DREAMS doubles up
   return {
     idx, character,               // "swan" | "charmgirl"
     x: 0, y: 0, w: T.PLAYER_W, h: T.PLAYER_H,
@@ -16,7 +17,7 @@ function makePlayer(idx, character) {
     form: character === "charmgirl" ? "charmgirl" : "swan",
     inWater: false, strokeCD: 0,
     flaps: 0, flapCD: 0,
-    hearts: T.MAX_HEARTS, maxHearts: T.MAX_HEARTS,
+    hearts: mh, maxHearts: mh,
     iframes: 0, dead: false, deadTimer: 0,
     stack: [],                    // worn costumes, bottom->top: goosefeet|laser|kirby|spoon
     powers: [],                   // treasure powers held — they STACK and persist: fire|pink|tree|mace|sticky|shell|egg

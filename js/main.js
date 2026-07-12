@@ -129,8 +129,17 @@ function update() {
         if (Game.pauseIdx === 0) Game.state = "play";
         else if (Game.pauseIdx === 1) { Game.checkpoint = null; World.resetWorld(Game.levelId); Game.state = "play"; }
         else if (Game.pauseIdx === 2) Game.toMap(Game.levelId);
-        else if (Game.pauseIdx === 3) AudioSys.toggleMute();
-        else if (Game.pauseIdx === 4) {
+        else if (Game.pauseIdx === 3) {           // GENTLE DREAMS: soft mode for little dreamers
+          save.gentle = !save.gentle; writeSave();
+          for (const p of players) {              // apply right now, mid-dream
+            const base = p.form === "mecha" ? T.MECHA_HEARTS : T.MAX_HEARTS;
+            p.maxHearts = base * (save.gentle ? T.GENTLE_HEART_MULT : 1);
+            p.hearts = save.gentle ? p.maxHearts : Math.min(p.hearts, p.maxHearts);
+          }
+          AudioSys.sfx(save.gentle ? "treat" : "menu");
+        }
+        else if (Game.pauseIdx === 4) AudioSys.toggleMute();
+        else if (Game.pauseIdx === 5) {
           if (Game.confirmErase) { eraseSave(); Game.confirmErase = false; Game.state = "title"; AudioSys.playSong("title"); }
           else Game.confirmErase = true;
         }

@@ -489,6 +489,9 @@ const Bosses = (() => {
         // a twin dying enrages the survivor
         for (const o of units) if (o !== b && o.state !== "dying") o.rage = T.TWIN_ENRAGE;
       }
+      // GENTLE DREAMS: a beaten boss leaves a warm heart where it fell
+      // (here, not in dieOff — the death anim drifts them off-screen)
+      if (save.gentle && !b.fleeing) World.dropHeart(b.x + b.w / 2 - 8, b.y + b.h / 2);
     }
     return true;
   }

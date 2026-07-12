@@ -185,29 +185,41 @@ const UI = (() => {
       const h = save.highScores[0];
       ctx.fillText("BEST DREAMER: " + h.name + "  " + h.score, T.VIEW_W / 2, 234);
     }
+    // the little dreamers' badge, up in the quiet corner above the panel
+    if (save.gentle) {
+      ctx.font = "8px monospace";
+      const tw = ctx.measureText("GENTLE DREAMS").width;
+      drawBubbleHeart(T.VIEW_W - 8 - tw - 18, 3);
+      ctx.textAlign = "right"; ctx.fillStyle = "#ffb0c8";
+      ctx.fillText("GENTLE DREAMS", T.VIEW_W - 8, 13);
+      ctx.textAlign = "center";
+    }
     ctx.textAlign = "left";
   }
 
   /* ---------------- pause ---------------- */
-  const PAUSE_OPTS = ["KEEP DREAMING", "RESTART THIS DREAM", "WORLD MAP", "MUTE MUSIC", "ERASE ALL DREAMS"];
+  const PAUSE_OPTS = ["KEEP DREAMING", "RESTART THIS DREAM", "WORLD MAP", "GENTLE DREAMS", "MUTE MUSIC", "ERASE ALL DREAMS"];
   function drawPause() {
     ctx.fillStyle = "rgba(12,10,20,0.6)"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
-    drawPanel(T.VIEW_W / 2 - 110, 52, 220, 138);
+    drawPanel(T.VIEW_W / 2 - 110, 48, 220, 152);
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px monospace";
-    ctx.fillText("PAUSED", T.VIEW_W / 2, 74);
+    ctx.fillText("PAUSED", T.VIEW_W / 2, 70);
     ctx.font = "9px monospace";
     const bounce = Math.round(Math.sin(Game.frame / 8) * 1.5);
     PAUSE_OPTS.forEach((o, i) => {
       const sel = i === Game.pauseIdx;
       let label = o;
-      if (i === 3 && AudioSys.muted) label = "UNMUTE MUSIC";
-      if (i === 4 && Game.confirmErase) label = "REALLY ERASE? — CONFIRM";
-      ctx.fillStyle = i === 4 ? (sel ? "#ff9a9a" : "#c08a9a") : (sel ? "#ffe48a" : "#b9b2d8");
-      ctx.fillText(label, T.VIEW_W / 2, 100 + i * 16);
+      if (i === 3) label = "GENTLE DREAMS " + (save.gentle ? "· ON ·" : "· OFF ·");
+      if (i === 4 && AudioSys.muted) label = "UNMUTE MUSIC";
+      if (i === 5 && Game.confirmErase) label = "REALLY ERASE? — CONFIRM";
+      ctx.fillStyle = i === 5 ? (sel ? "#ff9a9a" : "#c08a9a")
+                    : i === 3 && save.gentle ? (sel ? "#ffd9f0" : "#d8a0bc")
+                    : (sel ? "#ffe48a" : "#b9b2d8");
+      ctx.fillText(label, T.VIEW_W / 2, 92 + i * 16);
       if (sel) {
         ctx.textAlign = "left";
-        ctx.fillText("▶", T.VIEW_W / 2 - 92 + bounce, 100 + i * 16);
+        ctx.fillText("▶", T.VIEW_W / 2 - 92 + bounce, 92 + i * 16);
         ctx.textAlign = "center";
       }
     });

@@ -212,6 +212,8 @@ function damageEnemy(e, dmg, byPlayer) {
     World.addFloater(e.x + e.w / 2, e.y - 4, "+" + e.score);
     World.burstAt(e.x + e.w / 2, e.y + e.h / 2, "poof", 4);
     World.burstAt(e.x + e.w / 2, e.y + e.h / 2, "confetti", 6);   // the pop of joy
+    if (save.gentle && Math.random() < T.GENTLE_DROP_CHANCE)      // GENTLE DREAMS: a parting gift
+      World.dropHeart(e.x + e.w / 2 - 8, e.y);
   } else {
     e.iframes = T.ENEMY_HIT_IFRAMES;
     World.addFloater(e.x + e.w / 2, e.y - 4, "BONK");

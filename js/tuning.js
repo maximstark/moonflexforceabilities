@@ -37,6 +37,9 @@ const TUNING = {
 
   // --- health & damage ---
   MAX_HEARTS: 3, IFRAMES: 90, KNOCKBACK_X: 2.4, KNOCKBACK_Y: 3.0,
+  // GENTLE DREAMS (the soft mode for little dreamers): twice the hearts,
+  // and beaten baddies sometimes leave a warm one behind
+  GENTLE_HEART_MULT: 2, GENTLE_DROP_CHANCE: 0.25,
 
   // --- happiness ---
   HAPPINESS_MAX: 100, TREAT_REFILL: 45,

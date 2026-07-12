@@ -116,7 +116,9 @@ function writeSave() {
 }
 function eraseSave() {
   try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
+  const gentle = save.gentle;        // GENTLE DREAMS is a setting, not progress — it survives
   save = { unlocked: 1, babies: Array(T.WORLD_COUNT - 1).fill(false), highScores: [], best: 0 };
+  if (gentle) { save.gentle = true; writeSave(); }
 }
 
 /* ---------------- helpers ---------------- */
