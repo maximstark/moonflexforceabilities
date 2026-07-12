@@ -460,6 +460,13 @@ const UI = (() => {
       const bx = 40 + i * 64 + Math.sin((Game.frame + i * 30) / 30) * 4;
       drawFrame("babyswan", (Game.frame >> 4) % 2 ? "bob2" : "bob1", bx, 176 + Math.sin((Game.frame + i * 50) / 22) * 2);
     }
+    // the quiet sky celebrates
+    for (let i = 0; i < 14; i++) {
+      const tw = Math.abs(Math.sin(Game.frame / 22 + i * 2.3));
+      ctx.fillStyle = `rgba(255,246,216,${0.1 + tw * 0.45})`;
+      ctx.fillRect(Math.round(h01(i + 29) * T.VIEW_W),
+                   Math.round((h01(i + 63) * 150 + Game.frame * 0.06) % 150), 1, 1);
+    }
     drawFrame("items", "beads", T.VIEW_W / 2 - 8, 60 + Math.sin(Game.frame / 20) * 3);
     ctx.textAlign = "center";
     if (t > 60) { ctx.fillStyle = "#ffe48a"; ctx.font = "bold 11px monospace";
