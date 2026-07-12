@@ -8,6 +8,9 @@ const ctxStub = new Proxy({}, {
     // measureText returns a TextMetrics object in the real canvas; the engine
     // reads .width (e.g. world.js drawPrompt), so the stub must too
     if (p === "measureText") return (t[p] = () => ({ width: 0 }));
+    // gradients get .addColorStop() called on them (atmo.js sky grades)
+    if (p === "createLinearGradient" || p === "createRadialGradient")
+      return (t[p] = () => ({ addColorStop: () => {} }));
     return (t[p] = () => {});
   },
   set: (t, p, v) => { t[p] = v; return true; },

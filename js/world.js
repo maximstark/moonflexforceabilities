@@ -301,14 +301,17 @@ const World = (() => {
       cx += Math.round((Math.random() - 0.5) * 4);
       cy += Math.round((Math.random() - 0.5) * 3);
     }
-    // sky + parallax
+    // sky + parallax (far ridge and ambient drift live in Atmo)
     drawStretched(level.sky, "g", 0, 0, T.VIEW_W, T.VIEW_H);
+    Atmo.drawSkyGrade();
+    Atmo.drawFar(cx, cy);
     const strip = sheets[level.par];
     if (strip) {
       const off = Math.floor(cx * 0.35) % 192;
       const py = T.VIEW_H - 110 - Math.round(cy * 0.2);
       for (let x = -off; x < T.VIEW_W; x += 192) drawFrame(level.par, "s", x, py);
     }
+    Atmo.drawBack(cx, cy);
     drawTiles(cx, cy);
     drawWaterTint(cx, cy);
     drawHubBits(cx, cy);
@@ -319,6 +322,8 @@ const World = (() => {
     for (const p of players) drawPlayer(p, cx, cy);
     drawProjectiles(cx, cy);
     drawParticles(cx, cy);
+    Atmo.drawFront(cx, cy);
+    Atmo.drawGrade();
     drawFloaters(cx, cy);
     drawHubPrompts(cx, cy);
     return { cx, cy };
@@ -335,16 +340,77 @@ const World = (() => {
         if (t < 0) continue;
         let name = level.tileNames[t];
         if (alt && ANIM_TILES[name]) name = ANIM_TILES[name];
-        drawFrame(TILE_LOOKUP[name], name, tx * TS - cx, ty * TS - cy);
+        const sx = tx * TS - cx, sy = ty * TS - cy;
+        drawFrame(TILE_LOOKUP[name], name, sx, sy);
+        decorateTile(name, tx, ty, Math.round(sx), Math.round(sy));
         if (name.startsWith("fire") && Math.random() < 0.05)
           burstAt(tx * TS + 8, ty * TS, "ember", 1);
       }
     }
   }
+  // deterministic per-tile accents: tufts, flowers, sprinkles, dew, glow.
+  // seeded by the tile coordinate so the meadow never flickers
+  function decorateTile(name, tx, ty, sx, sy) {
+    const h = (((tx * 73856093) ^ (ty * 19349663)) >>> 0) % 100;
+    if (name === "grass_top") {
+      if (h >= 36 || tileAt(tx, ty - 1) !== -1) return;
+      if (h < 24) {                                   // a tuft
+        ctx.fillStyle = "#2e7d32";
+        ctx.fillRect(sx + (h % 11) + 2, sy - 2, 1, 2);
+        ctx.fillRect(sx + (h % 11) + 4, sy - 3, 1, 3);
+      } else {                                        // a little flower
+        const fx = sx + (h % 9) + 3;
+        ctx.fillStyle = "#3e8e41"; ctx.fillRect(fx, sy - 3, 1, 3);
+        ctx.fillStyle = ["#ff9ecb", "#ffe48a", "#fff6f0"][h % 3];
+        ctx.fillRect(fx - 1, sy - 5, 3, 2); ctx.fillRect(fx, sy - 6, 1, 1);
+      }
+    } else if (name === "night_grass") {
+      if (h < 20 && tileAt(tx, ty - 1) === -1) {      // silver tuft
+        ctx.fillStyle = "#7f9bd0";
+        ctx.fillRect(sx + (h % 11) + 2, sy - 2, 1, 2);
+      } else if (h >= 90) {                           // moonlit dew, blinking
+        const tw = 0.4 + 0.6 * Math.abs(Math.sin((Game.frame + h * 7) / 26));
+        ctx.fillStyle = `rgba(220,235,255,${tw})`;
+        ctx.fillRect(sx + (h % 13) + 1, sy + 1, 1, 1);
+      }
+    } else if (name === "candy_top") {
+      if (h < 30) {                                   // stray sprinkles
+        ctx.fillStyle = ["#ff6ea8", "#7ee0ff", "#b5f78e"][h % 3];
+        ctx.fillRect(sx + (h % 12) + 2, sy + 2 + (h % 3), 1, 1);
+      }
+    } else if (name === "cloud_top") {
+      if (h < 22) {                                   // sunlit wisp
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.fillRect(sx + (h % 10) + 2, sy + 2, 3, 1);
+      }
+    } else if (name === "rock_top") {
+      if (h < 14 && tileAt(tx, ty - 1) === -1) {      // a pebble
+        ctx.fillStyle = "#6a6478";
+        ctx.fillRect(sx + (h % 12) + 2, sy - 1, 2, 1);
+      }
+    } else if (name === "fire1" || name === "fire2") {  // warm breathing glow
+      const a = 0.08 + 0.05 * Math.sin((Game.frame + h) / 6);
+      ctx.fillStyle = `rgba(255,140,40,${a})`;
+      ctx.beginPath(); ctx.arc(sx + 8, sy + 6, 13, 0, Math.PI * 2); ctx.fill();
+    }
+  }
   function drawWaterTint(cx, cy) {
     for (const r of waterRects) {
+      const x = Math.round(r.x - cx), y = Math.round(r.y - cy);
+      if (x > T.VIEW_W || y > T.VIEW_H || x + r.w < 0 || y + r.h < 0) continue;
       ctx.fillStyle = "rgba(86,134,219,0.28)";
-      ctx.fillRect(Math.round(r.x - cx), Math.round(r.y - cy), r.w, r.h);
+      ctx.fillRect(x, y, r.w, r.h);
+      if (r.h > 48) {                                 // the deep gets deeper
+        ctx.fillStyle = "rgba(24,48,120,0.16)";
+        ctx.fillRect(x, y + (r.h >> 1), r.w, r.h - (r.h >> 1));
+      }
+      // a living surface: wobbling highlight dashes (clipped to the view)
+      ctx.fillStyle = "rgba(214,238,255,0.5)";
+      const s0 = Math.max(0, -x), s1 = Math.min(r.w, T.VIEW_W - x);
+      for (let sx = s0; sx < s1; sx += 6) {
+        const wy = Math.sin((Game.frame + (r.x + sx) * 0.8) / 13) * 1.5;
+        ctx.fillRect(x + sx, y + Math.round(wy), 4, 1);
+      }
     }
   }
   function drawHubBits(cx, cy) {
