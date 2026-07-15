@@ -29,6 +29,17 @@ const Atmo = (() => {
   /* ---------------- far layer (behind the near parallax strip) -------- */
   function drawFar(cx, cy) {
     const th = theme();
+    if (th === "lake") {
+      // A quiet storybook sun: deliberately soft-edged and slightly uneven,
+      // like a circle rubbed in with a wax crayon rather than a perfect disc.
+      const sx = 302 - cx * 0.025, sy = 52 - cy * 0.02;
+      ctx.fillStyle = "rgba(255,246,190,0.10)";
+      ctx.beginPath(); ctx.arc(sx, sy, 25, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "rgba(255,239,166,0.22)";
+      ctx.beginPath(); ctx.arc(sx + 1, sy, 17, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "rgba(255,247,204,0.72)";
+      ctx.beginPath(); ctx.arc(sx, sy + 1, 11, 0, Math.PI * 2); ctx.fill();
+    }
     // a second, hazier ridge of the same strip — atmospheric perspective
     if (level && level.par && sheets[level.par]) {
       const off = Math.floor(cx * 0.16) % 192;
@@ -72,6 +83,18 @@ const Atmo = (() => {
         ctx.fillStyle = `rgba(255,240,190,${tw})`;
         ctx.fillRect(Math.round(sx), Math.round(sy), 1, 1);
       });
+      if (th === "lake") {
+        // Thin broken highlights make open water feel alive without obscuring
+        // platforms or changing the collision-driven water tint.
+        for (let i = 0; i < 11; i++) {
+          const x = wrap(i * 47 - cx * 0.55 + f * (0.025 + hash(i) * 0.02), SPAN_X) - 24;
+          const y = 135 + hash(i + 19) * 88 - cy * 0.08;
+          const pulse = 0.18 + Math.abs(Math.sin(f / 25 + i * 1.8)) * 0.28;
+          ctx.fillStyle = `rgba(255,238,177,${pulse})`;
+          ctx.fillRect(Math.round(x), Math.round(y), 3 + (i % 3) * 2, 1);
+          if (i % 4 === 0) ctx.fillRect(Math.round(x + 2), Math.round(y - 1), 1, 3);
+        }
+      }
     } else if (th === "night") {                // fireflies, wandering and blinking
       field(9, cx, cy, 0.8, 0.06, -0.03, 12, (sx, sy, i) => {
         const blink = Math.sin(f / 16 + i * 2.1);
@@ -116,11 +139,37 @@ const Atmo = (() => {
     under: "170,225,255", candy: "255,190,225", fever: "255,140,70", finale: "225,205,255",
   };
   function drawFront(cx, cy) {
-    const tint = FRONT_TINT[theme()] || "255,236,180";
+    const th = theme();
+    const tint = FRONT_TINT[th] || "255,236,180";
     field(5, cx, cy, 1.35, 0.08, -0.05, 6, (sx, sy, i, h1) => {
       ctx.fillStyle = `rgba(${tint},${0.05 + h1 * 0.05})`;
       ctx.beginPath(); ctx.arc(sx, sy, 3 + h1 * 4, 0, Math.PI * 2); ctx.fill();
     });
+    if (th === "lake") drawLakeReeds(cx);
+  }
+
+  function drawLakeReeds(cx) {
+    // Sparse foreground silhouettes frame the action. Their screen-space
+    // placement is deterministic, so captures and replays remain stable.
+    ctx.save();
+    ctx.lineCap = "round";
+    for (let clump = 0; clump < 5; clump++) {
+      const baseX = wrap(clump * 113 - cx * 1.18, SPAN_X) - 28;
+      const baseY = T.VIEW_H + 5;
+      for (let stem = 0; stem < 4; stem++) {
+        const h = 18 + hash(clump * 9 + stem) * 24;
+        const sway = Math.sin(Game.frame / 55 + clump + stem * 0.8) * 2;
+        const x = baseX + stem * 5;
+        ctx.strokeStyle = stem % 2 ? "rgba(34,64,52,0.58)" : "rgba(23,47,43,0.68)";
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x, baseY); ctx.quadraticCurveTo(x + sway, baseY - h * 0.55, x + sway, baseY - h); ctx.stroke();
+        if ((stem + clump) % 2 === 0) {
+          ctx.fillStyle = "rgba(104,67,55,0.62)";
+          ctx.beginPath(); ctx.ellipse(x + sway, baseY - h, 2.5, 6, -0.12, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    }
+    ctx.restore();
   }
 
   /* ---------------- sky grade + vignette (cached gradients) ----------- */
