@@ -1,7 +1,7 @@
 {
   "swan": {
-    "frame_w": 40,
-    "frame_h": 36,
+    "frame_w": 80,
+    "frame_h": 72,
     "frames": [
       "idle",
       "blink",
@@ -13,7 +13,21 @@
       "swim1",
       "swim2"
     ],
-    "file": "assets/swan.png"
+    "file": "assets/swan.png",
+    "anchor": [
+      40,
+      68
+    ],
+    "attachments": {
+      "head": [
+        65,
+        12
+      ],
+      "feet": [
+        40,
+        68
+      ]
+    }
   },
   "mermaid": {
     "frame_w": 40,

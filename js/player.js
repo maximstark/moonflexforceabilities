@@ -497,16 +497,18 @@ function drawPlayer(p, camX, camY) {
     else frame = p.animTimer % 180 < 7 ? "blink" : "idle";
   }
   const s = sheets[sheet];
-  const dx = p.x + p.w / 2 - s.frame_w / 2 - camX;
-  const dy = p.y + p.h - s.frame_h - camY;
+  const anchor = s.anchor || [s.frame_w / 2, s.frame_h];
+  const dx = p.x + p.w / 2 - (p.facing < 0 ? s.frame_w - anchor[0] : anchor[0]) - camX;
+  const dy = p.y + p.h - anchor[1] - camY;
   const flip = p.facing < 0;
 
   // speed ghosts fade out behind a dashing swan
   if (p.trail && p.trail.length) {
     for (const g of p.trail) {
       ctx.globalAlpha = 0.08 + 0.14 * (g.t / 12);
-      drawFrame(sheet, frame, g.x + p.w / 2 - s.frame_w / 2 - camX,
-                g.y + p.h - s.frame_h - camY, g.facing < 0);
+      const ga = g.facing < 0 ? s.frame_w - anchor[0] : anchor[0];
+      drawFrame(sheet, frame, g.x + p.w / 2 - ga - camX,
+                g.y + p.h - anchor[1] - camY, g.facing < 0);
     }
     ctx.globalAlpha = 1;
   }
@@ -527,9 +529,12 @@ function drawPlayer(p, camX, camY) {
 
   // worn costume overlays (the visible stack)
   const cx = p.x + p.w / 2 - camX, footY = p.y + p.h - camY;
+  const head = s.attachments.head || [anchor[0], Math.max(4, anchor[1] - s.frame_h + 4)];
+  const headX = dx + (flip ? s.frame_w - head[0] : head[0]);
+  const headY = dy + head[1];
   if (has(p, "goosefeet")) drawFrame("gear", "goosefeet", cx - 14, footY - 24, flip);
-  if (has(p, "laser") && p.form !== "mecha") drawFrame("gear", "visor", cx - 14, footY - s.frame_h + (p.inWater ? 0 : -2), flip);
-  if (has(p, "kirby")) drawFrame("gear", "kirbycap", cx - 14, footY - s.frame_h - 6, flip);
+  if (has(p, "laser") && p.form !== "mecha") drawFrame("gear", "visor", headX - 14, headY - 8, flip);
+  if (has(p, "kirby")) drawFrame("gear", "kirbycap", headX - 14, headY - 20, flip);
   if (has(p, "spoon")) {
     const swing = p.spoonTimer > T.SPOON_ARC_FRAMES / 2;
     drawFrame("gear", swing ? "spoon_down" : "spoon_up",

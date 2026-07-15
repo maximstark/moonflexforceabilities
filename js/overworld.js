@@ -93,8 +93,8 @@ const Overworld = (() => {
       }
       ctx.globalAlpha = 1;
     }
-    drawFrame("swan", moving ? ((fr >> 3) % 2 ? "walk2" : "walk1") : "idle",
-              Math.round(tx - 20 - camX), Math.round(ty - 32 + bob), to < from);
+    drawFrameSized("swan", moving ? ((fr >> 3) % 2 ? "walk2" : "walk1") : "idle",
+                   Math.round(tx - 18 - camX), Math.round(ty - 31 + bob), 36, 32, to < from);
     // banner
     ctx.textAlign = "center";
     ctx.fillStyle = "rgba(16,10,26,0.72)"; ctx.fillRect(0, 0, T.VIEW_W, 31);

@@ -73,6 +73,8 @@ async function loadAssets() {
     const img = new Image();
     img.onload = () => {
       sheets[name] = { img, frame_w: m.frame_w, frame_h: m.frame_h, frames: m.frames,
+                       anchor: m.anchor || [m.frame_w / 2, m.frame_h],
+                       attachments: m.attachments || {},
                        index: Object.fromEntries(m.frames.map((f, i) => [f, i])) };
       res();
     };
@@ -102,6 +104,15 @@ function drawFrame(name, frame, x, y, flip = false, flipV = false) {
 function drawStretched(name, frame, x, y, w, h) {
   const s = sheets[name], i = s.index[frame];
   ctx.drawImage(s.img, i * s.frame_w, 0, s.frame_w, s.frame_h, Math.round(x), Math.round(y), w, h);
+}
+function drawFrameSized(name, frame, x, y, w, h, flip = false, flipV = false) {
+  const s = sheets[name], i = s.index[frame];
+  x = Math.round(x); y = Math.round(y);
+  ctx.save();
+  ctx.translate(x + (flip ? w : 0), y + (flipV ? h : 0));
+  ctx.scale(flip ? -1 : 1, flipV ? -1 : 1);
+  ctx.drawImage(s.img, i * s.frame_w, 0, s.frame_w, s.frame_h, 0, 0, w, h);
+  ctx.restore();
 }
 
 /* ---------------- save data ---------------- */

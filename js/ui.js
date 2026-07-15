@@ -163,10 +163,10 @@ const UI = (() => {
     const swanF = (Game.frame >> 4) % 2 ? "walk1" : "idle";
     const charmF = (Game.frame >> 4) % 2 ? "walk2" : "idle";
     ctx.globalAlpha = 0.16;
-    drawFrame("swan", swanF, T.VIEW_W / 2 - 46, 112 + wob + sheets.swan.frame_h, false, true);
+    drawFrameSized("swan", swanF, T.VIEW_W / 2 - 46, 112 + wob + 36, 40, 36, false, true);
     drawFrame("charmgirl", charmF, T.VIEW_W / 2 + 14, 118 - wob + sheets.charmgirl.frame_h, false, true);
     ctx.globalAlpha = 1;
-    drawFrame("swan", swanF, T.VIEW_W / 2 - 46, 112 + wob);
+    drawFrameSized("swan", swanF, T.VIEW_W / 2 - 46, 112 + wob, 40, 36);
     drawFrame("charmgirl", charmF, T.VIEW_W / 2 + 14, 118 - wob);
     ctx.fillStyle = "#fff6d8"; ctx.font = "9px monospace";
     ctx.fillText("MOVE  WASD / ARROWS", T.VIEW_W / 2, 154);

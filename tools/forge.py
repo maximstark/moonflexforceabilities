@@ -94,8 +94,22 @@ def swan_frames():
         im=cell(W,H);d=ImageDraw.Draw(im);body(d,low=3+bob);wing(d,low=3+bob);neck(d,low=bob);head(d,low=bob)
         for wx in (4,32): d.line([(wx,33),(wx+4,33)],fill=LAV2,width=1)
         return outline(im,W,H)
-    return (W,H,[f_idle(),f_blink(),f_walk(True),f_walk(False),f_walk(True,1),f_walk(False,1),f_jump(),f_swim(0),f_swim(2)],
-            ["idle","blink","walk1","walk2","walk3","walk4","jump","swim1","swim2"])
+    frames=[f_idle(),f_blink(),f_walk(True),f_walk(False),f_walk(True,1),f_walk(False,1),f_jump(),f_swim(0),f_swim(2)]
+    # The v2 hero sheet is authored at twice the old density. Preserve the
+    # readable silhouette, then add one-pixel high-resolution feather work
+    # that was impossible inside the original 40x36 production cell.
+    hi=[]
+    for n,src in enumerate(frames):
+        im=src.resize((80,72),Image.Resampling.NEAREST); d=ImageDraw.Draw(im)
+        low=6 if n in (7,8) else (2 if n in (4,5) else 0)
+        feather=(224,216,242,255); shine=(255,252,248,255); warm=(252,226,218,255)
+        for x,y,ln in [(19,42,12),(23,47,15),(29,51,14),(37,54,10)]:
+            d.line([(x,y+low),(x+ln,y+2+low)],fill=feather,width=1)
+            d.point((x+2,y+low),fill=shine)
+        d.line([(48,18+low),(52,10+low),(61,7+low)],fill=shine,width=1)
+        d.point((62,13+low),fill=warm); d.point((64,14+low),fill=warm)
+        hi.append(im)
+    return (80,72,hi,["idle","blink","walk1","walk2","walk3","walk4","jump","swim1","swim2"])
 
 def mermaid_frames():
     W,H=40,40
@@ -282,6 +296,9 @@ for name,fn in REGISTRY.items():
     for i,f in enumerate(frames): sheet.paste(f,(i*w,0),f)
     sheet.save(f"{OUT}/{name}.png")
     manifest[name]={"frame_w":w,"frame_h":h,"frames":labels,"file":f"assets/{name}.png"}
+    if name == "swan":
+        manifest[name]["anchor"]=[40,68]
+        manifest[name]["attachments"]={"head":[65,12],"feet":[40,68]}
     rows.append((name,w,h,frames,labels))
 json.dump(manifest,open(f"{OUT}/manifest.json","w"),indent=2)
 
