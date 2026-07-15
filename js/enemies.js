@@ -412,9 +412,14 @@ function updateCombat() {
 function drawEnemies(camX, camY) {
   for (const e of enemies) {
     if (!e.alive) continue;
-    const d = ENEMY_DEFS[e.type], s = sheets[d.sheet];
-    const dx = e.x + e.w / 2 - s.frame_w / 2 - camX;
-    const dy = e.y + e.h - s.frame_h - camY;
+    const d = ENEMY_DEFS[e.type];
+    // Alternate the approved airborne dinosaur into the existing flying-enemy
+    // population without changing AI, damage, collision, or level data.
+    const sheet = e.type === "fly" && sheets.fly_dino && ((Math.floor(e.baseY / 16) + Math.floor(e.x / 64)) & 1)
+      ? "fly_dino" : d.sheet;
+    const s = sheets[sheet];
+    const dx = e.x + e.w / 2 - s.draw_w / 2 - camX;
+    const dy = e.y + e.h - s.draw_h - camY;
     if (e.iframes > 0 && (e.iframes >> 2) % 2 === 0) continue;
     if (e.deadTimer > 0) {
       ctx.save();
@@ -425,7 +430,7 @@ function drawEnemies(camX, camY) {
       ctx.restore();
       continue;
     }
-    drawFrame(d.sheet, enemyFrame(e), dx, dy, e.dir > 0);
+    drawFrame(sheet, enemyFrame(e), dx, dy, e.dir > 0);
     if (e.stun > 0 && (e.animTimer >> 3) % 2)
       drawFrame("fx", "spark1", dx + s.frame_w / 2 - 8, dy - 10);
   }
@@ -442,12 +447,7 @@ function enemyFrame(e) {
   return "idle";
 }
 function drawShell(cx, cy) {
-  cx = Math.round(cx); cy = Math.round(cy);
-  ctx.fillStyle = "#ffe7d2";                                  // cream scallop fan
-  ctx.beginPath(); ctx.arc(cx, cy + 3, 6, Math.PI, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = "#d98fb0"; ctx.lineWidth = 1;             // pink ribs
-  for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(cx, cy + 3); ctx.lineTo(cx + i * 2.4, cy - 3); ctx.stroke(); }
-  ctx.fillStyle = "#e98fb0"; ctx.fillRect(cx - 1, cy + 2, 2, 2);   // hinge
+  drawFrame("items", "shell", Math.round(cx - 8), Math.round(cy - 8));
 }
 function drawStickyHand(h, camX, camY) {
   const p = h.owner;
@@ -458,11 +458,7 @@ function drawStickyHand(h, camX, camY) {
   const seg = Math.max(2, Math.round(h.len / 6));
   for (let i = 1; i < seg; i++)
     ctx.fillRect(Math.round(bx + (tx - bx) * i / seg) - 1, Math.round(by + (ty - by) * i / seg) - 1, 3, 3);
-  ctx.fillStyle = "#ff5fb0";                                  // the hand
-  ctx.beginPath(); ctx.arc(tx, ty, 4, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#ffa6d6";
-  for (let f = -1; f <= 1; f++)
-    ctx.fillRect(Math.round(tx + dx * 4 + f * 2) - 1, Math.round(ty + dy * 4) - 1, 2, 2);
+  drawFrame("items", "sticky", tx - 8, ty - 8, h.facing < 0);
 }
 function drawProjectiles(camX, camY) {
   for (const pr of projectiles) {
@@ -501,10 +497,7 @@ function drawProjectiles(camX, camY) {
       const hy = ccy + Math.sin(ang) * T.MACE_RADIUS;
       ctx.fillStyle = "#9a93b0";
       for (let i = 1; i <= 4; i++) ctx.fillRect(Math.round(ccx + (hx - ccx) * i / 5) - 1, Math.round(ccy + (hy - ccy) * i / 5) - 1, 2, 2);
-      ctx.fillStyle = "#2a2438";
-      for (let a = 0; a < 8; a++) { const A = a * Math.PI / 4; ctx.fillRect(Math.round(hx + Math.cos(A) * 6) - 1, Math.round(hy + Math.sin(A) * 6) - 1, 2, 2); }
-      ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI * 2); ctx.fillStyle = "#4a4458"; ctx.fill();
-      ctx.beginPath(); ctx.arc(hx - 1, hy - 1, 2, 0, Math.PI * 2); ctx.fillStyle = "#8a84a0"; ctx.fill();
+      drawFrame("items", "mace", hx - 8, hy - 8);
     }
   }
   // sticky hands reaching out
@@ -514,12 +507,6 @@ function drawProjectiles(camX, camY) {
     const p = eg.owner, ang = p.eggAngle + eg.off;
     const ex = p.x + p.w / 2 + Math.cos(ang) * T.EGG_RADIUS - camX;
     const ey = p.y + p.h / 2 + Math.sin(ang) * T.EGG_RADIUS - camY;
-    ctx.fillStyle = "#fff8ef";                                // fried egg white
-    ctx.beginPath(); ctx.ellipse(ex, ey, 6, 5, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(ex + 3, ey + 2, 3, 2, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#ffba2e";                                // yolk
-    ctx.beginPath(); ctx.arc(ex - 1, ey - 1, 2.6, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#fff0b0";
-    ctx.beginPath(); ctx.arc(ex - 1.8, ey - 1.8, 1, 0, Math.PI * 2); ctx.fill();
+    drawFrame("items", "egg", ex - 8, ey - 8, Math.cos(ang) < 0);
   }
 }

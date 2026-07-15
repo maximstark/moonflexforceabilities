@@ -105,7 +105,11 @@
       "popcorn",
       "star",
       "treat",
-      "trophy"
+      "trophy",
+      "boss_frame",
+      "boss_fill",
+      "ability_slot",
+      "checkpoint"
     ],
     "file": "assets/hud.png"
   },
@@ -270,7 +274,14 @@
       "pickup_spoon",
       "baby_icon",
       "charm_icon",
-      "phone"
+      "phone",
+      "bubble",
+      "sticky",
+      "shell",
+      "egg",
+      "mace",
+      "heart",
+      "happiness"
     ],
     "file": "assets/items.png"
   },
@@ -338,7 +349,7 @@
     "file": "assets/elevator.png"
   },
   "sky_lake": {
-    "frame_w": 4,
+    "frame_w": 384,
     "frame_h": 240,
     "frames": [
       "g"
@@ -346,7 +357,7 @@
     "file": "assets/sky_lake.png"
   },
   "sky_night": {
-    "frame_w": 4,
+    "frame_w": 384,
     "frame_h": 240,
     "frames": [
       "g"
@@ -354,7 +365,7 @@
     "file": "assets/sky_night.png"
   },
   "sky_under": {
-    "frame_w": 4,
+    "frame_w": 384,
     "frame_h": 240,
     "frames": [
       "g"
@@ -362,7 +373,7 @@
     "file": "assets/sky_under.png"
   },
   "sky_candy": {
-    "frame_w": 4,
+    "frame_w": 384,
     "frame_h": 240,
     "frames": [
       "g"
@@ -370,7 +381,7 @@
     "file": "assets/sky_candy.png"
   },
   "sky_fever": {
-    "frame_w": 4,
+    "frame_w": 384,
     "frame_h": 240,
     "frames": [
       "g"
@@ -378,7 +389,7 @@
     "file": "assets/sky_fever.png"
   },
   "sky_hub": {
-    "frame_w": 4,
+    "frame_w": 384,
     "frame_h": 240,
     "frames": [
       "g"
@@ -386,7 +397,7 @@
     "file": "assets/sky_hub.png"
   },
   "sky_finale": {
-    "frame_w": 4,
+    "frame_w": 384,
     "frame_h": 240,
     "frames": [
       "g"
@@ -448,5 +459,214 @@
       "s"
     ],
     "file": "assets/par_finale.png"
+  },
+  "fly_dino": {
+    "frame_w": 30,
+    "frame_h": 24,
+    "frames": [
+      "buzz1",
+      "buzz2"
+    ],
+    "file": "assets/fly_dino.png"
+  },
+  "boss_badcode": {
+    "frame_w": 96,
+    "frame_h": 96,
+    "frames": [
+      "idle",
+      "attack",
+      "hurt",
+      "sphere",
+      "sweep",
+      "dissolve"
+    ],
+    "file": "assets/boss_badcode.png"
+  },
+  "boss_giant": {
+    "frame_w": 128,
+    "frame_h": 144,
+    "frames": [
+      "idle",
+      "step",
+      "kneel"
+    ],
+    "file": "assets/boss_giant.png"
+  },
+  "boss_colossus": {
+    "frame_w": 96,
+    "frame_h": 128,
+    "frames": [
+      "windup",
+      "slam",
+      "hurt"
+    ],
+    "file": "assets/boss_colossus.png"
+  },
+  "boss_bigguy": {
+    "frame_w": 144,
+    "frame_h": 144,
+    "frames": [
+      "idle",
+      "dip",
+      "hurt"
+    ],
+    "file": "assets/boss_bigguy.png"
+  },
+  "finale_pair": {
+    "frame_w": 128,
+    "frame_h": 128,
+    "frames": [
+      "hover",
+      "laser",
+      "shield",
+      "track",
+      "hit",
+      "stagger",
+      "orbit",
+      "dodge",
+      "peace"
+    ],
+    "file": "assets/finale_pair.png"
+  },
+  "nice_npcs": {
+    "frame_w": 64,
+    "frame_h": 64,
+    "frames": [
+      "npc1",
+      "npc2",
+      "npc3",
+      "npc4",
+      "npc5",
+      "npc6"
+    ],
+    "file": "assets/nice_npcs.png"
+  },
+  "ui_panels": {
+    "frame_w": 128,
+    "frame_h": 96,
+    "frames": [
+      "title",
+      "story",
+      "pause",
+      "chooser",
+      "store",
+      "clear",
+      "credits",
+      "dialogue",
+      "confirm"
+    ],
+    "file": "assets/ui_panels.png"
+  },
+  "overworld_art": {
+    "frame_w": 384,
+    "frame_h": 240,
+    "frames": [
+      "map",
+      "routes",
+      "nodes",
+      "boat_idle",
+      "boat_move",
+      "dock",
+      "trophy_exterior",
+      "trophy_interior",
+      "ornaments"
+    ],
+    "file": "assets/overworld_art.png"
+  },
+  "sky_ascent": {
+    "frame_w": 384,
+    "frame_h": 240,
+    "frames": [
+      "g"
+    ],
+    "file": "assets/sky_ascent.png"
+  },
+  "par_ascent": {
+    "frame_w": 192,
+    "frame_h": 110,
+    "frames": [
+      "s"
+    ],
+    "file": "assets/par_ascent.png"
+  },
+  "sky_fall": {
+    "frame_w": 384,
+    "frame_h": 240,
+    "frames": [
+      "g"
+    ],
+    "file": "assets/sky_fall.png"
+  },
+  "par_fall": {
+    "frame_w": 192,
+    "frame_h": 110,
+    "frames": [
+      "s"
+    ],
+    "file": "assets/par_fall.png"
+  },
+  "sky_cove": {
+    "frame_w": 384,
+    "frame_h": 240,
+    "frames": [
+      "g"
+    ],
+    "file": "assets/sky_cove.png"
+  },
+  "par_cove": {
+    "frame_w": 192,
+    "frame_h": 110,
+    "frames": [
+      "s"
+    ],
+    "file": "assets/par_cove.png"
+  },
+  "sky_nice": {
+    "frame_w": 384,
+    "frame_h": 240,
+    "frames": [
+      "g"
+    ],
+    "file": "assets/sky_nice.png"
+  },
+  "par_nice": {
+    "frame_w": 192,
+    "frame_h": 110,
+    "frames": [
+      "s"
+    ],
+    "file": "assets/par_nice.png"
+  },
+  "sky_longup": {
+    "frame_w": 384,
+    "frame_h": 240,
+    "frames": [
+      "g"
+    ],
+    "file": "assets/sky_longup.png"
+  },
+  "par_longup": {
+    "frame_w": 192,
+    "frame_h": 110,
+    "frames": [
+      "s"
+    ],
+    "file": "assets/par_longup.png"
+  },
+  "sky_dream": {
+    "frame_w": 384,
+    "frame_h": 240,
+    "frames": [
+      "g"
+    ],
+    "file": "assets/sky_dream.png"
+  },
+  "par_dream": {
+    "frame_w": 192,
+    "frame_h": 110,
+    "frames": [
+      "s"
+    ],
+    "file": "assets/par_dream.png"
   }
 }

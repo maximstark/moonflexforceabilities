@@ -76,25 +76,16 @@ const Overworld = (() => {
 
   /* ---------------- draw ---------------- */
   function draw() {
-    drawWater();
-    drawClouds();
-    for (const n of NODES) drawIsland(n);
-    for (let i = 0; i < NODES.length - 1; i++) drawPath(NODES[i], NODES[i + 1], pathOpen(i));
+    const mapW = maxCam() + T.VIEW_W;
+    drawFrameSized("overworld_art", "map", -camX, 0, mapW, T.VIEW_H);
+    ctx.globalAlpha = 0.72;
+    drawFrameSized("overworld_art", "routes", -camX, 8, mapW, T.VIEW_H - 16);
+    ctx.globalAlpha = 1;
     for (let i = 0; i < NODES.length; i++) drawNode(NODES[i], nodeOpen(i), i === idx);
-    // the swan token, with a little wake while paddling
+    // The approved top-down Swan boat replaces the old side-view walking token.
     const bob = Math.sin(fr / 8) * 1.5;
-    if (moving) {
-      ctx.strokeStyle = "rgba(207,234,246,0.5)"; ctx.lineWidth = 1;
-      for (let k = 1; k <= 2; k++) {
-        const t = ((fr + k * 22) % 44) / 44;
-        const wx = tx - (to > from ? 1 : -1) * (6 + t * 12), wy = ty - 2;
-        ctx.globalAlpha = 1 - t;
-        ctx.beginPath(); ctx.ellipse(wx - camX, wy, 2 + t * 5, 1 + t * 2, 0, 0, TAU); ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-    }
-    drawFrameSized("swan", moving ? ((fr >> 3) % 2 ? "walk2" : "walk1") : "idle",
-                   Math.round(tx - 18 - camX), Math.round(ty - 31 + bob), 36, 32, to < from);
+    drawFrameSized("overworld_art", moving ? "boat_move" : "boat_idle",
+                   Math.round(tx - 15 - camX), Math.round(ty - 18 + bob), 30, 30, to < from);
     // banner
     ctx.textAlign = "center";
     ctx.fillStyle = "rgba(16,10,26,0.72)"; ctx.fillRect(0, 0, T.VIEW_W, 31);
@@ -204,6 +195,8 @@ const Overworld = (() => {
   function drawTrophy() {
     drawStretched("sky_hub", "g", 0, 0, T.VIEW_W, T.VIEW_H);
     ctx.fillStyle = "rgba(12,10,20,0.62)"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
+    drawFrameSized("overworld_art", "trophy_interior", 20, 22, T.VIEW_W - 40, T.VIEW_H - 34);
+    ctx.fillStyle = "rgba(24,14,34,0.42)"; ctx.fillRect(38, 28, T.VIEW_W - 76, 116);
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffe48a"; ctx.font = "bold 13px monospace";
     ctx.fillText("THE TROPHY ROOM", T.VIEW_W / 2, 34);

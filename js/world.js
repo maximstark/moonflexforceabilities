@@ -9,6 +9,11 @@ const World = (() => {
   let trophySpawned = false, firesLeft = 0, rescueArmed = false;
   let camX = 0, camY = 0;
   let levelCache = {};
+  const LATE_WORLD_ART = {
+    7: ["sky_ascent", "par_ascent"], 8: ["sky_fall", "par_fall"],
+    9: ["sky_cove", "par_cove"], 10: ["sky_nice", "par_nice"],
+    11: ["sky_longup", "par_longup"], 12: ["sky_dream", "par_dream"],
+  };
 
   /* ---------------- loading ---------------- */
   async function loadLevel(id) {
@@ -16,6 +21,9 @@ const World = (() => {
     if (!levelCache[file]) levelCache[file] = await (await fetch(file)).json();
     // deep-clone the pristine copy: the grid is mutated in play (fires, blocks)
     level = JSON.parse(JSON.stringify(levelCache[file]));
+    // Worlds 7-12 originally reused placeholder skies. The approved v2 library
+    // gives each late dream its own sky and two-tier parallax identity.
+    if (LATE_WORLD_ART[level.world]) [level.sky, level.par] = LATE_WORLD_ART[level.world];
     grid = level.grid; gridH = grid.length; gridW = grid[0].length;
     buildTileSets();
     if (Game.checkpoint && Game.checkpoint.levelId !== id) Game.checkpoint = null;
@@ -543,18 +551,22 @@ const World = (() => {
   }
   // the friendly cast of world 10: standees that compliment you as you pass
   function drawNpcs(cx, cy) {
-    for (const n of npcs) {
-      const s = sheets[n.sheet];
+    for (let ni = 0; ni < npcs.length; ni++) {
+      const n = npcs[ni];
+      const useV2 = sheets.nice_npcs && level && level.world === 10;
+      const sheet = useV2 ? "nice_npcs" : n.sheet;
+      const frame = useV2 ? "npc" + (ni + 1) : n.frame;
+      const s = sheets[sheet];
       if (!s) continue;
       const bob = Math.sin((Game.frame + n.x) / 16) * 1.5;
-      drawFrame(n.sheet, n.frame, n.x - s.frame_w / 2 - cx, n.y - s.frame_h - cy + bob);
+      drawFrame(sheet, frame, n.x - s.draw_w / 2 - cx, n.y - s.draw_h - cy + bob);
       let near = false;
       for (const p of players)
         if (!p.dead && Math.abs((p.x + p.w / 2) - n.x) < 44 && Math.abs((p.y + p.h) - n.y) < 64) near = true;
       if (near && n.line) {
         ctx.font = "7px monospace"; ctx.textAlign = "center";
         const w = ctx.measureText(n.line).width + 8;
-        const sx = Math.round(n.x - cx), sy = Math.round(n.y - s.frame_h - 6 - cy + bob);
+        const sx = Math.round(n.x - cx), sy = Math.round(n.y - s.draw_h - 6 - cy + bob);
         ctx.fillStyle = "rgba(20,12,28,0.82)"; ctx.fillRect(sx - w / 2, sy - 9, w, 11);
         ctx.fillStyle = "#fff6d8"; ctx.fillText(n.line, sx, sy - 1);
         ctx.textAlign = "left";
@@ -565,6 +577,7 @@ const World = (() => {
   function drawFlag(pk, cx, cy) {
     const x = Math.round(pk.x + 6 - cx), gy = Math.round(pk.y + 20 - cy);
     const up = pk.type === "flag_up";
+    drawFrameSized("hud", "checkpoint", x - 8, gy - 24, 16, 16);
     ctx.fillStyle = "#5a4a6a"; ctx.fillRect(x - 2, gy - 2, 6, 2);      // base
     ctx.fillStyle = "#8a7a9a"; ctx.fillRect(x, gy - 18, 1, 17);        // pole
     const flap = Math.sin(Game.frame / 8 + pk.x) > 0 ? 1 : 0;
@@ -579,20 +592,7 @@ const World = (() => {
   // the gentle heart has no sprite sheet either — warm, round, softly aglow
   function drawHeart(pk, cx, cy) {
     const bob = Math.sin((Game.frame + pk.seed * 37) / 18) * 2;
-    const x = Math.round(pk.x + 8 - cx), y = Math.round(pk.y + 8 + bob - cy);
-    const r = 3.2 * (1 + Math.sin(Game.frame / 14 + pk.seed) * 0.08);
-    ctx.fillStyle = "rgba(255,90,140,0.18)";
-    ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#ff5a7d";
-    ctx.beginPath();
-    ctx.arc(x - r * 0.9, y - r * 0.5, r, 0, Math.PI * 2);
-    ctx.arc(x + r * 0.9, y - r * 0.5, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(x - r * 1.85, y); ctx.lineTo(x + r * 1.85, y); ctx.lineTo(x, y + r * 2.2);
-    ctx.closePath(); ctx.fill();
-    ctx.fillStyle = "rgba(255,230,240,0.95)";
-    ctx.beginPath(); ctx.arc(x - r * 0.8, y - r * 0.9, 1.1, 0, Math.PI * 2); ctx.fill();
+    drawFrame("items", "heart", Math.round(pk.x - cx), Math.round(pk.y + bob - cy));
   }
   function drawPickups(cx, cy) {
     for (const pk of pickups) {

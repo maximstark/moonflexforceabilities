@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MoonFlexForceAbilities v2 — Concept Review</title>
+  <style>
+    :root { color-scheme: dark; --ink:#fff5fa; --muted:#cdbbd4; --panel:#24162f; --line:#634375; --pink:#ff78b8; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:radial-gradient(circle at top,#4a285c 0,#160d20 42rem); color:var(--ink); font:16px/1.5 system-ui,sans-serif; }
+    header { max-width:92rem; margin:auto; padding:3rem 1.25rem 1.5rem; }
+    h1 { margin:0; font-size:clamp(2rem,5vw,4rem); line-height:1; }
+    header p { max-width:58rem; color:var(--muted); }
+    nav { position:sticky; top:0; z-index:3; display:flex; gap:.6rem; flex-wrap:wrap; padding:.8rem max(1.25rem,calc((100vw - 89.5rem)/2)); background:#160d20e8; backdrop-filter:blur(10px); border-block:1px solid var(--line); }
+    nav a { color:var(--ink); text-decoration:none; border:1px solid var(--line); border-radius:2rem; padding:.35rem .75rem; }
+    main { max-width:92rem; margin:auto; padding:1.25rem; }
+    section { scroll-margin-top:5rem; margin:2.5rem 0 4rem; }
+    h2 { font-size:1.6rem; border-bottom:1px solid var(--line); padding-bottom:.5rem; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,25rem),1fr)); gap:1.2rem; }
+    figure { margin:0; overflow:hidden; border:1px solid var(--line); border-radius:1rem; background:var(--panel); box-shadow:0 1rem 2rem #09050d99; }
+    .alpha { aspect-ratio:1; display:grid; place-items:center; background-color:#ede3ef; background-image:linear-gradient(45deg,#d2c4d7 25%,transparent 25%),linear-gradient(-45deg,#d2c4d7 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#d2c4d7 75%),linear-gradient(-45deg,transparent 75%,#d2c4d7 75%); background-size:24px 24px; background-position:0 0,0 12px,12px -12px,-12px 0; }
+    img { display:block; width:100%; height:100%; object-fit:contain; image-rendering:auto; }
+    figcaption { padding:.8rem 1rem 1rem; }
+    strong { color:var(--pink); }
+    code { color:var(--muted); font-size:.8rem; overflow-wrap:anywhere; }
+    footer { color:var(--muted); text-align:center; padding:3rem 1rem 5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>MoonFlexForceAbilities v2</h1>
+    <p>Morning concept review: 27 new source boards plus the approved Swan benchmark. These are review assets only—nothing here has been integrated into gameplay atlases or published. Open an image in a new tab for full-resolution inspection, then record approvals or revision notes in <code>REVIEW_INDEX.md</code>.</p>
+  </header>
+  <nav>
+    <a href="#benchmark">Benchmark</a><a href="#characters">Characters</a><a href="#enemies">Enemies</a><a href="#bosses">Bosses</a><a href="#systems">Items & UI</a><a href="#environments">Environments</a>
+  </nav>
+  <main>
+    <section id="benchmark"><h2>Approved benchmark</h2><div class="grid">
+      <figure><a class="alpha" href="../source/swan_pose_board.png"><img src="../source/swan_pose_board.png" alt="Approved Swan pose board"></a><figcaption><strong>Approved Swan pose board</strong><br><code>../source/swan_pose_board.png</code></figcaption></figure>
+    </div></section>
+    <section id="characters"><h2>Playable forms, companions, and NPCs</h2><div class="grid">
+      <figure><a class="alpha" href="characters/playable_forms.png"><img src="characters/playable_forms.png" alt="Playable forms"></a><figcaption><strong>Playable forms</strong><br><code>characters/playable_forms.png</code></figcaption></figure>
+      <figure><a class="alpha" href="characters/swans_and_turtles.png"><img src="characters/swans_and_turtles.png" alt="Swans and turtles"></a><figcaption><strong>Swans and turtles</strong><br><code>characters/swans_and_turtles.png</code></figcaption></figure>
+      <figure><a class="alpha" href="characters/nice_place_npcs.png"><img src="characters/nice_place_npcs.png" alt="Nice Place NPCs"></a><figcaption><strong>Nice Place NPCs</strong><br><code>characters/nice_place_npcs.png</code></figcaption></figure>
+    </div></section>
+    <section id="enemies"><h2>Enemies</h2><div class="grid">
+      <figure><a class="alpha" href="enemies/world1_roster.png"><img src="enemies/world1_roster.png" alt="World 1 roster"></a><figcaption><strong>World 1 roster</strong><br><code>enemies/world1_roster.png</code></figcaption></figure>
+      <figure><a class="alpha" href="enemies/water_roster.png"><img src="enemies/water_roster.png" alt="Water roster"></a><figcaption><strong>Water roster</strong><br><code>enemies/water_roster.png</code></figcaption></figure>
+      <figure><a class="alpha" href="enemies/air_roster.png"><img src="enemies/air_roster.png" alt="Air roster"></a><figcaption><strong>Air roster</strong><br><code>enemies/air_roster.png</code></figcaption></figure>
+      <figure><a class="alpha" href="enemies/bad_dreams.png"><img src="enemies/bad_dreams.png" alt="Bad Dreams"></a><figcaption><strong>Bad Dreams</strong><br><code>enemies/bad_dreams.png</code></figcaption></figure>
+    </div></section>
+    <section id="bosses"><h2>Bosses and finale scale</h2><div class="grid">
+      <figure><a class="alpha" href="bosses/grumpis_family.png"><img src="bosses/grumpis_family.png" alt="Grumpis family"></a><figcaption><strong>Grumpis family</strong><br><code>bosses/grumpis_family.png</code></figcaption></figure>
+      <figure><a class="alpha" href="bosses/hogdog.png"><img src="bosses/hogdog.png" alt="Big Hog Dog"></a><figcaption><strong>Big Hog Dog</strong><br><code>bosses/hogdog.png</code></figcaption></figure>
+      <figure><a class="alpha" href="bosses/giant_progression.png"><img src="bosses/giant_progression.png" alt="Giant progression"></a><figcaption><strong>Giant progression</strong><br><code>bosses/giant_progression.png</code></figcaption></figure>
+      <figure><a class="alpha" href="bosses/finale_showdown.png"><img src="bosses/finale_showdown.png" alt="Finale showdown"></a><figcaption><strong>Finale showdown</strong><br><code>bosses/finale_showdown.png</code></figcaption></figure>
+    </div></section>
+    <section id="systems"><h2>Equipment, pickups, effects, HUD, and UI</h2><div class="grid">
+      <figure><a class="alpha" href="items-ui/equipment.png"><img src="items-ui/equipment.png" alt="Equipment"></a><figcaption><strong>Equipment</strong><br><code>items-ui/equipment.png</code></figcaption></figure>
+      <figure><a class="alpha" href="items-ui/powers_and_pickups.png"><img src="items-ui/powers_and_pickups.png" alt="Powers and pickups"></a><figcaption><strong>Powers and pickups</strong><br><code>items-ui/powers_and_pickups.png</code></figcaption></figure>
+      <figure><a class="alpha" href="effects/combat_fx.png"><img src="effects/combat_fx.png" alt="Combat effects"></a><figcaption><strong>Combat effects</strong><br><code>effects/combat_fx.png</code></figcaption></figure>
+      <figure><a class="alpha" href="effects/movement_fx.png"><img src="effects/movement_fx.png" alt="Movement effects"></a><figcaption><strong>Movement effects</strong><br><code>effects/movement_fx.png</code></figcaption></figure>
+      <figure><a class="alpha" href="items-ui/hud.png"><img src="items-ui/hud.png" alt="HUD kit"></a><figcaption><strong>HUD kit</strong><br><code>items-ui/hud.png</code></figcaption></figure>
+      <figure><a class="alpha" href="items-ui/ui_panels.png"><img src="items-ui/ui_panels.png" alt="UI panels"></a><figcaption><strong>UI panels</strong><br><code>items-ui/ui_panels.png</code></figcaption></figure>
+    </div></section>
+    <section id="environments"><h2>Tiles, architecture, backdrops, parallax, and overworld</h2><div class="grid">
+      <figure><a class="alpha" href="environments/lake_tiles.png"><img src="environments/lake_tiles.png" alt="Dream Lake tiles"></a><figcaption><strong>Dream Lake tiles</strong><br><code>environments/lake_tiles.png</code></figcaption></figure>
+      <figure><a class="alpha" href="environments/water_deep_tiles.png"><img src="environments/water_deep_tiles.png" alt="The Deep tiles"></a><figcaption><strong>The Deep tiles</strong><br><code>environments/water_deep_tiles.png</code></figcaption></figure>
+      <figure><a class="alpha" href="environments/night_rescue_tiles.png"><img src="environments/night_rescue_tiles.png" alt="Night Rescue tiles"></a><figcaption><strong>Night Rescue tiles</strong><br><code>environments/night_rescue_tiles.png</code></figcaption></figure>
+      <figure><a class="alpha" href="environments/candy_cloud_tiles.png"><img src="environments/candy_cloud_tiles.png" alt="Candy Cloud tiles"></a><figcaption><strong>Candy Cloud tiles</strong><br><code>environments/candy_cloud_tiles.png</code></figcaption></figure>
+      <figure><a class="alpha" href="environments/hub_house_tiles.png"><img src="environments/hub_house_tiles.png" alt="Hub house kit"></a><figcaption><strong>Hub house kit</strong><br><code>environments/hub_house_tiles.png</code></figcaption></figure>
+      <figure><a class="alpha" href="environments/world_backdrops_1.png"><img src="environments/world_backdrops_1.png" alt="World backdrops one"></a><figcaption><strong>Backdrops 1 — Lake, Night, Deep</strong><br><code>environments/world_backdrops_1.png</code></figcaption></figure>
+      <figure><a class="alpha" href="environments/world_backdrops_2.png"><img src="environments/world_backdrops_2.png" alt="World backdrops two"></a><figcaption><strong>Backdrops 2 — Candy, Fever, Hub</strong><br><code>environments/world_backdrops_2.png</code></figcaption></figure>
+      <figure><a class="alpha" href="environments/world_backdrops_3.png"><img src="environments/world_backdrops_3.png" alt="World backdrops three"></a><figcaption><strong>Backdrops 3 — Finale through Cove</strong><br><code>environments/world_backdrops_3.png</code></figcaption></figure>
+      <figure><a class="alpha" href="environments/world_backdrops_4.png"><img src="environments/world_backdrops_4.png" alt="World backdrops four"></a><figcaption><strong>Backdrops 4 — Nice Place through Biggest Dream</strong><br><code>environments/world_backdrops_4.png</code></figcaption></figure>
+      <figure><a class="alpha" href="environments/overworld.png"><img src="environments/overworld.png" alt="Overworld and trophy room"></a><figcaption><strong>Overworld and trophy room</strong><br><code>environments/overworld.png</code></figcaption></figure>
+    </div></section>
+  </main>
+  <footer>Concept approval is separate from atlas extraction, animation cleanup, gameplay integration, testing, and publishing.</footer>
+</body>
+</html>

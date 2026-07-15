@@ -111,12 +111,9 @@ const UI = (() => {
     const info = Bosses.barInfo();
     if (!info) return;
     const w = 160, x = T.VIEW_W / 2 - w / 2, y = 8;
-    ctx.fillStyle = "rgba(20,12,24,0.8)"; ctx.fillRect(x - 2, y - 2, w + 4, 12);
-    const segW = (w - (info.max - 1)) / info.max;
-    for (let i = 0; i < info.max; i++) {
-      ctx.fillStyle = i < info.cur ? "#ee3f7e" : "#4a2440";
-      ctx.fillRect(Math.round(x + i * (segW + 1)), y, Math.ceil(segW), 8);
-    }
+    drawFrameSized("hud", "boss_frame", x - 8, y - 5, w + 16, 20);
+    const fill = Math.round((w - 12) * info.cur / Math.max(1, info.max));
+    if (fill > 0) drawFrameSized("hud", "boss_fill", x + 6, y + 1, fill, 6);
     ctx.font = "7px monospace"; ctx.textAlign = "center";
     ctx.fillStyle = "#ffc6dd"; ctx.fillText(info.name, T.VIEW_W / 2, y + 18);
     ctx.textAlign = "left";
@@ -139,7 +136,7 @@ const UI = (() => {
     const off = Math.floor(Game.frame * 0.2) % 192;
     for (let x = -off; x < T.VIEW_W; x += 192) drawFrame("par_lake", "s", x, T.VIEW_H - 110);
     ctx.textAlign = "center";
-    drawPanel(10, 24, T.VIEW_W - 20, 76);
+    drawFrameSized("ui_panels", "title", 8, 17, T.VIEW_W - 16, 91);
     // the logo bobs, letter by letter, with a plum shadow
     ctx.font = "bold 17px monospace";
     const cw = ctx.measureText("M").width;
@@ -201,7 +198,8 @@ const UI = (() => {
   const PAUSE_OPTS = ["KEEP DREAMING", "RESTART THIS DREAM", "WORLD MAP", "GENTLE DREAMS", "MUTE MUSIC", "ERASE ALL DREAMS"];
   function drawPause() {
     ctx.fillStyle = "rgba(12,10,20,0.6)"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
-    drawPanel(T.VIEW_W / 2 - 110, 48, 220, 152);
+    drawFrameSized("ui_panels", Game.confirmErase ? "confirm" : "pause",
+                   T.VIEW_W / 2 - 116, 40, 232, 168);
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px monospace";
     ctx.fillText("PAUSED", T.VIEW_W / 2, 70);
@@ -249,6 +247,8 @@ const UI = (() => {
     fire: ["items","icon_fire"], pink: ["items","icon_pink"], tree: ["items","icon_tree"],
     laser: ["items","pickup_laser"], spoon: ["items","pickup_spoon"],
     goosefeet: ["items","pickup_goosefeet"], kirby: ["items","icon_kirby"],
+    mace: ["items","mace"], bubble: ["items","bubble"], sticky: ["items","sticky"],
+    shell: ["items","shell"], egg: ["items","egg"],
   };
   function visiblePowers() {
     const w = typeof Game.levelId === "number" ? Game.levelId : 1;
@@ -291,15 +291,13 @@ const UI = (() => {
     ctx.fillStyle = "rgba(255,205,238,0.95)"; ctx.beginPath(); ctx.arc(cx - 2, cy - 2, 1, 0, Math.PI * 2); ctx.fill();
   }
   function drawPowerIcon(pw, cx, cy) {                      // dispatch: (cx,cy) is the icon CENTER
-    if (pw === "mace")   return drawMaceIcon(cx, cy);
-    if (pw === "bubble") return drawBubbleIcon(cx, cy);
-    if (pw === "sticky") return drawStickyIcon(cx, cy);
-    if (pw === "shell")  return drawShellIcon(cx, cy);
-    if (pw === "egg")    return drawEggIcon(cx, cy);
     const ic = PICK_ICON[pw]; if (ic) drawFrame(ic[0], ic[1], cx - 8, cy - 8);
   }
   function drawChooser() {
     ctx.fillStyle = "rgba(12,10,20,0.80)"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
+    ctx.globalAlpha = 0.92;
+    drawFrameSized("ui_panels", "chooser", 8, 30, T.VIEW_W - 16, T.VIEW_H - 40);
+    ctx.globalAlpha = 1;
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffe48a"; ctx.font = "bold 11px monospace";
     ctx.fillText("THE TREASURE BOX OPENS...", T.VIEW_W / 2, 20);
@@ -397,6 +395,9 @@ const UI = (() => {
   function drawStore() {
     drawStretched(level ? level.sky : "sky_hub", "g", 0, 0, T.VIEW_W, T.VIEW_H);
     ctx.fillStyle = "rgba(12,10,20,0.7)"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
+    ctx.globalAlpha = 0.82;
+    drawFrameSized("ui_panels", "store", 12, 14, T.VIEW_W - 24, T.VIEW_H - 24);
+    ctx.globalAlpha = 1;
     const s = store;
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px monospace";
@@ -441,7 +442,7 @@ const UI = (() => {
     }
     const lines = Game.card || [];
     const ph = Math.max(90, lines.length * 16 + 52);
-    drawPanel(22, T.VIEW_H / 2 - ph / 2, T.VIEW_W - 44, ph);
+    drawFrameSized("ui_panels", "story", 18, T.VIEW_H / 2 - ph / 2 - 8, T.VIEW_W - 36, ph + 16);
     ctx.textAlign = "center"; ctx.font = "9px monospace";
     let budget = Math.floor(Game.stateTimer * 1.4);
     const y0 = T.VIEW_H / 2 - ph / 2 + 30;
@@ -507,6 +508,9 @@ const UI = (() => {
   ];
   function drawCredits() {
     ctx.fillStyle = "#16131f"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
+    ctx.globalAlpha = 0.72;
+    drawFrameSized("ui_panels", "credits", T.VIEW_W / 2 - 108, 8, 216, T.VIEW_H - 16);
+    ctx.globalAlpha = 1;
     for (let i = 0; i < 16; i++) {                    // the night sky applauds
       const tw = Math.abs(Math.sin(Game.frame / 24 + i * 2.1));
       ctx.fillStyle = `rgba(232,224,255,${0.08 + tw * 0.25})`;
@@ -527,7 +531,7 @@ const UI = (() => {
   /* ---------------- clear tally ---------------- */
   function drawClear() {
     ctx.fillStyle = "rgba(12,10,20,0.55)"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
-    drawPanel(T.VIEW_W / 2 - 92, 48, 184, 104);
+    drawFrameSized("ui_panels", "clear", T.VIEW_W / 2 - 102, 38, 204, 126);
     ctx.textAlign = "center";
     const hop = Math.round(Math.abs(Math.sin(Game.frame / 12)) * -3);
     drawFrame("hud", "trophy", T.VIEW_W / 2 - 8, 60 + hop);
@@ -546,6 +550,9 @@ const UI = (() => {
   /* ---------------- scores & iris ---------------- */
   function drawScores() {
     ctx.fillStyle = "#16131f"; ctx.fillRect(0, 0, T.VIEW_W, T.VIEW_H);
+    ctx.globalAlpha = 0.68;
+    drawFrameSized("ui_panels", "credits", T.VIEW_W / 2 - 110, 8, 220, T.VIEW_H - 16);
+    ctx.globalAlpha = 1;
     ctx.textAlign = "center";
     drawFrame("items", "beads", T.VIEW_W / 2 - 8, 24);
     ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px monospace";

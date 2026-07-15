@@ -635,24 +635,48 @@ const Bosses = (() => {
   function draw(camX, camY) {
     for (const b of units) {
       if (b.state === "gone") continue;
-      if (b.sub === "giant") { drawGiant(b, camX, camY); continue; }
-      if (b.sub === "colossus") { drawColossus(b, camX, camY); continue; }
+      if (b.sub === "giant") {
+        const frame = b.hurtFlash > 0 ? "kneel" : b.lift > 8 ? "step" : "idle";
+        const dw = Math.max(128, b.w), dh = Math.round(dw * 144 / 128);
+        drawFrameSized("boss_giant", frame, b.x + b.w / 2 - dw / 2 - camX,
+                       b.y + b.h - dh - camY - (b.retreat || 0), dw, dh);
+        continue;
+      }
+      if (b.sub === "colossus") {
+        if (b.state === "hover") {
+          ctx.fillStyle = ((b.animTimer >> 2) % 2) ? "rgba(255,70,120,0.18)" : "rgba(255,70,120,0.08)";
+          ctx.fillRect(Math.round(b.x - camX), Math.round(b.y + b.h - camY), b.w, 360);
+        }
+        const frame = b.hurtFlash > 0 ? "hurt" : b.state === "hover" ? "windup" : "slam";
+        const dw = Math.max(80, b.w * 1.45), dh = Math.round(dw * 128 / 96);
+        drawFrameSized("boss_colossus", frame, b.x + b.w / 2 - dw / 2 - camX,
+                       b.y + b.h - dh - camY, dw, dh);
+        continue;
+      }
       if (b.sub === "bigguy") {
-        const skin = b.hurtFlash > 0 ? "#ffb0a0" : "#f3c39a";
         if (b.fState === "wind") {                        // telegraph the stomp column
           const fx = Math.round(b.fX - camX);
-          ctx.fillStyle = ((b.animTimer >> 2) % 2) ? "rgba(255,70,70,0.18)" : "rgba(255,70,70,0.08)";
+          ctx.fillStyle = ((b.animTimer >> 2) % 2) ? "rgba(255,70,120,0.18)" : "rgba(255,70,120,0.08)";
           ctx.fillRect(fx - T.BIGGUY_FOOT_W / 2, 0, T.BIGGUY_FOOT_W, T.VIEW_H);
         } else if (b.fState === "slam" || b.fState === "recover") {
-          drawBigLeg(Math.round(b.fX - T.BIGGUY_FOOT_W / 2 - camX), -160,
-                     T.BIGGUY_FOOT_W, Math.round(b.fY + T.BIGGUY_FOOT_H - camY), skin);
+          const fw = Math.max(84, T.BIGGUY_FOOT_W * 1.4), fh = Math.round(fw * 128 / 96);
+          drawFrameSized("boss_colossus", b.hurtFlash > 0 ? "hurt" : "slam",
+                         b.fX - fw / 2 - camX, b.fY + T.BIGGUY_FOOT_H - fh - camY, fw, fh);
         }
-        drawBigFace(b, camX, camY);
+        const frame = b.hurtFlash > 0 ? "hurt" : b.state === "dip" ? "dip" : "idle";
+        const dw = Math.max(144, b.w * 1.7), dh = dw;
+        drawFrameSized("boss_bigguy", frame, b.x + b.w / 2 - dw / 2 - camX,
+                       b.y + b.h - dh * 0.72 - camY, dw, dh);
         continue;
       }
       if (b.iframes > 0 && b.hurtFlash <= 0 && (b.iframes >> 2) % 2 === 0) continue;
       if (b.state === "dying" && (b.animTimer >> 2) % 2 === 0) continue;
-      if (b.sub === "badcode") { drawBadcode(b, camX, camY); continue; }
+      if (b.sub === "badcode") {
+        const frame = b.hurtFlash > 0 ? "hurt" : b.phase === 2 ? "sphere"
+                    : b.state === "sweep" ? "sweep" : b.state === "sleep" ? "idle" : "attack";
+        drawFrameSized("boss_badcode", frame, b.x - camX, b.y - camY, b.w, b.h, b.facing > 0);
+        continue;
+      }
       const s = sheets[b.sheet];
       let frame = "idle";
       if (b.hurtFlash > 0 || b.state === "dying") frame = "hurt";
