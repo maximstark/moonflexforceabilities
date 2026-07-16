@@ -316,6 +316,13 @@ def main() -> None:
                          [cell(trex_source, 6, 1, col, 0) for col in range(6)], (60, 54), manifest)
         manifest['trex'].update({'anchor': [30, 53], 'attachments': {'head': [42, 13], 'feet': [30, 53]}})
 
+    production_mecha = ROOT / 'art' / 'production' / 'mecha_source.png'
+    if production_mecha.exists():
+        mecha_source = Image.open(production_mecha).convert('RGBA')
+        registered_atlas('mecha', ['idle', 'walk1', 'walk2', 'fly1', 'fly2', 'hurt'],
+                         [cell(mecha_source, 6, 1, col, 0) for col in range(6)], (76, 70), manifest)
+        manifest['mecha'].update({'anchor': [38, 69], 'attachments': {'head': [52, 15], 'feet': [38, 69]}})
+
     production_grumpis = ROOT / 'art' / 'production' / 'grumpis_source.png'
     if production_grumpis.exists():
         grumpis_source = Image.open(production_grumpis).convert('RGBA')

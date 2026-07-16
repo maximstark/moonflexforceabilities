@@ -199,16 +199,31 @@
     }
   },
   "mecha": {
-    "frame_w": 64,
-    "frame_h": 60,
+    "frame_w": 76,
+    "frame_h": 70,
     "frames": [
       "idle",
       "walk1",
       "walk2",
       "fly1",
-      "fly2"
+      "fly2",
+      "hurt"
     ],
-    "file": "assets/mecha.png"
+    "file": "assets/mecha.png",
+    "anchor": [
+      38,
+      69
+    ],
+    "attachments": {
+      "head": [
+        52,
+        15
+      ],
+      "feet": [
+        38,
+        69
+      ]
+    }
   },
   "babyswan": {
     "frame_w": 18,
