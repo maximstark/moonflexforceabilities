@@ -35,6 +35,11 @@ async function level(page, id) {
   await page.waitForTimeout(400);
   await snap(page, "02-overworld");
 
+  await level(page, 'hub');
+  await page.evaluate(() => { players[0].y = 650; World.updateCamera(); });
+  await page.waitForTimeout(250);
+  await snap(page, '02b-home');
+
   await level(page, 1);
   await snap(page, "03-dream-lake");
   await page.keyboard.press("Escape");
@@ -121,5 +126,5 @@ async function level(page, id) {
 
   await browser.close();
   if (errors.length) throw new Error(errors.join("\n"));
-  console.log(`Captured 16 live frames in ${OUT}`);
+  console.log(`Captured 17 live frames in ${OUT}`);
 })().catch(error => { console.error(error); process.exit(1); });

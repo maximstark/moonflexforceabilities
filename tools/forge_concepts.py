@@ -226,11 +226,12 @@ def main() -> None:
     raw_atlas("tiles2", tile2_labels, [fit(cell(img,4,4,c,r),16,16,0) for img,c,r in tile2_specs], (16,16), manifest)
 
     hub = board("environments/hub_house_tiles.png")
+    hub_labels = ["wall","paper","floor","window","door","bed_l","bed_r","shelf","lamp","plant","shaft","roof_l","roof_r"]
     bed = cell(hub,4,4,0,2); roof = cell(hub,4,4,3,0)
     hub_frames = [cell(hub,4,4,0,0),cell(hub,4,4,2,0),cell(hub,4,4,1,0),cell(hub,4,4,2,1),cell(hub,4,4,0,1),
                   bed.crop((0,0,bed.width//2,bed.height)),bed.crop((bed.width//2,0,bed.width,bed.height)),cell(hub,4,4,3,2),cell(hub,4,4,1,2),cell(hub,4,4,2,2),cell(hub,4,4,1,3),
                   roof.crop((0,0,roof.width//2,roof.height)),roof.crop((roof.width//2,0,roof.width,roof.height))]
-    raw_atlas("hub", ["wall","paper","floor","window","door","bed_l","bed_r","shelf","lamp","plant","shaft","roof_l","roof_r"], [fit(f,16,16,0) for f in hub_frames], (16,16), manifest)
+    raw_atlas("hub", hub_labels, [fit(f,16,16,0) for f in hub_frames], (16,16), manifest)
     atlas("elevator", ["closed","open"], [cell(hub,4,4,0,1),cell(hub,4,4,0,3)], (24,32), manifest)
 
     panels = "items-ui/ui_panels.png"
@@ -412,6 +413,19 @@ def main() -> None:
 
     production_terrain = ROOT / 'art' / 'production' / 'dream_lake_terrain.png'
     production_world_tiles = ROOT / 'art' / 'production' / 'world_tiles_source.png'
+    production_home_tiles = ROOT / 'art' / 'production' / 'home_tiles_source.png'
+    if production_home_tiles.exists():
+        home_tiles = Image.open(production_home_tiles).convert('RGBA')
+        home_prop_cells = {3, 4, 5, 6, 7, 8, 9, 11, 12}
+        home_frames = []
+        for index in range(len(hub_labels)):
+            tile = cell(home_tiles, 4, 4, index % 4, index // 4)
+            tile = tile.crop((2, 2, tile.width - 2, tile.height - 2))
+            if index in home_prop_cells:
+                tile = clear_connected_matte(tile)
+            home_frames.append(tile.resize((16, 16), Image.Resampling.LANCZOS))
+        raw_atlas('hub', hub_labels, home_frames, (16, 16), manifest)
+
     if production_world_tiles.exists():
         world_tiles = Image.open(production_world_tiles).convert('RGBA')
         prop_cells = {5, 6, 7, 8, 9, 14, 15, 16, 19, 20, 24, 25, 26}
@@ -482,6 +496,14 @@ def main() -> None:
         manifest[f'par_{scene_name}'] = {
             'frame_w': 192, 'frame_h': 110, 'frames': ['s'], 'file': f'assets/par_{scene_name}.png'
         }
+
+    production_home = ROOT / 'art' / 'production' / 'home_background.png'
+    if production_home.exists():
+        home_image = Image.open(production_home).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
+        home_image.save(ASSETS / 'sky_hub.png')
+        manifest['sky_hub'] = {'frame_w': 384, 'frame_h': 240, 'frames': ['g'], 'file': 'assets/sky_hub.png'}
+        Image.new('RGBA', (192, 110), TRANSPARENT).save(ASSETS / 'par_hub.png')
+        manifest['par_hub'] = {'frame_w': 192, 'frame_h': 110, 'frames': ['s'], 'file': 'assets/par_hub.png'}
 
     if production_candy.exists():
         candy_image = Image.open(production_candy).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
