@@ -685,6 +685,11 @@ const Bosses = (() => {
               : b.state === 'windup' || b.state === 'rising' ? 'anticipation'
               : b.state === 'spit' || b.state === 'swat' ? 'attack'
               : b.state === 'vulnerable' || b.state === 'recover' ? 'recovery' : 'idle';
+      } else if (b.sub === 'hog' && s.index.retreat !== undefined) {
+        frame = b.fleeing ? (b.timer > 65 ? 'grab' : 'retreat')
+              : b.state === 'dying' ? 'defeated'
+              : b.hurtFlash > 0 ? 'hurt'
+              : b.state === 'volley' || b.state === 'lunge' ? 'attack' : 'idle';
       } else if (b.hurtFlash > 0 || b.state === "dying") frame = "hurt";
       else if (b.state === "lunge" || b.state === "spit" || b.state === "swat" ||
               b.state === "volley") frame = "attack";

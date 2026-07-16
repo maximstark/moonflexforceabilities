@@ -338,6 +338,14 @@ def main() -> None:
 
     production_grumpis = ROOT / 'art' / 'production' / 'grumpis_source.png'
     production_papa = ROOT / 'art' / 'production' / 'papa_grumpis_source.png'
+    production_hogdog = ROOT / 'art' / 'production' / 'hogdog_source.png'
+    if production_hogdog.exists():
+        hogdog_source = Image.open(production_hogdog).convert('RGBA')
+        registered_atlas('boss_hogdog',
+                         ['idle', 'attack', 'grab', 'retreat', 'hurt', 'defeated'],
+                         [cell(hogdog_source, 6, 1, col, 0) for col in range(6)],
+                         (96, 88), manifest)
+
     if production_papa.exists():
         papa_source = Image.open(production_papa).convert('RGBA')
         registered_atlas('boss_papa',

@@ -338,7 +338,10 @@
     "frames": [
       "idle",
       "attack",
-      "hurt"
+      "grab",
+      "retreat",
+      "hurt",
+      "defeated"
     ],
     "file": "assets/boss_hogdog.png"
   },
