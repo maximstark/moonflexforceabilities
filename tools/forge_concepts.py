@@ -466,6 +466,23 @@ def main() -> None:
         Image.new('RGBA', (192, 110), TRANSPARENT).save(ASSETS / 'par_finale.png')
         manifest['par_finale'] = {'frame_w': 192, 'frame_h': 110, 'frames': ['s'], 'file': 'assets/par_finale.png'}
 
+    early_backgrounds = {
+        'night': ROOT / 'art' / 'production' / 'moonlight_lake_background.png',
+        'under': ROOT / 'art' / 'production' / 'the_deep_background.png',
+    }
+    for scene_name, scene_path in early_backgrounds.items():
+        if not scene_path.exists():
+            continue
+        scene_image = Image.open(scene_path).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
+        scene_image.save(ASSETS / f'sky_{scene_name}.png')
+        manifest[f'sky_{scene_name}'] = {
+            'frame_w': 384, 'frame_h': 240, 'frames': ['g'], 'file': f'assets/sky_{scene_name}.png'
+        }
+        Image.new('RGBA', (192, 110), TRANSPARENT).save(ASSETS / f'par_{scene_name}.png')
+        manifest[f'par_{scene_name}'] = {
+            'frame_w': 192, 'frame_h': 110, 'frames': ['s'], 'file': f'assets/par_{scene_name}.png'
+        }
+
     if production_candy.exists():
         candy_image = Image.open(production_candy).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
         candy_image.save(ASSETS / 'sky_candy.png')

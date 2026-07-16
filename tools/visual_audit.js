@@ -41,6 +41,16 @@ async function level(page, id) {
   await page.waitForTimeout(100);
   await snap(page, "04-pause");
 
+  await level(page, 2);
+  await page.evaluate(() => { players[0].x = 420; World.updateCamera(); });
+  await page.waitForTimeout(200);
+  await snap(page, '04b-moonlight-lake');
+
+  await level(page, 3);
+  await page.evaluate(() => { players[0].x = 520; players[0].y = 120; World.updateCamera(); });
+  await page.waitForTimeout(200);
+  await snap(page, '04c-the-deep');
+
   await level(page, 4);
   await snap(page, "05-candy-clouds");
 
@@ -111,5 +121,5 @@ async function level(page, id) {
 
   await browser.close();
   if (errors.length) throw new Error(errors.join("\n"));
-  console.log(`Captured 14 live frames in ${OUT}`);
+  console.log(`Captured 16 live frames in ${OUT}`);
 })().catch(error => { console.error(error); process.exit(1); });
