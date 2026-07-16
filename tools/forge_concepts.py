@@ -358,6 +358,14 @@ def main() -> None:
         manifest['par_lake'] = {'frame_w': 192, 'frame_h': 110, 'frames': ['s'], 'file': 'assets/par_lake.png'}
 
     production_terrain = ROOT / 'art' / 'production' / 'dream_lake_terrain.png'
+    production_candy = ROOT / 'art' / 'production' / 'candy_clouds_background.png'
+    if production_candy.exists():
+        candy_image = Image.open(production_candy).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
+        candy_image.save(ASSETS / 'sky_candy.png')
+        manifest['sky_candy'] = {'frame_w': 384, 'frame_h': 240, 'frames': ['g'], 'file': 'assets/sky_candy.png'}
+        Image.new('RGBA', (192, 110), TRANSPARENT).save(ASSETS / 'par_candy.png')
+        manifest['par_candy'] = {'frame_w': 192, 'frame_h': 110, 'frames': ['s'], 'file': 'assets/par_candy.png'}
+
     if production_terrain.exists():
         terrain = Image.open(production_terrain).convert('RGBA')
         terrain_frames = [
