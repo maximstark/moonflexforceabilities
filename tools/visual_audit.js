@@ -63,6 +63,12 @@ async function level(page, id) {
   });
   await page.waitForTimeout(250);
   await snap(page, "06-bad-dreams");
+  await page.evaluate(() => {
+    const boss = Bosses.units[0];
+    boss.phase = 2; boss.state = 'sweep'; boss.sweepDir = -1; boss.sweepTimer = 12;
+  });
+  await page.waitForTimeout(120);
+  await snap(page, '06a-bad-dreams-sweep');
 
   await level(page, 9);
   await page.evaluate(() => { players[0].x = 480; World.updateCamera(); });
@@ -96,5 +102,5 @@ async function level(page, id) {
 
   await browser.close();
   if (errors.length) throw new Error(errors.join("\n"));
-  console.log(`Captured 12 live frames in ${OUT}`);
+  console.log(`Captured 13 live frames in ${OUT}`);
 })().catch(error => { console.error(error); process.exit(1); });

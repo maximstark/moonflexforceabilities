@@ -672,8 +672,10 @@ const Bosses = (() => {
       if (b.iframes > 0 && b.hurtFlash <= 0 && (b.iframes >> 2) % 2 === 0) continue;
       if (b.state === "dying" && (b.animTimer >> 2) % 2 === 0) continue;
       if (b.sub === "badcode") {
-        const frame = b.hurtFlash > 0 ? "hurt" : b.phase === 2 ? "sphere"
-                    : b.state === "sweep" ? "sweep" : b.state === "sleep" ? "idle" : "attack";
+        const frame = b.state === 'dying' ? 'dissolve' : b.hurtFlash > 0 ? 'hurt'
+                    : b.state === 'sweep' ? 'sweep'
+                    : b.state === 'morph' || b.phase === 2 ? 'sphere'
+                    : b.state === 'sleep' ? 'idle' : 'attack';
         drawFrameSized("boss_badcode", frame, b.x - camX, b.y - camY, b.w, b.h, b.facing > 0);
         continue;
       }

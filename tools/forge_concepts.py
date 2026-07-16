@@ -340,6 +340,13 @@ def main() -> None:
     production_papa = ROOT / 'art' / 'production' / 'papa_grumpis_source.png'
     production_hogdog = ROOT / 'art' / 'production' / 'hogdog_source.png'
     production_giant = ROOT / 'art' / 'production' / 'giant_legs_source.png'
+    production_bad_dreams = ROOT / 'art' / 'production' / 'bad_dreams_source.png'
+    if production_bad_dreams.exists():
+        bad_dreams_source = Image.open(production_bad_dreams).convert('RGBA')
+        registered_atlas('boss_badcode', ['idle', 'attack', 'hurt', 'sphere', 'sweep', 'dissolve'],
+                         [cell(bad_dreams_source, 6, 1, col, 0) for col in range(6)],
+                         (96, 96), manifest, baseline=False)
+
     if production_giant.exists():
         giant_source = Image.open(production_giant).convert('RGBA')
         registered_atlas('boss_giant', ['idle', 'step', 'kneel'],
