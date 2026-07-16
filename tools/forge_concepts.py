@@ -484,6 +484,13 @@ def main() -> None:
     production_terrain = ROOT / 'art' / 'production' / 'dream_lake_terrain.png'
     production_world_tiles = ROOT / 'art' / 'production' / 'world_tiles_source.png'
     production_home_tiles = ROOT / 'art' / 'production' / 'home_tiles_source.png'
+    production_elevator = ROOT / 'art' / 'production' / 'elevator_source.png'
+    if production_elevator.exists():
+        elevator_source = Image.open(production_elevator).convert('RGBA')
+        registered_atlas('elevator', ['closed', 'open'],
+                         [cell(elevator_source, 2, 1, col, 0) for col in range(2)],
+                         (24, 32), manifest)
+
     if production_home_tiles.exists():
         home_tiles = Image.open(production_home_tiles).convert('RGBA')
         home_prop_cells = {3, 4, 5, 6, 7, 8, 9, 11, 12}
