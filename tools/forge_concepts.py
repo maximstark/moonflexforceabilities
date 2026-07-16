@@ -330,6 +330,12 @@ def main() -> None:
                          [cell(baby_source, 6, 1, col, 0) for col in range(6)], (22, 20), manifest,
                          baseline=False)
 
+    production_turtles = ROOT / 'art' / 'production' / 'turtles_source.png'
+    if production_turtles.exists():
+        turtle_source = Image.open(production_turtles).convert('RGBA')
+        registered_atlas('turtles', ['calm1', 'calm2', 'wiggle', 'smile', 'cheer', 'cuddle'],
+                         [cell(turtle_source, 6, 1, col, 0) for col in range(6)], (112, 52), manifest)
+
     production_grumpis = ROOT / 'art' / 'production' / 'grumpis_source.png'
     if production_grumpis.exists():
         grumpis_source = Image.open(production_grumpis).convert('RGBA')

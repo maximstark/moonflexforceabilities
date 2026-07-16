@@ -291,11 +291,15 @@
     "file": "assets/fly.png"
   },
   "turtles": {
-    "frame_w": 96,
-    "frame_h": 40,
+    "frame_w": 112,
+    "frame_h": 52,
     "frames": [
       "calm1",
-      "calm2"
+      "calm2",
+      "wiggle",
+      "smile",
+      "cheer",
+      "cuddle"
     ],
     "file": "assets/turtles.png"
   },
