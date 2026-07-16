@@ -497,6 +497,10 @@ function drawPlayer(p, camX, camY) {
     else if (p.animTimer % 360 < 28) frame = "preen";
     else frame = (p.animTimer >> 6) % 2 ? "idle2" : "idle";
   }
+  if (p.form === 'charmgirl' && sheets.charmgirl.index.walk3 !== undefined) {
+    frame = !p.grounded ? 'jump' : moving
+      ? ['walk1', 'walk2', 'walk3', 'walk2'][(p.animTimer >> 2) & 3] : 'idle';
+  }
   if (p.form === 'mermaid' && p.inWater && sheets.mermaid.index.swim3 !== undefined) {
     const swimming = moving || Math.abs(p.vy) > 0.3;
     frame = swimming ? ['swim1', 'swim2', 'swim3', 'swim2'][(p.animTimer >> 2) & 3] : 'idle';

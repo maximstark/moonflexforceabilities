@@ -145,15 +145,31 @@
     "file": "assets/hud.png"
   },
   "charmgirl": {
-    "frame_w": 30,
-    "frame_h": 28,
+    "frame_w": 36,
+    "frame_h": 34,
     "frames": [
       "idle",
       "walk1",
       "walk2",
-      "jump"
+      "walk3",
+      "jump",
+      "hurt"
     ],
-    "file": "assets/charmgirl.png"
+    "file": "assets/charmgirl.png",
+    "anchor": [
+      18,
+      33
+    ],
+    "attachments": {
+      "head": [
+        22,
+        8
+      ],
+      "feet": [
+        18,
+        33
+      ]
+    }
   },
   "trex": {
     "frame_w": 52,

@@ -302,6 +302,13 @@ def main() -> None:
                          baseline=False)
         manifest['mermaid'].update({'anchor': [24, 30], 'attachments': {'head': [37, 9], 'feet': [24, 30]}})
 
+    production_charm = ROOT / 'art' / 'production' / 'charmgirl_source.png'
+    if production_charm.exists():
+        charm_source = Image.open(production_charm).convert('RGBA')
+        registered_atlas('charmgirl', ['idle', 'walk1', 'walk2', 'walk3', 'jump', 'hurt'],
+                         [cell(charm_source, 6, 1, col, 0) for col in range(6)], (36, 34), manifest)
+        manifest['charmgirl'].update({'anchor': [18, 33], 'attachments': {'head': [22, 8], 'feet': [18, 33]}})
+
     production_grumpis = ROOT / 'art' / 'production' / 'grumpis_source.png'
     if production_grumpis.exists():
         grumpis_source = Image.open(production_grumpis).convert('RGBA')
