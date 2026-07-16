@@ -360,6 +360,24 @@ def main() -> None:
     production_terrain = ROOT / 'art' / 'production' / 'dream_lake_terrain.png'
     production_candy = ROOT / 'art' / 'production' / 'candy_clouds_background.png'
     production_fever = ROOT / 'art' / 'production' / 'fever_swarm_background.png'
+    late_backgrounds = {
+        'ascent': ROOT / 'art' / 'production' / 'broken_ascent_background.png',
+        'fall': ROOT / 'art' / 'production' / 'long_fall_background.png',
+        'cove': ROOT / 'art' / 'production' / 'secret_cove_background.png',
+    }
+    for scene_name, scene_path in late_backgrounds.items():
+        if not scene_path.exists():
+            continue
+        scene_image = Image.open(scene_path).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
+        scene_image.save(ASSETS / f'sky_{scene_name}.png')
+        manifest[f'sky_{scene_name}'] = {
+            'frame_w': 384, 'frame_h': 240, 'frames': ['g'], 'file': f'assets/sky_{scene_name}.png'
+        }
+        Image.new('RGBA', (192, 110), TRANSPARENT).save(ASSETS / f'par_{scene_name}.png')
+        manifest[f'par_{scene_name}'] = {
+            'frame_w': 192, 'frame_h': 110, 'frames': ['s'], 'file': f'assets/par_{scene_name}.png'
+        }
+
     if production_fever.exists():
         fever_image = Image.open(production_fever).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
         fever_image.save(ASSETS / 'sky_fever.png')

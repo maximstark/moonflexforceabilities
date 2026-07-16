@@ -49,6 +49,11 @@ async function level(page, id) {
   await page.waitForTimeout(250);
   await snap(page, '05b-fever-swarm');
 
+  await level(page, 7);
+  await page.evaluate(() => { players[0].x = 160; players[0].y = 560; World.updateCamera(); });
+  await page.waitForTimeout(200);
+  await snap(page, '05c-broken-ascent');
+
   await level(page, 8);
   await page.evaluate(() => {
     const boss = Bosses.units[0], player = players[0];
@@ -58,6 +63,11 @@ async function level(page, id) {
   });
   await page.waitForTimeout(250);
   await snap(page, "06-bad-dreams");
+
+  await level(page, 9);
+  await page.evaluate(() => { players[0].x = 480; World.updateCamera(); });
+  await page.waitForTimeout(200);
+  await snap(page, '06b-secret-cove');
 
   await level(page, 10);
   await page.evaluate(() => { players[0].x = 360; players[0].y = 375; World.updateCamera(); });
@@ -76,5 +86,5 @@ async function level(page, id) {
 
   await browser.close();
   if (errors.length) throw new Error(errors.join("\n"));
-  console.log(`Captured 8 live frames in ${OUT}`);
+  console.log(`Captured 11 live frames in ${OUT}`);
 })().catch(error => { console.error(error); process.exit(1); });
