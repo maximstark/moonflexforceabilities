@@ -359,6 +359,14 @@ def main() -> None:
 
     production_terrain = ROOT / 'art' / 'production' / 'dream_lake_terrain.png'
     production_candy = ROOT / 'art' / 'production' / 'candy_clouds_background.png'
+    production_fever = ROOT / 'art' / 'production' / 'fever_swarm_background.png'
+    if production_fever.exists():
+        fever_image = Image.open(production_fever).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
+        fever_image.save(ASSETS / 'sky_fever.png')
+        manifest['sky_fever'] = {'frame_w': 384, 'frame_h': 240, 'frames': ['g'], 'file': 'assets/sky_fever.png'}
+        Image.new('RGBA', (192, 110), TRANSPARENT).save(ASSETS / 'par_fever.png')
+        manifest['par_fever'] = {'frame_w': 192, 'frame_h': 110, 'frames': ['s'], 'file': 'assets/par_fever.png'}
+
     if production_candy.exists():
         candy_image = Image.open(production_candy).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
         candy_image.save(ASSETS / 'sky_candy.png')
