@@ -8,19 +8,19 @@
  * ===================================================================== */
 const Overworld = (() => {
   const NODES = [
-    { id: "home", x: 40,  y: 192, label: "HOME · TROPHY ROOM" },
-    { id: 1, x: 104, y: 160, label: "1   THE DREAM LAKE" },
-    { id: 2, x: 160, y: 192, label: "2   MOONLIGHT LAKE" },
-    { id: 3, x: 220, y: 150, label: "3   THE DEEP" },
-    { id: 4, x: 280, y: 190, label: "4   CANDY CLOUDS" },
-    { id: 5, x: 340, y: 148, label: "5   THE FEVER SWARM" },
-    { id: 6, x: 400, y: 188, label: "6   THE BIG HOG DOG" },
-    { id: 7, x: 460, y: 150, label: "7   THE BROKEN ASCENT" },
-    { id: 8, x: 520, y: 188, label: "8   THE LONG FALL" },
-    { id: 9, x: 580, y: 150, label: "9   SECRET COVE" },
-    { id: 10, x: 640, y: 188, label: "10  THE NICE PLACE" },
-    { id: 11, x: 700, y: 150, label: "11  THE LONG WAY UP" },
-    { id: 12, x: 760, y: 186, label: "12  THE BIGGEST DREAM" },
+    { id: "home", x: 40,  y: 110, label: "HOME · TROPHY ROOM" },
+    { id: 1, x: 104, y: 188, label: "1   THE DREAM LAKE" },
+    { id: 2, x: 160, y: 112, label: "2   MOONLIGHT LAKE" },
+    { id: 3, x: 220, y: 176, label: "3   THE DEEP" },
+    { id: 4, x: 280, y: 112, label: "4   CANDY CLOUDS" },
+    { id: 5, x: 340, y: 185, label: "5   THE FEVER SWARM" },
+    { id: 6, x: 400, y: 120, label: "6   THE BIG HOG DOG" },
+    { id: 7, x: 460, y: 190, label: "7   THE BROKEN ASCENT" },
+    { id: 8, x: 520, y: 115, label: "8   THE LONG FALL" },
+    { id: 9, x: 580, y: 180, label: "9   SECRET COVE" },
+    { id: 10, x: 640, y: 112, label: "10  THE NICE PLACE" },
+    { id: 11, x: 700, y: 180, label: "11  THE LONG WAY UP" },
+    { id: 12, x: 760, y: 130, label: "12  THE BIGGEST DREAM" },
   ];
   let idx = 1, tx = NODES[1].x, ty = NODES[1].y;
   let moving = false, from = 1, to = 1, mt = 0, fr = 0, camX = 0;
@@ -77,7 +77,7 @@ const Overworld = (() => {
   /* ---------------- draw ---------------- */
   function draw() {
     const mapW = maxCam() + T.VIEW_W;
-    drawFrameSized("overworld_map", "map", -camX, 0, mapW, T.VIEW_H);
+    drawFrameSized("overworld_map", "map", -camX, -80, mapW, 400);
     for (let i = 0; i < NODES.length; i++) drawNode(NODES[i], nodeOpen(i), i === idx);
     // The approved top-down Swan boat replaces the old side-view walking token.
     const bob = Math.sin(fr / 8) * 1.5;

@@ -799,7 +799,7 @@
   },
   "overworld_map": {
     "frame_w": 800,
-    "frame_h": 240,
+    "frame_h": 400,
     "frames": [
       "map"
     ],

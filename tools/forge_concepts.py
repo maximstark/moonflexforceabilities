@@ -360,9 +360,9 @@ def main() -> None:
     production_overworld_props = ROOT / 'art' / 'production' / 'overworld_props_source.png'
     if production_overworld_map.exists():
         map_source = Image.open(production_overworld_map).convert('RGBA')
-        map_source.resize((800, 240), Image.Resampling.LANCZOS).save(ASSETS / 'overworld_map.png')
+        map_source.resize((800, 400), Image.Resampling.LANCZOS).save(ASSETS / 'overworld_map.png')
         manifest['overworld_map'] = {
-            'frame_w': 800, 'frame_h': 240, 'frames': ['map'], 'file': 'assets/overworld_map.png'
+            'frame_w': 800, 'frame_h': 400, 'frames': ['map'], 'file': 'assets/overworld_map.png'
         }
 
     if production_overworld_props.exists():
