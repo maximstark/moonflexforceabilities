@@ -430,12 +430,17 @@ function drawEnemies(camX, camY) {
       ctx.restore();
       continue;
     }
-    drawFrame(sheet, enemyFrame(e), dx, dy, e.dir > 0);
+    const requestedFrame = enemyFrame(e);
+    const safeFrame = s.index[requestedFrame] !== undefined
+      ? requestedFrame : s.frames[(e.animTimer >> 2) % Math.min(2, s.frames.length)];
+    drawFrame(sheet, safeFrame, dx, dy, e.dir > 0);
     if (e.stun > 0 && (e.animTimer >> 3) % 2)
       drawFrame("fx", "spark1", dx + s.frame_w / 2 - 8, dy - 10);
   }
 }
 function enemyFrame(e) {
+  if (e.type === 'fly' && sheets.fly.index.buzz3 !== undefined)
+    return ['buzz1', 'buzz2', 'buzz3', 'buzz4'][(e.animTimer >> 1) & 3];
   if (e.type === 'wisp' && sheets.wisp.index.bob3 !== undefined)
     return ['bob1', 'bob2', 'bob3', 'bob2'][(e.animTimer >> 2) & 3];
   if (e.type === 'fish' && sheets.fish.index.swim3 !== undefined)

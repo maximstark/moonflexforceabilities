@@ -44,6 +44,11 @@ async function level(page, id) {
   await level(page, 4);
   await snap(page, "05-candy-clouds");
 
+  await level(page, 5);
+  await page.evaluate(() => { players[0].x = 720; players[0].y = 120; World.updateCamera(); });
+  await page.waitForTimeout(250);
+  await snap(page, '05b-fever-swarm');
+
   await level(page, 8);
   await page.evaluate(() => {
     const boss = Bosses.units[0], player = players[0];
