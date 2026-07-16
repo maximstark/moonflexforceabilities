@@ -356,6 +356,24 @@ def main() -> None:
     production_items = ROOT / 'art' / 'production' / 'items_source.png'
     production_hud = ROOT / 'art' / 'production' / 'hud_source.png'
     production_panels = ROOT / 'art' / 'production' / 'ui_panels_source.png'
+    production_overworld_map = ROOT / 'art' / 'production' / 'overworld_map_source.png'
+    production_overworld_props = ROOT / 'art' / 'production' / 'overworld_props_source.png'
+    if production_overworld_map.exists():
+        map_source = Image.open(production_overworld_map).convert('RGBA')
+        map_source.resize((800, 240), Image.Resampling.LANCZOS).save(ASSETS / 'overworld_map.png')
+        manifest['overworld_map'] = {
+            'frame_w': 800, 'frame_h': 240, 'frames': ['map'], 'file': 'assets/overworld_map.png'
+        }
+
+    if production_overworld_props.exists():
+        props_source = Image.open(production_overworld_props).convert('RGBA')
+        prop_labels = ['boat_idle', 'boat_move', 'dock', 'trophy_exterior',
+                       'trophy_interior', 'ornaments']
+        prop_frames = [fit(trim(cell(props_source, 3, 2, index % 3, index // 3)),
+                           128, 96, 2, baseline=False)
+                       for index in range(len(prop_labels))]
+        raw_atlas('overworld_props', prop_labels, prop_frames, (128, 96), manifest)
+
     if production_panels.exists():
         panel_source = Image.open(production_panels).convert('RGBA')
         panel_labels = ['title', 'story', 'pause', 'chooser', 'store', 'clear',

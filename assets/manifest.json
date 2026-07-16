@@ -796,5 +796,26 @@
       "s"
     ],
     "file": "assets/par_dream.png"
+  },
+  "overworld_map": {
+    "frame_w": 800,
+    "frame_h": 240,
+    "frames": [
+      "map"
+    ],
+    "file": "assets/overworld_map.png"
+  },
+  "overworld_props": {
+    "frame_w": 128,
+    "frame_h": 96,
+    "frames": [
+      "boat_idle",
+      "boat_move",
+      "dock",
+      "trophy_exterior",
+      "trophy_interior",
+      "ornaments"
+    ],
+    "file": "assets/overworld_props.png"
   }
 }
