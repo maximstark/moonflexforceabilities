@@ -170,12 +170,15 @@
     "file": "assets/babyswan.png"
   },
   "alligator": {
-    "frame_w": 48,
-    "frame_h": 26,
+    "frame_w": 56,
+    "frame_h": 32,
     "frames": [
       "catface",
       "reveal",
-      "chomp"
+      "revealed",
+      "swim",
+      "chomp",
+      "hurt"
     ],
     "file": "assets/alligator.png"
   },

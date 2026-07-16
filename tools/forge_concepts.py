@@ -264,6 +264,12 @@ def main() -> None:
         registered_atlas('dino', ['idle', 'walk1', 'walk2', 'walk3', 'attack', 'hurt'],
                          [cell(dino_source, 6, 1, col, 0) for col in range(6)], (40, 36), manifest)
 
+    production_gator = ROOT / 'art' / 'production' / 'alligator_source.png'
+    if production_gator.exists():
+        gator_source = Image.open(production_gator).convert('RGBA')
+        registered_atlas('alligator', ['catface', 'reveal', 'revealed', 'swim', 'chomp', 'hurt'],
+                         [cell(gator_source, 6, 1, col, 0) for col in range(6)], (56, 32), manifest)
+
     production_grumpis = ROOT / 'art' / 'production' / 'grumpis_source.png'
     if production_grumpis.exists():
         grumpis_source = Image.open(production_grumpis).convert('RGBA')
