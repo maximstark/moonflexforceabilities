@@ -324,8 +324,11 @@
     "frame_h": 80,
     "frames": [
       "idle",
+      "anticipation",
       "attack",
-      "hurt"
+      "recovery",
+      "hurt",
+      "defeated"
     ],
     "file": "assets/boss_papa.png"
   },

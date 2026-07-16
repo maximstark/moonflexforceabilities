@@ -679,9 +679,15 @@ const Bosses = (() => {
       }
       const s = sheets[b.sheet];
       let frame = "idle";
-      if (b.hurtFlash > 0 || b.state === "dying") frame = "hurt";
+      if (b.sub === 'papa' && s.index.anticipation !== undefined) {
+        frame = b.state === 'dying' ? 'defeated'
+              : b.hurtFlash > 0 ? 'hurt'
+              : b.state === 'windup' || b.state === 'rising' ? 'anticipation'
+              : b.state === 'spit' || b.state === 'swat' ? 'attack'
+              : b.state === 'vulnerable' || b.state === 'recover' ? 'recovery' : 'idle';
+      } else if (b.hurtFlash > 0 || b.state === "dying") frame = "hurt";
       else if (b.state === "lunge" || b.state === "spit" || b.state === "swat" ||
-               b.state === "volley") frame = "attack";
+              b.state === "volley") frame = "attack";
       let dx = b.x + b.w / 2 - s.frame_w / 2 - camX;
       let dy = b.y + b.h - s.frame_h - camY;
       if (b.state === "windup" || b.state === "rising") dx += ((b.animTimer >> 2) % 2) * 2 - 1;

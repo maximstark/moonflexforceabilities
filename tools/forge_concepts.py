@@ -337,6 +337,14 @@ def main() -> None:
                          [cell(turtle_source, 6, 1, col, 0) for col in range(6)], (112, 52), manifest)
 
     production_grumpis = ROOT / 'art' / 'production' / 'grumpis_source.png'
+    production_papa = ROOT / 'art' / 'production' / 'papa_grumpis_source.png'
+    if production_papa.exists():
+        papa_source = Image.open(production_papa).convert('RGBA')
+        registered_atlas('boss_papa',
+                         ['idle', 'anticipation', 'attack', 'recovery', 'hurt', 'defeated'],
+                         [cell(papa_source, 6, 1, col, 0) for col in range(6)],
+                         (96, 80), manifest)
+
     production_gear = ROOT / 'art' / 'production' / 'gear_source.png'
     if production_gear.exists():
         gear_source = Image.open(production_gear).convert('RGBA')
