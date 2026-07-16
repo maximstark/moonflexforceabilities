@@ -74,6 +74,16 @@ async function level(page, id) {
   await page.waitForTimeout(200);
   await snap(page, "07-nice-place");
 
+  await level(page, 11);
+  await page.evaluate(() => {
+    const boss = Bosses.units[0], player = players[0];
+    player.x = boss.x - 40; player.y = boss.y + 24;
+    boss.state = 'planted'; boss.y = player.y - 12; Bosses.activated = true;
+    World.updateCamera();
+  });
+  await page.waitForTimeout(250);
+  await snap(page, '07b-long-way-up');
+
   await level(page, 12);
   await page.evaluate(() => {
     const boss = Bosses.units[0], player = players[0];
@@ -86,5 +96,5 @@ async function level(page, id) {
 
   await browser.close();
   if (errors.length) throw new Error(errors.join("\n"));
-  console.log(`Captured 11 live frames in ${OUT}`);
+  console.log(`Captured 12 live frames in ${OUT}`);
 })().catch(error => { console.error(error); process.exit(1); });
