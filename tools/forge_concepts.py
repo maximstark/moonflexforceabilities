@@ -354,6 +354,17 @@ def main() -> None:
     production_nice_npcs = ROOT / 'art' / 'production' / 'nice_npcs_source.png'
     production_effects = ROOT / 'art' / 'production' / 'effects_source.png'
     production_items = ROOT / 'art' / 'production' / 'items_source.png'
+    production_hud = ROOT / 'art' / 'production' / 'hud_source.png'
+    if production_hud.exists():
+        hud_source = Image.open(production_hud).convert('RGBA')
+        production_hud_labels = ['heart_full', 'heart_empty', 'happy_smiley', 'happy_seg',
+                                 'popcorn', 'star', 'treat', 'trophy',
+                                 'boss_frame', 'boss_fill', 'ability_slot', 'checkpoint']
+        registered_atlas('hud', production_hud_labels,
+                         [cell(hud_source, 4, 3, index % 4, index // 4)
+                          for index in range(len(production_hud_labels))],
+                         (16, 16), manifest, baseline=False)
+
     if production_items.exists():
         items_source = Image.open(production_items).convert('RGBA')
         production_item_labels = ['moon', 'beads', 'icon_fire', 'icon_pink', 'icon_tree',

@@ -111,9 +111,9 @@ const UI = (() => {
     const info = Bosses.barInfo();
     if (!info) return;
     const w = 160, x = T.VIEW_W / 2 - w / 2, y = 8;
-    drawFrameSized("hud", "boss_frame", x - 8, y - 5, w + 16, 20);
+    drawNineSlice("hud", "boss_frame", x - 8, y - 5, w + 16, 20, 4);
     const fill = Math.round((w - 12) * info.cur / Math.max(1, info.max));
-    if (fill > 0) drawFrameSized("hud", "boss_fill", x + 6, y + 1, fill, 6);
+    if (fill > 0) drawNineSlice("hud", "boss_fill", x + 6, y + 1, fill, 6, 2);
     ctx.font = "7px monospace"; ctx.textAlign = "center";
     ctx.fillStyle = "#ffc6dd"; ctx.fillText(info.name, T.VIEW_W / 2, y + 18);
     ctx.textAlign = "left";
