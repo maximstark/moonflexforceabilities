@@ -497,6 +497,10 @@ function drawPlayer(p, camX, camY) {
     else if (p.animTimer % 360 < 28) frame = "preen";
     else frame = (p.animTimer >> 6) % 2 ? "idle2" : "idle";
   }
+  if (p.form === 'mermaid' && p.inWater && sheets.mermaid.index.swim3 !== undefined) {
+    const swimming = moving || Math.abs(p.vy) > 0.3;
+    frame = swimming ? ['swim1', 'swim2', 'swim3', 'swim2'][(p.animTimer >> 2) & 3] : 'idle';
+  }
   const s = sheets[sheet];
   const anchor = s.anchor || [s.draw_w / 2, s.draw_h];
   const dx = p.x + p.w / 2 - (p.facing < 0 ? s.draw_w - anchor[0] : anchor[0]) - camX;

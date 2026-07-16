@@ -32,14 +32,31 @@
     }
   },
   "mermaid": {
-    "frame_w": 40,
-    "frame_h": 40,
+    "frame_w": 48,
+    "frame_h": 44,
     "frames": [
       "idle",
       "swim1",
-      "swim2"
+      "swim2",
+      "swim3",
+      "upturn",
+      "hurt"
     ],
-    "file": "assets/mermaid.png"
+    "file": "assets/mermaid.png",
+    "anchor": [
+      24,
+      30
+    ],
+    "attachments": {
+      "head": [
+        37,
+        9
+      ],
+      "feet": [
+        24,
+        30
+      ]
+    }
   },
   "boss_grumpis": {
     "frame_w": 72,

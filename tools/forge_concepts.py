@@ -78,7 +78,7 @@ def raw_atlas(name: str, labels: list[str], frames: list[Image.Image], size: tup
 
 
 def registered_atlas(name: str, labels: list[str], frames: list[Image.Image], size: tuple[int, int],
-                     manifest: dict, pad: int = 1) -> None:
+                     manifest: dict, pad: int = 1, baseline: bool = True) -> None:
     '''Preserve relative subject scale while registering every frame to one baseline.'''
     width, height = size
     trimmed = [trim(frame) for frame in frames]
@@ -89,7 +89,7 @@ def registered_atlas(name: str, labels: list[str], frames: list[Image.Image], si
     for index, frame in enumerate(trimmed):
         resized = frame.resize((max(1, round(frame.width * scale)), max(1, round(frame.height * scale))), Image.Resampling.LANCZOS)
         x = index * width + (width - resized.width) // 2
-        y = height - pad - resized.height
+        y = height - pad - resized.height if baseline else (height - resized.height) // 2
         sheet.alpha_composite(resized, (x, y))
     sheet.save(ASSETS / f'{name}.png')
     manifest[name] = {'frame_w': width, 'frame_h': height, 'frames': labels, 'file': f'assets/{name}.png'}
@@ -293,6 +293,14 @@ def main() -> None:
         fly_dino_source = Image.open(production_fly_dino).convert('RGBA')
         registered_atlas('fly_dino', ['buzz1', 'buzz2', 'buzz3', 'buzz4', 'dart', 'hurt'],
                          [cell(fly_dino_source, 6, 1, col, 0) for col in range(6)], (36, 30), manifest)
+
+    production_mermaid = ROOT / 'art' / 'production' / 'mermaid_source.png'
+    if production_mermaid.exists():
+        mermaid_source = Image.open(production_mermaid).convert('RGBA')
+        registered_atlas('mermaid', ['idle', 'swim1', 'swim2', 'swim3', 'upturn', 'hurt'],
+                         [cell(mermaid_source, 6, 1, col, 0) for col in range(6)], (48, 44), manifest,
+                         baseline=False)
+        manifest['mermaid'].update({'anchor': [24, 30], 'attachments': {'head': [37, 9], 'feet': [24, 30]}})
 
     production_grumpis = ROOT / 'art' / 'production' / 'grumpis_source.png'
     if production_grumpis.exists():
