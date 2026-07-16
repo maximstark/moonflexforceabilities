@@ -70,6 +70,7 @@ async function level(page, id) {
     player.x = boss.x - 120; player.y = boss.y; player.form = 'mecha';
     Bosses.activated = true; World.updateCamera();
   });
+  await page.keyboard.press('KeyX');
   await page.waitForTimeout(250);
   await snap(page, '05c-moonflex-finale');
 

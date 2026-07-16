@@ -352,6 +352,17 @@ def main() -> None:
     production_giant = ROOT / 'art' / 'production' / 'giant_legs_source.png'
     production_bad_dreams = ROOT / 'art' / 'production' / 'bad_dreams_source.png'
     production_nice_npcs = ROOT / 'art' / 'production' / 'nice_npcs_source.png'
+    production_effects = ROOT / 'art' / 'production' / 'effects_source.png'
+    if production_effects.exists():
+        effects_source = Image.open(production_effects).convert('RGBA')
+        effects_labels = ['fireball1', 'fireball2', 'nut', 'mushroom', 'stink', 'ring1',
+                          'ring2', 'beam', 'beamtip', 'splash1', 'splash2', 'spark1',
+                          'spark2', 'feather', 'poof1', 'poof2', 'bubble', 'moonspark']
+        registered_atlas('fx', effects_labels,
+                         [cell(effects_source, 6, 3, index % 6, index // 6)
+                          for index in range(len(effects_labels))],
+                         (16, 16), manifest, baseline=False)
+
     if production_nice_npcs.exists():
         nice_npcs_source = Image.open(production_nice_npcs).convert('RGBA')
         registered_atlas('nice_npcs', [f'npc{i}' for i in range(1, 7)],
