@@ -42,22 +42,28 @@
     "file": "assets/mermaid.png"
   },
   "boss_grumpis": {
-    "frame_w": 64,
+    "frame_w": 72,
     "frame_h": 64,
     "frames": [
       "idle",
+      "anticipation",
       "attack",
-      "hurt"
+      "recover",
+      "hurt",
+      "defeated"
     ],
     "file": "assets/boss_grumpis.png"
   },
   "frog": {
-    "frame_w": 26,
-    "frame_h": 22,
+    "frame_w": 32,
+    "frame_h": 28,
     "frames": [
       "idle",
+      "anticipation",
       "crouch",
-      "hop"
+      "launch",
+      "airborne",
+      "landing"
     ],
     "file": "assets/frog.png"
   },

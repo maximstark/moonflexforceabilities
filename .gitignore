@@ -5,5 +5,6 @@ _shot_*.png
 assets/gpt_style_refs/
 art/source/*_chroma.png
 art/concepts/**/*_chroma.png
+art/production/*_chroma.png
 bots_out.log
 tools/reel/out/

@@ -77,6 +77,24 @@ def raw_atlas(name: str, labels: list[str], frames: list[Image.Image], size: tup
     manifest[name] = {"frame_w": width, "frame_h": height, "frames": labels, "file": f"assets/{name}.png"}
 
 
+def registered_atlas(name: str, labels: list[str], frames: list[Image.Image], size: tuple[int, int],
+                     manifest: dict, pad: int = 1) -> None:
+    '''Preserve relative subject scale while registering every frame to one baseline.'''
+    width, height = size
+    trimmed = [trim(frame) for frame in frames]
+    max_w = max(frame.width for frame in trimmed)
+    max_h = max(frame.height for frame in trimmed)
+    scale = min((width - pad * 2) / max_w, (height - pad * 2) / max_h)
+    sheet = Image.new('RGBA', (width * len(trimmed), height), TRANSPARENT)
+    for index, frame in enumerate(trimmed):
+        resized = frame.resize((max(1, round(frame.width * scale)), max(1, round(frame.height * scale))), Image.Resampling.LANCZOS)
+        x = index * width + (width - resized.width) // 2
+        y = height - pad - resized.height
+        sheet.alpha_composite(resized, (x, y))
+    sheet.save(ASSETS / f'{name}.png')
+    manifest[name] = {'frame_w': width, 'frame_h': height, 'frames': labels, 'file': f'assets/{name}.png'}
+
+
 def make_parallax(source: Image.Image, cols: int, col: int) -> Image.Image:
     far = trim(cell(source, cols, 3, col, 1))
     mid = trim(cell(source, cols, 3, col, 2))
@@ -225,6 +243,41 @@ def main() -> None:
     environment_pair("nice", "environments/world_backdrops_4.png", 3, 0, manifest)
     environment_pair("longup", "environments/world_backdrops_4.png", 3, 1, manifest)
     environment_pair("dream", "environments/world_backdrops_4.png", 3, 2, manifest)
+
+    # Production sheets supersede concept-board slices once they have passed
+    # registration and in-game validation.
+    production_frog = ROOT / 'art' / 'production' / 'frog_jump_source.png'
+    if production_frog.exists():
+        frog_source = Image.open(production_frog).convert('RGBA')
+        registered_atlas('frog', ['idle', 'anticipation', 'crouch', 'launch', 'airborne', 'landing'],
+                         [cell(frog_source, 6, 1, col, 0) for col in range(6)], (32, 28), manifest)
+
+    production_grumpis = ROOT / 'art' / 'production' / 'grumpis_source.png'
+    if production_grumpis.exists():
+        grumpis_source = Image.open(production_grumpis).convert('RGBA')
+        registered_atlas('boss_grumpis', ['idle', 'anticipation', 'attack', 'recover', 'hurt', 'defeated'],
+                         [cell(grumpis_source, 6, 1, col, 0) for col in range(6)], (72, 64), manifest)
+
+    production_lake = ROOT / 'art' / 'production' / 'dream_lake_background.png'
+    if production_lake.exists():
+        lake_image = Image.open(production_lake).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
+        lake_image.save(ASSETS / 'sky_lake.png')
+        manifest['sky_lake'] = {'frame_w': 384, 'frame_h': 240, 'frames': ['g'], 'file': 'assets/sky_lake.png'}
+        Image.new('RGBA', (192, 110), TRANSPARENT).save(ASSETS / 'par_lake.png')
+        manifest['par_lake'] = {'frame_w': 192, 'frame_h': 110, 'frames': ['s'], 'file': 'assets/par_lake.png'}
+
+    production_terrain = ROOT / 'art' / 'production' / 'dream_lake_terrain.png'
+    if production_terrain.exists():
+        terrain = Image.open(production_terrain).convert('RGBA')
+        terrain_frames = [
+            cell(terrain, 4, 4, 0, 0), cell(terrain, 4, 4, 0, 1),
+            cell(terrain, 4, 4, 2, 0), cell(terrain, 4, 4, 3, 0),
+            cell(terrain, 4, 4, 1, 2), cell(terrain, 4, 4, 3, 2),
+            cell(terrain, 4, 4, 0, 3), terrain.crop((round(terrain.width * .60), round(terrain.height * .75),
+                                                    round(terrain.width * .82), terrain.height)),
+        ]
+        raw_atlas('tiles', ['grass_top', 'dirt', 'edge_left', 'edge_right', 'platform', 'lilypad', 'cattail', 'lantern'],
+                  [fit(frame, 16, 16, 0) for frame in terrain_frames], (16, 16), manifest)
 
     # Preserve the already-approved Swan extraction metadata.
     manifest["swan"].update({"draw_w": 40, "draw_h": 36, "anchor": [20, 34], "attachments": {"head": [32.5, 6], "feet": [20, 34]}})

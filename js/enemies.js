@@ -436,6 +436,14 @@ function drawEnemies(camX, camY) {
   }
 }
 function enemyFrame(e) {
+  if (e.type === 'frog' && sheets.frog.index.airborne !== undefined) {
+    if (e.state === 'windup') {
+      const progress = 1 - e.timer / Math.max(1, T.FROG_WINDUP);
+      return progress < 0.45 ? 'anticipation' : 'crouch';
+    }
+    if (e.state === 'air') return e.vy < -1 ? 'launch' : e.vy < 1.5 ? 'airborne' : 'landing';
+    return 'idle';
+  }
   if (e.type === "frog") return e.state === "air" ? "hop" : e.state === "windup" ? "crouch" : "idle";
   if (e.type === "cockroach") return (e.animTimer >> 3) % 2 ? "scuttle2" : "scuttle1";
   if (e.type === "dino") return (e.animTimer >> 4) % 2 ? "walk2" : "walk1";
