@@ -355,6 +355,16 @@ def main() -> None:
     production_effects = ROOT / 'art' / 'production' / 'effects_source.png'
     production_items = ROOT / 'art' / 'production' / 'items_source.png'
     production_hud = ROOT / 'art' / 'production' / 'hud_source.png'
+    production_panels = ROOT / 'art' / 'production' / 'ui_panels_source.png'
+    if production_panels.exists():
+        panel_source = Image.open(production_panels).convert('RGBA')
+        panel_labels = ['title', 'story', 'pause', 'chooser', 'store', 'clear',
+                        'credits', 'dialogue', 'confirm']
+        raw_atlas('ui_panels', panel_labels,
+                  [trim(cell(panel_source, 3, 3, index % 3, index // 3))
+                   for index in range(len(panel_labels))],
+                  (128, 96), manifest)
+
     if production_hud.exists():
         hud_source = Image.open(production_hud).convert('RGBA')
         production_hud_labels = ['heart_full', 'heart_empty', 'happy_smiley', 'happy_seg',
