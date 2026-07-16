@@ -351,6 +351,13 @@ def main() -> None:
     production_hogdog = ROOT / 'art' / 'production' / 'hogdog_source.png'
     production_giant = ROOT / 'art' / 'production' / 'giant_legs_source.png'
     production_bad_dreams = ROOT / 'art' / 'production' / 'bad_dreams_source.png'
+    production_nice_npcs = ROOT / 'art' / 'production' / 'nice_npcs_source.png'
+    if production_nice_npcs.exists():
+        nice_npcs_source = Image.open(production_nice_npcs).convert('RGBA')
+        registered_atlas('nice_npcs', [f'npc{i}' for i in range(1, 7)],
+                         [cell(nice_npcs_source, 6, 1, col, 0) for col in range(6)],
+                         (64, 64), manifest)
+
     if production_bad_dreams.exists():
         bad_dreams_source = Image.open(production_bad_dreams).convert('RGBA')
         registered_atlas('boss_badcode', ['idle', 'attack', 'hurt', 'sphere', 'sweep', 'dissolve'],
