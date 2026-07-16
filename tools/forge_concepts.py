@@ -258,6 +258,12 @@ def main() -> None:
         registered_atlas('cockroach', ['scuttle1', 'scuttle2', 'scuttle3', 'scuttle4', 'hurt', 'defeated'],
                          [cell(roach_source, 6, 1, col, 0) for col in range(6)], (36, 20), manifest)
 
+    production_dino = ROOT / 'art' / 'production' / 'dino_source.png'
+    if production_dino.exists():
+        dino_source = Image.open(production_dino).convert('RGBA')
+        registered_atlas('dino', ['idle', 'walk1', 'walk2', 'walk3', 'attack', 'hurt'],
+                         [cell(dino_source, 6, 1, col, 0) for col in range(6)], (40, 36), manifest)
+
     production_grumpis = ROOT / 'art' / 'production' / 'grumpis_source.png'
     if production_grumpis.exists():
         grumpis_source = Image.open(production_grumpis).convert('RGBA')

@@ -81,11 +81,15 @@
     "file": "assets/cockroach.png"
   },
   "dino": {
-    "frame_w": 32,
-    "frame_h": 30,
+    "frame_w": 40,
+    "frame_h": 36,
     "frames": [
+      "idle",
       "walk1",
-      "walk2"
+      "walk2",
+      "walk3",
+      "attack",
+      "hurt"
     ],
     "file": "assets/dino.png"
   },

@@ -436,6 +436,8 @@ function drawEnemies(camX, camY) {
   }
 }
 function enemyFrame(e) {
+  if (e.type === 'dino' && sheets.dino.index.walk3 !== undefined)
+    return ['walk1', 'walk2', 'walk3', 'walk2'][(e.animTimer >> 3) & 3];
   if (e.type === 'cockroach' && sheets.cockroach.index.scuttle3 !== undefined)
     return ['scuttle1', 'scuttle2', 'scuttle3', 'scuttle4'][(e.animTimer >> 2) & 3];
   if (e.type === 'frog' && sheets.frog.index.airborne !== undefined) {
