@@ -87,13 +87,13 @@ const Overworld = (() => {
     ctx.textAlign = "center";
     ctx.fillStyle = "rgba(16,10,26,0.72)"; ctx.fillRect(0, 0, T.VIEW_W, 31);
     ctx.fillStyle = "#ffe48a"; ctx.fillRect(0, 30, T.VIEW_W, 1);
-    ctx.font = "bold 11px monospace";
+    ctx.font = "bold 11px Verdana";
     ctx.fillStyle = "#ffe48a";
     ctx.fillText("CHOOSE YOUR DREAM", T.VIEW_W / 2, 13);
-    ctx.font = "8px monospace"; ctx.fillStyle = "#fff6d8";
+    ctx.font = "8px Verdana"; ctx.fillStyle = "#fff6d8";
     ctx.fillText(NODES[idx].label, T.VIEW_W / 2, 25);
     if ((fr >> 4) % 2) {
-      ctx.fillStyle = "#9fe8a0"; ctx.font = "8px monospace";
+      ctx.fillStyle = "#9fe8a0"; ctx.font = "8px Verdana";
       ctx.fillText("← →  WALK      X / ENTER  GO IN", T.VIEW_W / 2, T.VIEW_H - 8);
     }
     ctx.textAlign = "left";
@@ -137,7 +137,7 @@ const Overworld = (() => {
     ctx.fillStyle = "#241a30"; ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = open ? (n.id === "home" ? "#9ad0ff" : n.id === T.WORLD_COUNT ? "#ff7ab0" : "#ffd96a") : "#5a5470";
     ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
-    ctx.font = "7px monospace"; ctx.textAlign = "center"; ctx.fillStyle = "#241a30";
+    ctx.font = "7px Verdana"; ctx.textAlign = "center"; ctx.fillStyle = "#241a30";
     ctx.fillText(n.id === "home" ? "H" : open ? String(n.id) : "×", x, y + 2);
     ctx.textAlign = "left";
     if (beaten) {                                     // a wee victory pennant
@@ -196,13 +196,13 @@ const Overworld = (() => {
                   T.VIEW_W - 40, T.VIEW_H - 34, 18);
     ctx.fillStyle = "rgba(24,14,34,0.84)"; ctx.fillRect(38, 28, T.VIEW_W - 76, 116);
     ctx.textAlign = "center";
-    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 13px monospace";
+    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 13px Verdana";
     ctx.fillText("THE TROPHY ROOM", T.VIEW_W / 2, 34);
-    ctx.font = "8px monospace"; ctx.fillStyle = "#b9b2d8";
+    ctx.font = "8px Verdana"; ctx.fillStyle = "#b9b2d8";
     ctx.fillText("(the room is always neat)", T.VIEW_W / 2, 48);
     const babies = save.babies.filter(b => b).length;
     drawFrame("babyswan", (fr >> 4) % 2 ? "bob2" : "bob1", T.VIEW_W / 2 - 78, 64);
-    ctx.fillStyle = "#fff6d8"; ctx.font = "9px monospace";
+    ctx.fillStyle = "#fff6d8"; ctx.font = "9px Verdana";
     ctx.fillText("BABY SWANS RESCUED:  " + babies + " / " + (T.WORLD_COUNT - 1), T.VIEW_W / 2, 74);
     if (save.unlocked >= T.WORLD_COUNT) {
       drawFrame("items", "beads", T.VIEW_W / 2 - 8, 90);
@@ -210,7 +210,7 @@ const Overworld = (() => {
     } else {
       ctx.fillStyle = "#7a7490"; ctx.fillText("the gold medal waits at the end...", T.VIEW_W / 2, 108);
     }
-    ctx.fillStyle = "#e8d8f8"; ctx.font = "8px monospace";
+    ctx.fillStyle = "#e8d8f8"; ctx.font = "8px Verdana";
     ctx.fillText("BEST: " + (save.best || 0).toLocaleString(), T.VIEW_W / 2, 132);
     (save.highScores || []).slice(0, 5).forEach((h, i) =>
       ctx.fillText((i + 1) + ". " + h.name + "   " + h.score, T.VIEW_W / 2, 148 + i * 12));

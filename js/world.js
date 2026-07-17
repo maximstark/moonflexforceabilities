@@ -486,7 +486,7 @@ const World = (() => {
       const nearLift = p && !p.dead && p.x + p.w > e.x - 6 && p.x < e.x + e.w + 6;
       if (save.unlocked > 1 && !nearLift) {
         const by = Math.sin(Game.frame / 10) * 2;
-        ctx.font = "7px monospace"; ctx.textAlign = "center"; ctx.fillStyle = "#ffe48a";
+        ctx.font = "7px Verdana"; ctx.textAlign = "center"; ctx.fillStyle = "#ffe48a";
         ctx.fillText("↑ FL." + save.unlocked, e.x + e.w / 2 - cx, e.y - 34 - cy + by);
         ctx.textAlign = "left";
       }
@@ -494,7 +494,7 @@ const World = (() => {
     for (const d of doors) {
       const locked = d.level > save.unlocked;
       if (locked) drawBars(d.x - cx, d.y - cy);
-      ctx.font = "7px monospace"; ctx.textAlign = "center";
+      ctx.font = "7px Verdana"; ctx.textAlign = "center";
       ctx.fillStyle = locked ? "#8a7a9a" : "#ffe48a";
       ctx.fillText("FL." + d.level, d.x + 8 - cx, d.y - 4 - cy);
       if (d.level === save.unlocked) {                 // newest open floor: go here
@@ -544,7 +544,7 @@ const World = (() => {
     }
   }
   function drawPrompt(text, wx, wy, cx, cy) {
-    ctx.font = "7px monospace"; ctx.textAlign = "center";
+    ctx.font = "7px Verdana"; ctx.textAlign = "center";
     const w = ctx.measureText(text).width + 8;
     const x = Math.round(wx - cx), y = Math.round(wy - cy + Math.sin(Game.frame / 12));
     ctx.fillStyle = "rgba(20,12,28,0.82)"; ctx.fillRect(x - w / 2, y - 9, w, 11);
@@ -566,7 +566,7 @@ const World = (() => {
       for (const p of players)
         if (!p.dead && Math.abs((p.x + p.w / 2) - n.x) < 44 && Math.abs((p.y + p.h) - n.y) < 64) near = true;
       if (near && n.line) {
-        ctx.font = "7px monospace"; ctx.textAlign = "center";
+        ctx.font = "7px Verdana"; ctx.textAlign = "center";
         const w = ctx.measureText(n.line).width + 8;
         const sx = Math.round(n.x - cx), sy = Math.round(n.y - s.draw_h - 6 - cy + bob);
         ctx.fillStyle = "rgba(20,12,28,0.82)"; ctx.fillRect(sx - w / 2, sy - 9, w, 11);
@@ -627,7 +627,7 @@ const World = (() => {
     }
   }
   function drawFloaters(cx, cy) {
-    ctx.font = "8px monospace"; ctx.textAlign = "center";
+    ctx.font = "8px Verdana"; ctx.textAlign = "center";
     for (const f of floaters) {
       ctx.fillStyle = f.timer > 15 ? "#fff6d8" : "rgba(255,246,216,0.5)";
       ctx.fillText(f.text, Math.round(f.x - cx), Math.round(f.y - cy));

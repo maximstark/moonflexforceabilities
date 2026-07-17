@@ -103,14 +103,14 @@ def clean_world_tiles() -> list[Image.Image]:
         if opened: d.rectangle((2, 2, 13, 7), fill=(91, 49, 48, 255), outline=(48, 34, 45, 255))
         else: d.rectangle((2, 4, 13, 8), fill=(151, 88, 57, 255), outline=(48, 34, 45, 255))
         out.append(im)
-    cloud = tile((226, 224, 242, 255)); d = ImageDraw.Draw(cloud); d.rectangle((0, 0, 15, 2), fill=(255, 248, 232, 255)); d.line((0, 4, 15, 4), fill=(186, 180, 216, 255)); out.append(cloud)
+    cloud = tile((226, 224, 242, 255)); d = ImageDraw.Draw(cloud); d.rectangle((0, 0, 15, 3), fill=(255, 248, 232, 255)); d.polygon([(0,4),(3,6),(6,4),(9,7),(12,4),(15,6),(15,8),(0,8)], fill=(186, 180, 216, 255)); out.append(cloud)
     out.append(speck(tile((199, 193, 224, 255)), [(215, 209, 235, 255), (174, 165, 207, 255)], 4))
-    candy = tile((240, 165, 197, 255)); d = ImageDraw.Draw(candy); d.rectangle((0, 0, 15, 2), fill=(255, 230, 239, 255)); d.line((0, 5, 15, 5), fill=(212, 119, 163, 255)); out.append(candy)
+    candy = tile((240, 165, 197, 255)); d = ImageDraw.Draw(candy); d.rectangle((0, 0, 15, 3), fill=(255, 238, 246, 255)); d.polygon([(0,4),(3,7),(6,4),(9,6),(12,4),(15,7),(15,9),(0,9)], fill=(220, 132, 175, 255)); out.append(candy)
     out.append(speck(tile((211, 129, 177, 255)), [(230, 151, 193, 255), (187, 103, 155, 255)], 5))
     im = tile(); d = ImageDraw.Draw(im); d.polygon([(3,15),(5,6),(8,2),(11,6),(13,15)], fill=(113, 207, 191, 255), outline=(54, 88, 105, 255)); d.line((6,8,10,8), fill=(238,247,220,255)); out.append(im)
     for compressed in (False, True):
         im=tile(); d=ImageDraw.Draw(im); top=8 if compressed else 4; d.rectangle((3,top,12,14),fill=(113,78,145,255),outline=(43,34,62,255)); d.line((4,top+2,11,top+2),fill=(242,205,92,255),width=2); out.append(im)
-    night=speck(tile((65,55,91,255)),[(83,70,108,255),(46,41,68,255)],6); d=ImageDraw.Draw(night); d.rectangle((0,0,15,2),fill=(135,186,105,255)); d.rectangle((0,3,15,4),fill=(83,126,78,255)); out.append(night)
+    night=speck(tile((65,55,91,255)),[(83,70,108,255),(46,41,68,255)],6); d=ImageDraw.Draw(night); d.rectangle((0,0,15,3),fill=(155,205,112,255)); d.polygon([(0,4),(3,7),(5,4),(8,8),(11,4),(15,7),(15,9),(0,9)],fill=(76,119,75,255)); out.append(night)
     out.append(speck(tile((50,43,72,255)),[(68,57,91,255),(39,34,58,255)],7))
     for phase in range(2):
         im=tile(); d=ImageDraw.Draw(im); d.polygon([(8,1+phase),(4,8),(7,14),(11,10),(12,5)],fill=(255,119,68,255)); d.polygon([(8,5),(6,10),(9,12),(10,7)],fill=(255,226,106,255)); out.append(im)
@@ -143,10 +143,12 @@ def clean_hub_tiles() -> list[Image.Image]:
 
 def clean_lake_tiles() -> list[Image.Image]:
     grass = Image.new('RGBA', (16, 16), (102, 71, 70, 255)); d = ImageDraw.Draw(grass)
-    d.rectangle((0, 0, 15, 2), fill=(174, 209, 105, 255)); d.rectangle((0, 3, 15, 4), fill=(94, 145, 78, 255))
-    d.point((3, 9), fill=(128, 84, 75, 255)); d.point((12, 13), fill=(76, 55, 65, 255))
+    d.rectangle((0, 0, 15, 2), fill=(210, 229, 132, 255)); d.rectangle((0, 3, 15, 5), fill=(122, 174, 88, 255))
+    d.polygon([(1,6),(3,8),(5,6),(8,9),(11,6),(14,8),(15,6)], fill=(79, 126, 72, 255))
+    d.rectangle((2, 11, 4, 12), fill=(145, 94, 79, 255)); d.point((12, 14), fill=(74, 53, 64, 255))
     dirt = Image.new('RGBA', (16, 16), (102, 71, 70, 255)); d = ImageDraw.Draw(dirt)
-    for x, y in ((2,3),(11,5),(6,12),(14,14)): d.point((x,y), fill=(137, 88, 76, 255))
+    for x, y in ((2,3),(11,5),(6,12),(14,14)): d.rectangle((x,y,min(15,x+1),min(15,y+1)), fill=(137, 88, 76, 255))
+    d.line((8,1,7,6,9,9), fill=(72,52,64,255))
     edge_l = grass.copy(); edge_r = grass.copy()
     d = ImageDraw.Draw(edge_l); d.rectangle((0,0,1,15), fill=(211, 177, 108, 255))
     d = ImageDraw.Draw(edge_r); d.rectangle((14,0,15,15), fill=(211, 177, 108, 255))
@@ -176,13 +178,43 @@ def atlas(name: str, labels: list[str], frames: list[Image.Image], size: tuple[i
     manifest[name] = entry
 
 
-def raw_atlas(name: str, labels: list[str], frames: list[Image.Image], size: tuple[int, int], manifest: dict) -> None:
+def raw_atlas(name: str, labels: list[str], frames: list[Image.Image], size: tuple[int, int], manifest: dict,
+              *, draw: tuple[int, int] | None = None) -> None:
     width, height = size
     sheet = Image.new("RGBA", (width * len(frames), height), TRANSPARENT)
     for index, frame in enumerate(frames):
         sheet.alpha_composite(frame.resize((width, height), Image.Resampling.LANCZOS), (index * width, 0))
     sheet.save(ASSETS / f"{name}.png")
-    manifest[name] = {"frame_w": width, "frame_h": height, "frames": labels, "file": f"assets/{name}.png"}
+    entry = {"frame_w": width, "frame_h": height, "frames": labels, "file": f"assets/{name}.png"}
+    if draw:
+        entry['draw_w'], entry['draw_h'] = draw
+    manifest[name] = entry
+
+
+def storybook_2x(frames: list[Image.Image], seed: int) -> list[Image.Image]:
+    '''Two source pixels per world pixel, with restrained hand-drawn texture.'''
+    upgraded = []
+    for frame_index, frame in enumerate(frames):
+        hi = frame.resize((32, 32), Image.Resampling.NEAREST).convert('RGBA')
+        px = hi.load()
+        for i in range(44):
+            x = (i * 17 + seed * 11 + frame_index * 7) % 32
+            y = (i * 23 + seed * 5 + frame_index * 13) % 32
+            r, g, b, a = px[x, y]
+            if a < 180:
+                continue
+            lift = 12 if i % 3 else -10
+            px[x, y] = (max(0, min(255, r + lift)), max(0, min(255, g + lift)),
+                        max(0, min(255, b + lift)), a)
+        upgraded.append(hi)
+    return upgraded
+
+
+def storybook_background(image: Image.Image) -> Image.Image:
+    '''Keep the painted composition but bring it into the game's shared pixel palette.'''
+    sized = image.convert('RGB').resize((384, 240), Image.Resampling.LANCZOS)
+    return sized.quantize(colors=72, method=Image.Quantize.MEDIANCUT,
+                          dither=Image.Dither.FLOYDSTEINBERG).convert('RGBA')
 
 
 def registered_atlas(name: str, labels: list[str], frames: list[Image.Image], size: tuple[int, int],
@@ -574,7 +606,7 @@ def main() -> None:
 
     production_lake = ROOT / 'art' / 'production' / 'dream_lake_background.png'
     if production_lake.exists():
-        lake_image = Image.open(production_lake).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
+        lake_image = storybook_background(Image.open(production_lake))
         lake_image.save(ASSETS / 'sky_lake.png')
         manifest['sky_lake'] = {'frame_w': 384, 'frame_h': 240, 'frames': ['g'], 'file': 'assets/sky_lake.png'}
         Image.new('RGBA', (192, 110), TRANSPARENT).save(ASSETS / 'par_lake.png')
@@ -634,7 +666,7 @@ def main() -> None:
     for scene_name, scene_path in late_backgrounds.items():
         if not scene_path.exists():
             continue
-        scene_image = Image.open(scene_path).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
+        scene_image = storybook_background(Image.open(scene_path))
         scene_image.save(ASSETS / f'sky_{scene_name}.png')
         manifest[f'sky_{scene_name}'] = {
             'frame_w': 384, 'frame_h': 240, 'frames': ['g'], 'file': f'assets/sky_{scene_name}.png'
@@ -645,7 +677,7 @@ def main() -> None:
         }
 
     if production_fever.exists():
-        fever_image = Image.open(production_fever).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
+        fever_image = storybook_background(Image.open(production_fever))
         fever_image.save(ASSETS / 'sky_fever.png')
         manifest['sky_fever'] = {'frame_w': 384, 'frame_h': 240, 'frames': ['g'], 'file': 'assets/sky_fever.png'}
         Image.new('RGBA', (192, 110), TRANSPARENT).save(ASSETS / 'par_fever.png')
@@ -653,7 +685,7 @@ def main() -> None:
 
     production_finale = ROOT / 'art' / 'production' / 'moonflex_finale_background.png'
     if production_finale.exists():
-        finale_image = Image.open(production_finale).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
+        finale_image = storybook_background(Image.open(production_finale))
         finale_image.save(ASSETS / 'sky_finale.png')
         manifest['sky_finale'] = {'frame_w': 384, 'frame_h': 240, 'frames': ['g'], 'file': 'assets/sky_finale.png'}
         Image.new('RGBA', (192, 110), TRANSPARENT).save(ASSETS / 'par_finale.png')
@@ -666,7 +698,7 @@ def main() -> None:
     for scene_name, scene_path in early_backgrounds.items():
         if not scene_path.exists():
             continue
-        scene_image = Image.open(scene_path).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
+        scene_image = storybook_background(Image.open(scene_path))
         scene_image.save(ASSETS / f'sky_{scene_name}.png')
         manifest[f'sky_{scene_name}'] = {
             'frame_w': 384, 'frame_h': 240, 'frames': ['g'], 'file': f'assets/sky_{scene_name}.png'
@@ -678,14 +710,14 @@ def main() -> None:
 
     production_home = ROOT / 'art' / 'production' / 'home_background.png'
     if production_home.exists():
-        home_image = Image.open(production_home).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
+        home_image = storybook_background(Image.open(production_home))
         home_image.save(ASSETS / 'sky_hub.png')
         manifest['sky_hub'] = {'frame_w': 384, 'frame_h': 240, 'frames': ['g'], 'file': 'assets/sky_hub.png'}
         Image.new('RGBA', (192, 110), TRANSPARENT).save(ASSETS / 'par_hub.png')
         manifest['par_hub'] = {'frame_w': 192, 'frame_h': 110, 'frames': ['s'], 'file': 'assets/par_hub.png'}
 
     if production_candy.exists():
-        candy_image = Image.open(production_candy).convert('RGBA').resize((384, 240), Image.Resampling.LANCZOS)
+        candy_image = storybook_background(Image.open(production_candy))
         candy_image.save(ASSETS / 'sky_candy.png')
         manifest['sky_candy'] = {'frame_w': 384, 'frame_h': 240, 'frames': ['g'], 'file': 'assets/sky_candy.png'}
         Image.new('RGBA', (192, 110), TRANSPARENT).save(ASSETS / 'par_candy.png')
@@ -711,9 +743,11 @@ def main() -> None:
     # Never use presentation-board gutters or decorative cell frames here.
     raw_atlas('tiles', ['grass_top', 'dirt', 'edge_left', 'edge_right', 'platform',
                         'lilypad', 'cattail', 'lantern'],
-              clean_lake_tiles(), (16, 16), manifest)
-    raw_atlas('tiles2', tile2_labels, clean_world_tiles(), (16, 16), manifest)
-    raw_atlas('hub', hub_labels, clean_hub_tiles(), (16, 16), manifest)
+              storybook_2x(clean_lake_tiles(), 3), (32, 32), manifest, draw=(16, 16))
+    raw_atlas('tiles2', tile2_labels, storybook_2x(clean_world_tiles(), 7),
+              (32, 32), manifest, draw=(16, 16))
+    raw_atlas('hub', hub_labels, storybook_2x(clean_hub_tiles(), 11),
+              (32, 32), manifest, draw=(16, 16))
 
     # Preserve the already-approved Swan extraction metadata.
     manifest["swan"].update({"draw_w": 40, "draw_h": 36, "anchor": [20, 34], "attachments": {"head": [32.5, 6], "feet": [20, 34]}})

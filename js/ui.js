@@ -37,10 +37,10 @@ const UI = (() => {
     for (let i = 0; i < segs; i++) drawFrame("hud", "happy_seg", 24 + i * 8, 22);
     if (panic) {
       ctx.fillStyle = (Game.frame >> 3) % 2 ? "#ff7a7a" : "#ffd1d1";
-      ctx.font = "8px monospace"; ctx.fillText("PANIC!", 26, 33);
+      ctx.font = "8px Verdana"; ctx.fillText("PANIC!", 26, 33);
     }
     // score / stars / babies
-    ctx.font = "8px monospace"; ctx.fillStyle = "#fff6d8";
+    ctx.font = "8px Verdana"; ctx.fillStyle = "#fff6d8";
     drawFrame("hud", "popcorn", T.VIEW_W - 70, 5);
     ctx.fillStyle = dispScore < Game.score ? "#ffe48a" : "#fff6d8";   // gold while counting up
     ctx.fillText(String(dispScore).padStart(8, "0"), T.VIEW_W - 52, 16);
@@ -63,7 +63,7 @@ const UI = (() => {
     for (const pw of p1.powers) {
       drawPowerIcon(pw, ppx + 8, 46);
       if ((p1.lvl[pw] || 1) >= 2) {                 // a tiny stack badge: x2 / x3
-        ctx.font = "6px monospace"; ctx.fillStyle = "#ffe48a"; ctx.textAlign = "left";
+        ctx.font = "6px Verdana"; ctx.fillStyle = "#ffe48a"; ctx.textAlign = "left";
         ctx.fillText("x" + p1.lvl[pw], ppx + 11, 54);
       }
       ppx += 14;
@@ -77,7 +77,7 @@ const UI = (() => {
     // the invisible phone: visible ONLY while transform is held (the joke, made UI law)
     if (pads[0].held.transform || (coop && pads[1] && pads[1].held.transform)) {
       drawFrame("items", "phone", T.VIEW_W / 2 - 8, 30);
-      ctx.font = "7px monospace"; ctx.textAlign = "center";
+      ctx.font = "7px Verdana"; ctx.textAlign = "center";
       ctx.fillStyle = "#d8c8f0";
       ctx.fillText("the unvisible button", T.VIEW_W / 2, 56);
       ctx.fillText(players[0].inWater ? "(press again in water: transform!)" : "(works in water)", T.VIEW_W / 2, 66);
@@ -94,13 +94,13 @@ const UI = (() => {
       ctx.fillStyle = "#ffe48a";
       ctx.fillRect(0, y, T.VIEW_W, 1); ctx.fillRect(0, y + 33, T.VIEW_W, 1);
       ctx.textAlign = "center";
-      ctx.font = "7px monospace"; ctx.fillStyle = "#ffd9f0";
+      ctx.font = "7px Verdana"; ctx.fillStyle = "#ffd9f0";
       ctx.fillText(typeof Game.levelId === "number" ? "· DREAM " + Game.levelId + " ·" : "· HOME ·",
                    T.VIEW_W / 2, y + 11);
-      ctx.font = "bold 12px monospace"; ctx.fillStyle = "#ffe48a";
+      ctx.font = "bold 12px Verdana"; ctx.fillStyle = "#ffe48a";
       ctx.fillText(level.name, T.VIEW_W / 2, y + 25);
       if (level.world === 0 && save.unlocked > 1) {     // back in the hub with progress
-        ctx.font = "8px monospace"; ctx.fillStyle = "#9fe8a0";
+        ctx.font = "8px Verdana"; ctx.fillStyle = "#9fe8a0";
         ctx.fillText("FLOOR " + save.unlocked + " IS OPEN — RIDE THE ELEVATOR UP", T.VIEW_W / 2, y + 44);
       }
       ctx.textAlign = "left";
@@ -114,7 +114,7 @@ const UI = (() => {
     drawNineSlice("hud", "boss_frame", x - 8, y - 5, w + 16, 20, 4);
     const fill = Math.round((w - 12) * info.cur / Math.max(1, info.max));
     if (fill > 0) drawNineSlice("hud", "boss_fill", x + 6, y + 1, fill, 6, 2);
-    ctx.font = "7px monospace"; ctx.textAlign = "center";
+    ctx.font = "7px Verdana"; ctx.textAlign = "center";
     ctx.fillStyle = "#ffc6dd"; ctx.fillText(info.name, T.VIEW_W / 2, y + 18);
     ctx.textAlign = "left";
   }
@@ -134,15 +134,15 @@ const UI = (() => {
     for (let x = -off2 - 96; x < T.VIEW_W; x += 192) drawFrame("par_lake", "s", x, T.VIEW_H - 136);
     ctx.globalAlpha = 1;
     ctx.fillStyle = 'rgba(24,14,38,0.76)';
-    ctx.fillRect(8, 104, T.VIEW_W - 16, 116);
+    ctx.fillRect(8, 104, T.VIEW_W - 16, 130);
     ctx.strokeStyle = 'rgba(255,228,138,0.72)';
-    ctx.strokeRect(10.5, 106.5, T.VIEW_W - 21, 111);
+    ctx.strokeRect(10.5, 106.5, T.VIEW_W - 21, 125);
     const off = Math.floor(Game.frame * 0.2) % 192;
     for (let x = -off; x < T.VIEW_W; x += 192) drawFrame("par_lake", "s", x, T.VIEW_H - 110);
     ctx.textAlign = "center";
     drawUiPanel('title', 8, 17, T.VIEW_W - 16, 91);
     // the logo bobs, letter by letter, with a plum shadow
-    ctx.font = "bold 17px monospace";
+    ctx.font = "bold 17px Verdana";
     const cw = ctx.measureText("M").width;
     const wave = (s, y) => {
       const x0 = T.VIEW_W / 2 - (s.length - 1) * cw / 2;
@@ -156,7 +156,7 @@ const UI = (() => {
     if ((Game.frame >> 3) % 5 < 2)      // a passing glint on the frame
       drawFrame("fx", (Game.frame >> 3) % 2 ? "spark1" : "spark2",
                 (Game.frame >> 3) % 4 < 2 ? 18 : T.VIEW_W - 34, 28);
-    ctx.font = "8px monospace"; ctx.fillStyle = "#ffd9f0";
+    ctx.font = "8px Verdana"; ctx.fillStyle = "#ffd9f0";
     ctx.fillText("a dream made by Josie, age 4", T.VIEW_W / 2, 82);
     ctx.fillText("(now with 100% more everything)", T.VIEW_W / 2, 92);
     // the cast paddles by, doubled faintly in the lake
@@ -169,26 +169,26 @@ const UI = (() => {
     ctx.globalAlpha = 1;
     drawFrameSized("swan", swanF, T.VIEW_W / 2 - 46, 112 + wob, 40, 36);
     drawFrame("charmgirl", charmF, T.VIEW_W / 2 + 14, 118 - wob);
-    ctx.fillStyle = "#fff6d8"; ctx.font = "9px monospace";
-    ctx.fillText("MOVE  WASD / ARROWS", T.VIEW_W / 2, 154);
-    ctx.fillText("JUMP  SPACE   ·   tap jump in the air to FLAP", T.VIEW_W / 2, 166);
-    ctx.fillText("X  ACTION        SHIFT/E  THE PHONE", T.VIEW_W / 2, 178);
+    ctx.fillStyle = "#fff6d8"; ctx.font = "9px Verdana";
+    ctx.fillText("MOVE  WASD / ARROWS", T.VIEW_W / 2, 158);
+    ctx.fillText("SPACE  JUMP + FLAP", T.VIEW_W / 2, 172);
+    ctx.fillText("X  ACTION     SHIFT / E  PHONE", T.VIEW_W / 2, 186);
     ctx.fillStyle = "#ffd9f0";
-    ctx.fillText("AT HOME:  X up  ·  ↓ down  ·  ↓ at a door to dive in", T.VIEW_W / 2, 190);
+    ctx.fillText("ENTER A DOOR TO CHOOSE A DREAM", T.VIEW_W / 2, 200);
     ctx.fillStyle = "#ffb0c8";
-    ctx.fillText("RIGHT-SHIFT: CHARMGIRL JOINS     ·     M  MUTE", T.VIEW_W / 2, 202);
+    ctx.fillText("RIGHT SHIFT: CHARMGIRL JOINS", T.VIEW_W / 2, 212);
     if ((Game.frame >> 4) % 2) {
-      ctx.fillStyle = "#ffe48a"; ctx.font = "11px monospace";
-      ctx.fillText("PRESS ENTER", T.VIEW_W / 2, 220);
+      ctx.fillStyle = "#ffe48a"; ctx.font = "11px Verdana";
+      ctx.fillText("PRESS ENTER", T.VIEW_W / 2, 228);
     }
     if (save.highScores.length) {
-      ctx.font = "8px monospace"; ctx.fillStyle = "#e8d8f8";
+      ctx.font = "8px Verdana"; ctx.fillStyle = "#e8d8f8";
       const h = save.highScores[0];
       ctx.fillText("BEST DREAMER: " + h.name + "  " + h.score, T.VIEW_W / 2, 234);
     }
     // the little dreamers' badge, up in the quiet corner above the panel
     if (save.gentle) {
-      ctx.font = "8px monospace";
+      ctx.font = "8px Verdana";
       const tw = ctx.measureText("GENTLE DREAMS").width;
       drawBubbleHeart(T.VIEW_W - 8 - tw - 18, 3);
       ctx.textAlign = "right"; ctx.fillStyle = "#ffb0c8";
@@ -205,9 +205,9 @@ const UI = (() => {
     drawUiPanel(Game.confirmErase ? 'confirm' : 'pause',
                    T.VIEW_W / 2 - 116, 40, 232, 168);
     ctx.textAlign = "center";
-    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px monospace";
+    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px Verdana";
     ctx.fillText("PAUSED", T.VIEW_W / 2, 70);
-    ctx.font = "9px monospace";
+    ctx.font = "9px Verdana";
     const bounce = Math.round(Math.sin(Game.frame / 8) * 1.5);
     PAUSE_OPTS.forEach((o, i) => {
       const sel = i === Game.pauseIdx;
@@ -311,9 +311,9 @@ const UI = (() => {
     drawUiPanel('chooser', 8, 30, T.VIEW_W - 16, T.VIEW_H - 40);
     ctx.globalAlpha = 1;
     ctx.textAlign = "center";
-    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 11px monospace";
+    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 11px Verdana";
     ctx.fillText("THE TREASURE BOX OPENS...", T.VIEW_W / 2, 20);
-    ctx.font = "8px monospace"; ctx.fillStyle = "#b9b2d8";
+    ctx.font = "8px Verdana"; ctx.fillStyle = "#b9b2d8";
     ctx.fillText("pick an ability — they STACK, so grab everything", T.VIEW_W / 2, 32);
     const vis = visiblePowers();
     if (Game.chooserIdx >= vis.length) Game.chooserIdx = 0;
@@ -328,11 +328,11 @@ const UI = (() => {
       ctx.fillStyle = sel ? "#3a2a50" : "#241a34"; ctx.fillRect(x, y, bw, bh);
       if (sel) { ctx.strokeStyle = "#ffe48a"; ctx.strokeRect(x + 0.5, y + 0.5, bw - 1, bh - 1); }
       drawPowerIcon(pw[0], cx, y + 15);
-      ctx.fillStyle = sel ? "#ffe48a" : "#cabce0"; ctx.font = "7px monospace";
+      ctx.fillStyle = sel ? "#ffe48a" : "#cabce0"; ctx.font = "7px Verdana";
       ctx.fillText(pw[1], cx, y + bh - 5);
     });
     const descY = top + rows * rowH + 8;
-    ctx.fillStyle = "#fff6d8"; ctx.font = "8px monospace";
+    ctx.fillStyle = "#fff6d8"; ctx.font = "8px Verdana";
     ctx.fillText(vis[Game.chooserIdx][2], T.VIEW_W / 2, descY);
     ctx.fillStyle = "#b9b2d8";
     ctx.fillText("ARROWS + ENTER", T.VIEW_W / 2, descY + 14);
@@ -412,13 +412,13 @@ const UI = (() => {
     ctx.globalAlpha = 1;
     const s = store;
     ctx.textAlign = "center";
-    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px monospace";
+    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px Verdana";
     ctx.fillText("SPELL YOUR NAME", T.VIEW_W / 2, 28);
-    ctx.font = "8px monospace"; ctx.fillStyle = "#b9b2d8";
+    ctx.font = "8px Verdana"; ctx.fillStyle = "#b9b2d8";
     ctx.fillText("EACH LETTER COSTS " + s.cost.toLocaleString() + " PTS — WHAT'S LEFT IS YOUR SCORE", T.VIEW_W / 2, 42);
-    ctx.fillStyle = "#fff6d8"; ctx.font = "12px monospace";
+    ctx.fillStyle = "#fff6d8"; ctx.font = "12px Verdana";
     ctx.fillText(s.name + (s.name.length < T.NAME_MAX_LEN ? "_" : ""), T.VIEW_W / 2, 64);
-    ctx.font = "9px monospace";
+    ctx.font = "9px Verdana";
     ctx.fillStyle = s.wallet >= s.cost ? "#9fe8a0" : "#ff7a7a";
     ctx.fillText("WALLET: " + s.wallet.toLocaleString(), T.VIEW_W / 2, 80);
     if (s.wallet < s.cost)
@@ -429,10 +429,10 @@ const UI = (() => {
       const x = gx0 + col * 22, y = 114 + row * 17;
       if (i === s.cursor) { ctx.fillStyle = "#ffe48a"; ctx.fillRect(x - 10, y - 10, 20, 13); }
       ctx.fillStyle = i === s.cursor ? "#16131f" : "#fff6d8";
-      ctx.font = STORE_GRID[i].length > 1 ? "7px monospace" : "10px monospace";
+      ctx.font = STORE_GRID[i].length > 1 ? "7px Verdana" : "10px Verdana";
       ctx.fillText(STORE_GRID[i], x, y);
     }
-    ctx.fillStyle = "#b9b2d8"; ctx.font = "8px monospace";
+    ctx.fillStyle = "#b9b2d8"; ctx.font = "8px Verdana";
     ctx.fillText("ARROWS MOVE  ENTER BUY  BACKSPACE REFUND", T.VIEW_W / 2, 198);
     ctx.textAlign = "left";
   }
@@ -455,7 +455,7 @@ const UI = (() => {
     const lines = Game.card || [];
     const ph = Math.max(90, lines.length * 16 + 52);
     drawUiPanel('story', 18, T.VIEW_H / 2 - ph / 2 - 8, T.VIEW_W - 36, ph + 16);
-    ctx.textAlign = "center"; ctx.font = "9px monospace";
+    ctx.textAlign = "center"; ctx.font = "9px Verdana";
     let budget = Math.floor(Game.stateTimer * 1.4);
     const y0 = T.VIEW_H / 2 - ph / 2 + 30;
     lines.forEach((ln, i) => {
@@ -465,7 +465,7 @@ const UI = (() => {
       ctx.fillText(shown, T.VIEW_W / 2, y0 + i * 16);
     });
     if (cardDone() && (Game.frame >> 4) % 2) {
-      ctx.fillStyle = "#b9b2d8"; ctx.font = "8px monospace";
+      ctx.fillStyle = "#b9b2d8"; ctx.font = "8px Verdana";
       ctx.fillText("ENTER ▸", T.VIEW_W / 2, T.VIEW_H / 2 + ph / 2 - 12);
     }
     ctx.textAlign = "left";
@@ -494,9 +494,9 @@ const UI = (() => {
     }
     drawFrame("items", "beads", T.VIEW_W / 2 - 8, 60 + Math.sin(Game.frame / 20) * 3);
     ctx.textAlign = "center";
-    if (t > 60) { ctx.fillStyle = "#ffe48a"; ctx.font = "bold 11px monospace";
+    if (t > 60) { ctx.fillStyle = "#ffe48a"; ctx.font = "bold 11px Verdana";
       ctx.fillText("THE BABIES ARE SAFE.", T.VIEW_W / 2, 96); }
-    if (t > 150) { ctx.fillStyle = "#fff6d8"; ctx.font = "9px monospace";
+    if (t > 150) { ctx.fillStyle = "#fff6d8"; ctx.font = "9px Verdana";
       ctx.fillText("every big bad dream is over now.", T.VIEW_W / 2, 112); }
     if (t > 240) { ctx.fillStyle = "#ffd9f0";
       ctx.fillText("the lake is quiet. the turtles came back.", T.VIEW_W / 2, 128); }
@@ -534,7 +534,7 @@ const UI = (() => {
       const y = T.VIEW_H + i * 18 - scroll;
       if (y < -10 || y > T.VIEW_H + 10) return;
       ctx.fillStyle = i === 0 ? "#ffe48a" : "#e8e0f4";
-      ctx.font = i === 0 ? "bold 12px monospace" : "9px monospace";
+      ctx.font = i === 0 ? "bold 12px Verdana" : "9px Verdana";
       ctx.fillText(ln, T.VIEW_W / 2, y);
     });
     ctx.textAlign = "left";
@@ -547,9 +547,9 @@ const UI = (() => {
     ctx.textAlign = "center";
     const hop = Math.round(Math.abs(Math.sin(Game.frame / 12)) * -3);
     drawFrame("hud", "trophy", T.VIEW_W / 2 - 8, 60 + hop);
-    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px monospace";
+    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px Verdana";
     ctx.fillText("DREAM CLEAR!", T.VIEW_W / 2, 98);
-    ctx.font = "9px monospace";
+    ctx.font = "9px Verdana";
     ctx.fillStyle = dispScore < Game.score ? "#ffe48a" : "#fff6d8";
     ctx.fillText("SCORE " + dispScore.toLocaleString(), T.VIEW_W / 2, 118);
     if (Game.babiesThisLevel > 0) {
@@ -567,9 +567,9 @@ const UI = (() => {
     ctx.globalAlpha = 1;
     ctx.textAlign = "center";
     drawFrame("items", "beads", T.VIEW_W / 2 - 8, 24);
-    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px monospace";
+    ctx.fillStyle = "#ffe48a"; ctx.font = "bold 12px Verdana";
     ctx.fillText("HALL OF DREAMERS", T.VIEW_W / 2, 60);
-    ctx.font = "9px monospace";
+    ctx.font = "9px Verdana";
     const medal = ["#ffd96a", "#cfd4e8", "#e0a35f"];
     save.highScores.slice(0, 8).forEach((h, i) => {
       ctx.fillStyle = medal[i] || "#b9b2d8";

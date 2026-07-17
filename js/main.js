@@ -214,7 +214,7 @@ function render() {
 
   switch (Game.state) {
     case "loading":
-      ctx.fillStyle = "#fff6d8"; ctx.font = "10px monospace"; ctx.textAlign = "center";
+      ctx.fillStyle = "#fff6d8"; ctx.font = "10px Verdana"; ctx.textAlign = "center";
       ctx.fillText("DREAMING...", T.VIEW_W / 2, T.VIEW_H / 2); ctx.textAlign = "left";
       break;
     case "title": Game.frame % 1 === 0 && UI.drawTitle(); break;

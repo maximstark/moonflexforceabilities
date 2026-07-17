@@ -119,8 +119,8 @@
     "file": "assets/dino.png"
   },
   "tiles": {
-    "frame_w": 16,
-    "frame_h": 16,
+    "frame_w": 32,
+    "frame_h": 32,
     "frames": [
       "grass_top",
       "dirt",
@@ -131,7 +131,9 @@
       "cattail",
       "lantern"
     ],
-    "file": "assets/tiles.png"
+    "file": "assets/tiles.png",
+    "draw_w": 16,
+    "draw_h": 16
   },
   "hud": {
     "frame_w": 16,
@@ -410,8 +412,8 @@
     "file": "assets/items.png"
   },
   "tiles2": {
-    "frame_w": 16,
-    "frame_h": 16,
+    "frame_w": 32,
+    "frame_h": 32,
     "frames": [
       "water_surf1",
       "water_surf2",
@@ -441,11 +443,13 @@
       "flower",
       "sign"
     ],
-    "file": "assets/tiles2.png"
+    "file": "assets/tiles2.png",
+    "draw_w": 16,
+    "draw_h": 16
   },
   "hub": {
-    "frame_w": 16,
-    "frame_h": 16,
+    "frame_w": 32,
+    "frame_h": 32,
     "frames": [
       "wall",
       "paper",
@@ -461,7 +465,9 @@
       "roof_l",
       "roof_r"
     ],
-    "file": "assets/hub.png"
+    "file": "assets/hub.png",
+    "draw_w": 16,
+    "draw_h": 16
   },
   "elevator": {
     "frame_w": 24,
